@@ -87,7 +87,7 @@ function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps)
           href={`${EXPLORERS[chainId as keyof typeof EXPLORERS] ?? ''}/tx/${txHash}`}
           target='_blank'
           rel='noreferrer'
-          className='inline-flex items-center gap-1 font-mono text-xs text-foreground hover:underline tabular-nums'
+          className='inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-[#0847c4] hover:underline tabular-nums'
         >
           coverDebt() confirmed — {txHash.slice(0, 6)}…{txHash.slice(-4)}
           <Icons.externalLink className='size-3' />
@@ -198,7 +198,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
               href={EXPLORERS[5318007]}
               target='_blank'
               rel='noreferrer'
-              className='inline-flex items-center gap-1 text-xs text-foreground underline underline-offset-2 hover:underline'
+              className='inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline'
             >
               View on Reactscan
               <Icons.externalLink className='size-3' />
@@ -266,7 +266,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
                     name
                   ]}
                 />
-                <Bar dataKey='reserves' name='Reserves' fill='#0A0A0A' radius={[4, 4, 0, 0]} />
+                <Bar dataKey='reserves' name='Reserves' fill='#0000f2' radius={[4, 4, 0, 0]} />
                 <Bar dataKey='debt' name='Debt' fill='#A3A3A3' radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

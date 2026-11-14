@@ -190,7 +190,7 @@ const columns: ColumnDef<IncidentFeatures, Incident, unknown>[] = [
           href={explorerTxUrl(incident.originChainId, incident.emergencyPauseTxHash)}
           target='_blank'
           rel='noreferrer'
-          className='inline-flex items-center gap-1 font-mono text-xs text-foreground underline underline-offset-2 hover:underline tabular-nums'
+          className='inline-flex items-center gap-1 font-mono text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline tabular-nums'
         >
           {truncateHex(incident.emergencyPauseTxHash)}
           <Icons.externalLink className='size-3' />

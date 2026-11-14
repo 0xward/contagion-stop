@@ -1,3 +1,4 @@
+import DashboardNav from '@/components/layout/dashboard-nav';
 import HeaderWallet from '@/components/web3/header-wallet';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -31,21 +32,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className='mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 md:px-6'>
           <Link
             href='/dashboard/overview'
-            className='font-mono text-sm font-bold tracking-[0.22em] uppercase'
+            className='font-mono text-sm font-bold tracking-[0.22em] text-primary uppercase'
           >
             ContagionStop
           </Link>
-          <nav
-            className='flex items-center gap-4 font-mono text-xs tracking-[0.14em] uppercase'
-            aria-label='Sections'
-          >
-            <Link href='/dashboard/overview' className='text-muted-foreground hover:text-foreground'>
-              Overview
-            </Link>
-            <Link href='/dashboard/docs' className='text-muted-foreground hover:text-foreground'>
-              Docs
-            </Link>
-          </nav>
+          <DashboardNav />
           <div className='ml-auto'>
             <HeaderWallet />
           </div>

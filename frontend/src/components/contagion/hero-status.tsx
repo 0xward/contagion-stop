@@ -46,7 +46,7 @@ function LatencyMetric({
       </span>
       <span
         className={cn(
-          'font-mono tabular-nums',
+          'font-mono text-primary tabular-nums',
           large ? 'text-3xl font-semibold' : 'text-lg font-medium'
         )}
       >
@@ -71,7 +71,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
   const total = incident?.confirmedTotal ?? 2;
   const ringTotal = Math.max(total, 1);
   const ringColor =
-    confirmed === 0 ? '#0A0A0A' : confirmed < total ? '#737373' : '#0A0A0A';
+    confirmed === 0 ? '#0000f2' : confirmed < total ? '#737373' : '#0000f2';
 
   const isMock = incident?.isMock ?? latency?.isMock ?? false;
   const isContained = incident?.status === 'CONTAINED';
@@ -119,7 +119,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
             ) : null}
           </div>
           {isMock ? (
-            <Badge variant='outline' className='border-foreground/40 text-foreground shrink-0'>
+            <Badge variant='outline' className='border-primary/40 text-primary shrink-0'>
               <Icons.circleCheck className='mr-1 size-3.5' />
               RECORDED
             </Badge>

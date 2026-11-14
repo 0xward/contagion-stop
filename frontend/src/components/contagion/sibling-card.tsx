@@ -71,7 +71,7 @@ function CopyAddressButton({ address }: { address: string }) {
  * One sibling vault card (ux-ui-notes §3).
  *
  * Status is always icon + text label, never color alone. Origin vault A is
- * distinguished with an ORIGIN label + indigo border. Debt is read from the
+ * distinguished with an ORIGIN label + blue border. Debt is read from the
  * Lasna system contract / callback proxy (never `debt()` on the vault —
  * it does not exist in the ABI); in mock mode the numbers come from
  * mock-data.ts. Balance is `eth_getBalance` in live mode.
@@ -107,7 +107,7 @@ export function SiblingCard({
   return (
     <Card
       className={cn(
-        isPaused && 'border-foreground',
+        isPaused && 'border-primary',
         !isPaused && isOrigin && 'border-foreground'
       )}
     >
@@ -120,7 +120,7 @@ export function SiblingCard({
             className={cn(
               'ml-auto',
               isPaused
-                ? 'border-foreground bg-foreground text-background'
+                ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-foreground/30 bg-muted text-foreground'
             )}
           >
@@ -128,7 +128,7 @@ export function SiblingCard({
           </Badge>
         </div>
         <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
-          <span className='inline-block size-2 rounded-full bg-foreground' aria-hidden />
+          <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {sibling.chainName} · chain {sibling.chainId}
         </div>
       </CardHeader>
@@ -146,14 +146,14 @@ export function SiblingCard({
             href={`${sibling.explorerUrl}/address/${sibling.address}`}
             target='_blank'
             rel='noreferrer'
-            className='inline-flex items-center gap-0.5 text-xs text-foreground underline underline-offset-2 hover:underline'
+            className='inline-flex items-center gap-0.5 text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline'
             title={`View on ${sibling.explorerUrl}`}
           >
             Explorer
             <Icons.externalLink className='size-3' />
           </a>
           {sibling.isMock ? (
-            <Badge variant='outline' className='border-foreground/40 text-foreground ml-auto'>
+            <Badge variant='outline' className='border-primary/40 text-primary ml-auto'>
               RECORDED
             </Badge>
           ) : null}

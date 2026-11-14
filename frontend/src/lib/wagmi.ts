@@ -24,13 +24,13 @@ export const lasna = defineChain({
 /** Urutan chain: origin (Unichain Sepolia) dulu, lalu Base Sepolia, lalu Lasna (watcher). */
 export const chains = [unichainSepolia, baseSepolia, lasna] as const;
 
-/** Warna dot per chain — monokrom (Nous Mono, restyle 14 Nov 2026): semua
- * chain memakai dot hitam yang sama; chain dibedakan lewat teks, bukan warna.
- * Helper dipertahankan agar pemakaian lama tidak pecah. */
+/** Warna dot per chain — Nous Blue (restyle 15 Nov 2026): semua chain
+ * memakai dot biru #0000f2 yang sama; chain dibedakan lewat teks, bukan
+ * warna. Helper dipertahankan agar pemakaian lama tidak pecah. */
 export const CHAIN_DOT_COLOR: Record<number, string> = {
-  [unichainSepolia.id]: '#0a0a0a',
-  [baseSepolia.id]: '#0a0a0a',
-  [lasna.id]: '#0a0a0a'
+  [unichainSepolia.id]: '#0000f2',
+  [baseSepolia.id]: '#0000f2',
+  [lasna.id]: '#0000f2'
 };
 
 export function getChainName(chainId: number): string {
@@ -39,7 +39,7 @@ export function getChainName(chainId: number): string {
 }
 
 export function getChainDotColor(chainId: number): string {
-  return CHAIN_DOT_COLOR[chainId] ?? '#0a0a0a';
+  return CHAIN_DOT_COLOR[chainId] ?? '#0000f2';
 }
 
 /**

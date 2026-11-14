@@ -48,7 +48,7 @@ export default function DocsPage() {
           <CardHeader>
             <div className='flex flex-wrap items-center gap-2'>
               <CardTitle>Project docs</CardTitle>
-              <Badge variant='outline' className='border-foreground/40 text-foreground'>
+              <Badge variant='outline' className='border-primary/40 text-primary'>
                 <Icons.circleCheck className='mr-1 size-3.5' />
                 RECORDED RUN — TESTNET
               </Badge>

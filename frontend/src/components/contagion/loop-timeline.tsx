@@ -57,14 +57,14 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
         </div>
         <div className='flex flex-col items-start gap-2 sm:items-end'>
           {isMock ? (
-            <Badge variant='outline' className='border-border bg-muted text-muted-foreground'>
+            <Badge variant='outline' className='border-primary/40 text-primary'>
               RECORDED RUN — TESTNET
             </Badge>
           ) : null}
           {latency ? (
             <span className='font-mono text-sm tabular-nums'>
               Full loop{' '}
-              <span className='font-semibold text-foreground'>
+              <span className='font-semibold text-primary'>
                 {latency.fullLoopSeconds.toFixed(1)} s
               </span>
             </span>
@@ -157,7 +157,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
                             href={`${step.explorerUrl}/tx/${step.txHash}`}
                             target='_blank'
                             rel='noreferrer'
-                            className='inline-flex items-center gap-1 text-foreground underline underline-offset-2 hover:underline'
+                            className='inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline'
                           >
                             {truncateHash(step.txHash)}
                             <Icons.externalLink className='size-3' />
@@ -207,13 +207,13 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
               href={`${freezeProof.explorerUrl}/tx/${freezeProof.txHash}`}
               target='_blank'
               rel='noreferrer'
-              className='inline-flex items-center gap-1 font-mono text-xs text-foreground underline underline-offset-2 hover:underline tabular-nums'
+              className='inline-flex items-center gap-1 font-mono text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline tabular-nums'
             >
               {truncateHash(freezeProof.txHash)}
               <Icons.externalLink className='size-3' />
             </a>
             {freezeProof.isMock ? (
-              <Badge variant='outline' className='border-border bg-muted text-muted-foreground'>
+              <Badge variant='outline' className='border-primary/40 text-primary'>
                 RECORDED
               </Badge>
             ) : null}

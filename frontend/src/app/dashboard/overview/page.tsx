@@ -122,12 +122,12 @@ export default function OverviewPage() {
       pageDescription='Cross-chain circuit breaker — one emergencyPause freezes every sibling vault.'
       pageHeaderAction={
         LIVE ? (
-          <Badge variant='outline' className='border-foreground/40 text-foreground'>
+          <Badge variant='outline' className='border-primary/40 text-primary'>
             <Icons.circleCheck className='mr-1 size-3.5' />
             RECORDED RUN — TESTNET
           </Badge>
         ) : (
-          <Badge variant='outline' className='border-foreground/40 text-foreground'>
+          <Badge variant='outline' className='border-primary/40 text-primary'>
             <Icons.warning className='mr-1 size-3.5' />
             DEMO DATA — contracts not deployed yet
           </Badge>
@@ -140,7 +140,7 @@ export default function OverviewPage() {
           <CardHeader className='pb-3'>
             <div className='flex flex-wrap items-center gap-2'>
               <CardTitle className='text-sm'>DEMO CONTROL — recorded run</CardTitle>
-              <Badge variant='outline' className='border-foreground/40 text-foreground'>
+              <Badge variant='outline' className='border-primary/40 text-primary'>
                 RECORDED
               </Badge>
             </div>

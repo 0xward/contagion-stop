@@ -1,8 +1,8 @@
 /* ContagionStop Light — Nous Mono
- * Palette final (restyle 14 Nov 2026, menggantikan "Trust Indigo" gelap).
- * Monokrom terang ala nousresearch.com: near-black di atas near-white,
- * tanpa gradient, tanpa shadow, tanpa warna aksen. Status dibedakan lewat
- * teks + border, bukan warna. Satu-satunya "aksen" adalah hitam/putih.
+ * Palette final (restyle 15 Nov 2026, menggantikan monokrom hitam-putih).
+ * Biru + putih ala nousresearch.com: biru utama #0000f2, hover/gelap
+ * #0847c4, di atas near-white; teks tetap near-black. Tanpa gradient,
+ * tanpa shadow. Status dibedakan lewat teks + border, bukan warna saja.
  * Font self-host via Fontsource (bukan Google Fonts): Inter Variable untuk
  * body, JetBrains Mono Variable untuk label/angka/alamat/hash.
  * Radius 0 (sudut tajam, gaya TUI) dan semua shadow dimatikan (flat).
@@ -17,35 +17,35 @@
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #fafaf9;
+  --primary: #0000f2;
+  --primary-foreground: #ffffff;
   --secondary: #f5f5f4;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f4;
   --muted-foreground: #525252;
   --accent: #f5f5f4;
   --accent-foreground: #0a0a0a;
-  --destructive: #0a0a0a;
-  --destructive-foreground: #fafaf9;
+  --destructive: #0000f2;
+  --destructive-foreground: #ffffff;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #0a0a0a;
-  --chart-1: #0a0a0a;
-  --chart-2: #525252;
+  --ring: #0000f2;
+  --chart-1: #0000f2;
+  --chart-2: #0847c4;
   --chart-3: #737373;
   --chart-4: #a3a3a3;
   --chart-5: #d4d4d4;
   --sidebar: #fafaf9;
   --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #0a0a0a;
-  --sidebar-primary-foreground: #fafaf9;
+  --sidebar-primary: #0000f2;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f5f5f4;
   --sidebar-accent-foreground: #0a0a0a;
   --sidebar-border: #e5e5e5;
-  --sidebar-ring: #0a0a0a;
+  --sidebar-ring: #0000f2;
   /* Token status (di luar token bawaan shadcn, untuk worker komponen) —
      semuanya abu-abu: status dibedakan teks + border, bukan warna. */
-  --success: #0a0a0a;
+  --success: #0000f2;
   --warning: #525252;
   --info: #737373;
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
@@ -77,33 +77,33 @@
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #fafaf9;
+  --primary: #0000f2;
+  --primary-foreground: #ffffff;
   --secondary: #f5f5f4;
   --secondary-foreground: #0a0a0a;
   --muted: #f5f5f4;
   --muted-foreground: #525252;
   --accent: #f5f5f4;
   --accent-foreground: #0a0a0a;
-  --destructive: #0a0a0a;
-  --destructive-foreground: #fafaf9;
+  --destructive: #0000f2;
+  --destructive-foreground: #ffffff;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #0a0a0a;
-  --chart-1: #0a0a0a;
-  --chart-2: #525252;
+  --ring: #0000f2;
+  --chart-1: #0000f2;
+  --chart-2: #0847c4;
   --chart-3: #737373;
   --chart-4: #a3a3a3;
   --chart-5: #d4d4d4;
   --sidebar: #fafaf9;
   --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #0a0a0a;
-  --sidebar-primary-foreground: #fafaf9;
+  --sidebar-primary: #0000f2;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f5f5f4;
   --sidebar-accent-foreground: #0a0a0a;
   --sidebar-border: #e5e5e5;
-  --sidebar-ring: #0a0a0a;
-  --success: #0a0a0a;
+  --sidebar-ring: #0000f2;
+  --success: #0000f2;
   --warning: #525252;
   --info: #737373;
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
