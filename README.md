@@ -182,6 +182,18 @@ answer those questions. Closing needs seconds; opening needs judgement. Like
 a household circuit breaker: it trips itself on a short circuit, and only a
 human may flip it back after checking.
 
+## What doesn't count as integration
+
+- A frontend button that calls `pause()` directly. The dashboard never calls
+  `pause()` itself; only the watcher contract's callback does, after a real
+  `EmergencyPaused` LogRecord.
+- A watcher that only alerts. ContagionStop has no alert-only mode: every
+  trip ends in an executed `pause()` callback on each sibling, confirmed
+  on-chain (`confirmedPaused`), or it stays visibly unconfirmed.
+- A simulated loop. Nothing in the loop is mocked in production: the event,
+  the `react()` execution, the callbacks, and the confirmations are all real
+  testnet transactions (see "Full loop — transaction hashes" below).
+
 ---
 
 ## Contract addresses

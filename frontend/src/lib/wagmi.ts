@@ -1,6 +1,6 @@
 import { http, createConfig } from 'wagmi';
 import { baseSepolia, unichainSepolia } from 'wagmi/chains';
-import { injected } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 import { defineChain } from 'viem';
 
 /**
@@ -43,12 +43,23 @@ export function getChainDotColor(chainId: number): string {
 }
 
 /**
- * wagmi v2 config. No WalletConnect projectId — injected connector only.
- * WalletConnect can be added here when a projectId is available.
+ * wagmi v2 config. Two connectors: injected (browser extension wallets)
+ * and WalletConnect (mobile wallets via QR, Reown project ID below).
+ * The project ID comes from NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID when set
+ * (Vercel env var); the built-in fallback keeps WalletConnect working in
+ * builds without the env var. The ID is a public client identifier, not
+ * a secret.
  */
 export const wagmiConfig = createConfig({
   chains: [unichainSepolia, baseSepolia, lasna],
-  connectors: [injected()],
+  connectors: [
+    injected(),
+    walletConnect({
+      projectId:
+        process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ??
+        'ea5f0fd20b26896045774900b7294b1a'
+    })
+  ],
   transports: {
     [unichainSepolia.id]: http(),
     [baseSepolia.id]: http(),
