@@ -17,7 +17,7 @@
 
 ---
 
-## 🏆 Track — Every Second Counts (Reactive Omni Buildathon)
+## Track — Every Second Counts (Reactive Omni Buildathon)
 
 "Every Second Counts" = the value of this project is measured in seconds: how
 long from a security event on one chain until every sibling deployment is
@@ -29,7 +29,7 @@ event → Lasna → callback fan-out.
 
 ---
 
-## 🎯 Problem
+## Problem
 
 Serious DeFi protocols do not live on one chain: the same lending vault, the
 same bridge, the same code is deployed on Base, Unichain, and a dozen other
@@ -58,7 +58,7 @@ decision needs judgement, not speed.
 
 ---
 
-## 💡 Solution
+## Solution
 
 ContagionStop is a cross-chain circuit breaker. When the security team pauses
 one deployment — because an exploit was detected — a reactive contract on
@@ -73,7 +73,7 @@ within seconds, without waiting for a human to wake up.**
 
 ---
 
-## ⚙️ How it works
+## How it works
 
 ### Architecture
 
@@ -184,31 +184,31 @@ human may flip it back after checking.
 
 ---
 
-## 📍 Contract addresses
+## Contract addresses
 
-> ✅ **Deployed + Sourcify-verified `exact_match` (creation + runtime) on 14 Nov 2026.**
+>  **Deployed + Sourcify-verified `exact_match` (creation + runtime) on 14 Nov 2026.**
 > All four production contracts verified; vault D is a test-only 4th vault
 > (fall-through scenario, unregistered — see below).
 
 | Contract | Chain | Address | Explorer |
 |---|---|---|---|
-| `SiblingVault` A (origin) | Unichain Sepolia (1301) | `0xb18A213bfa8c1888af39AF100d7dd54Aa376F7b5` ✅ Sourcify exact_match | [Uniscan](https://sepolia.uniscan.xyz/address/0xb18A213bfa8c1888af39AF100d7dd54Aa376F7b5) |
-| `SiblingVault` B | Base Sepolia (84532) | `0xa7e3ceb5686f8d3b03e688efdc6a5a64ed80ca4a` ✅ Sourcify exact_match | [BaseScan](https://sepolia.basescan.org/address/0xa7e3ceb5686f8d3b03e688efdc6a5a64ed80ca4a) |
-| `SiblingVault` C | Unichain Sepolia (1301) | `0xb07a380104ac093485566cfc964540b04518b354` ✅ Sourcify exact_match | [Uniscan](https://sepolia.uniscan.xyz/address/0xb07a380104ac093485566cfc964540b04518b354) |
-| `ContagionWatcher` | Lasna (5318007) | `0xb18a213bfa8c1888af39af100d7dd54aa376f7b5` ✅ Sourcify exact_match | [Reactscan](https://lasna.reactscan.net/address/0xb18a213bfa8c1888af39af100d7dd54aa376f7b5) |
-| `SiblingVault` D (test-only, unregistered) | Unichain Sepolia (1301) | `0x8fB4aae500D914a1876f06FfA7f74fE9A88cEf7a` ✅ Sourcify exact_match | [Uniscan](https://sepolia.uniscan.xyz/address/0x8fB4aae500D914a1876f06FfA7f74fE9A88cEf7a) |
-| Callback proxy (Base Sepolia) | Base Sepolia (84532) | `0x476F44b11F5C942c58f4c8E3d0300E5710743585` ✅ verified | [BaseScan](https://sepolia.basescan.org/address/0x476F44b11F5C942c58f4c8E3d0300E5710743585) |
-| Callback proxy (Unichain Sepolia) | Unichain Sepolia (1301) | `0x775c9B990ADe401060B78D0e98684eEf8d2466C1` ✅ verified | [Uniscan](https://sepolia.uniscan.xyz/address/0x775c9B990ADe401060B78D0e98684eEf8d2466C1) |
-| Lasna faucet (Base Sepolia) | Base Sepolia (84532) | `0x2afaFD298b23b62760711756088F75B7409f5967` ✅ verified | 1 ETH → 100 lREACT, max 5 ETH/tx |
+| `SiblingVault` A (origin) | Unichain Sepolia (1301) | `0xb18A213bfa8c1888af39AF100d7dd54Aa376F7b5`  Sourcify exact_match | [Uniscan](https://sepolia.uniscan.xyz/address/0xb18A213bfa8c1888af39AF100d7dd54Aa376F7b5) |
+| `SiblingVault` B | Base Sepolia (84532) | `0xa7e3ceb5686f8d3b03e688efdc6a5a64ed80ca4a`  Sourcify exact_match | [BaseScan](https://sepolia.basescan.org/address/0xa7e3ceb5686f8d3b03e688efdc6a5a64ed80ca4a) |
+| `SiblingVault` C | Unichain Sepolia (1301) | `0xb07a380104ac093485566cfc964540b04518b354`  Sourcify exact_match | [Uniscan](https://sepolia.uniscan.xyz/address/0xb07a380104ac093485566cfc964540b04518b354) |
+| `ContagionWatcher` | Lasna (5318007) | `0xb18a213bfa8c1888af39af100d7dd54aa376f7b5`  Sourcify exact_match | [Reactscan](https://lasna.reactscan.net/address/0xb18a213bfa8c1888af39af100d7dd54aa376f7b5) |
+| `SiblingVault` D (test-only, unregistered) | Unichain Sepolia (1301) | `0x8fB4aae500D914a1876f06FfA7f74fE9A88cEf7a`  Sourcify exact_match | [Uniscan](https://sepolia.uniscan.xyz/address/0x8fB4aae500D914a1876f06FfA7f74fE9A88cEf7a) |
+| Callback proxy (Base Sepolia) | Base Sepolia (84532) | `0x476F44b11F5C942c58f4c8E3d0300E5710743585`  verified | [BaseScan](https://sepolia.basescan.org/address/0x476F44b11F5C942c58f4c8E3d0300E5710743585) |
+| Callback proxy (Unichain Sepolia) | Unichain Sepolia (1301) | `0x775c9B990ADe401060B78D0e98684eEf8d2466C1`  verified | [Uniscan](https://sepolia.uniscan.xyz/address/0x775c9B990ADe401060B78D0e98684eEf8d2466C1) |
+| Lasna faucet (Base Sepolia) | Base Sepolia (84532) | `0x2afaFD298b23b62760711756088F75B7409f5967`  verified | 1 ETH → 100 lREACT, max 5 ETH/tx |
 
 **Do NOT use** the old proxy `0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4`
 (pre-Omni material, May 2026).
 
 ---
 
-## 🔗 Full loop — transaction hashes
+## Full loop — transaction hashes
 
-> ✅ **Measured on testnet, 14 Nov 2026 (incident 1, reason `EXPLOIT-001`).**
+>  **Measured on testnet, 14 Nov 2026 (incident 1, reason `EXPLOIT-001`).**
 > Four hashes, plus two revert proofs. All verifiable on the explorers above.
 
 | # | Step | Chain | Tx hash |
@@ -235,9 +235,9 @@ while unregistered and correctly ignored (no incident, no `react()`).
 
 ---
 
-## 📏 Latency metrics (measured on testnet)
+## Latency metrics (measured on testnet)
 
-> ✅ **Measured on testnet, 14 Nov 2026 (incident 1).**
+>  **Measured on testnet, 14 Nov 2026 (incident 1).**
 > All values are block timestamps from explorers, never block counts
 > (Base Sepolia ~200 ms/block, Unichain ~1 s/block — block counts mislead).
 > **Full-loop latency = max(T2a, T2b) − T0** (the slowest destination — the
@@ -279,7 +279,7 @@ is worth more to judges than a missing number.
 
 ---
 
-## 🙏 Prior art we acknowledge
+## Prior art we acknowledge
 
 We did not invent the circuit breaker, and we did not invent auto-pause. What
 is new here is narrow and honest: **the first Reactive-native cross-chain
@@ -305,7 +305,7 @@ breaker / auto-pause across chains among the 23 builds in this event.
 
 ---
 
-## ❓ Why not Chainlink CRE?
+## Why not Chainlink CRE?
 
 Asked up front, not hidden: CRE is the right tool when the trigger needs
 **off-chain data** (social signals like Aegis AI, or prices from outside the
@@ -319,7 +319,7 @@ whole loop can be replayed from the 4 transaction hashes + contract state.
 
 ---
 
-## ⚠️ Honest limitations
+## Honest limitations
 
 - **Retry needs an operator re-emit.** There is no automatic retry loop: if
   one destination is not confirmed, the origin owner must call
@@ -361,7 +361,7 @@ whole loop can be replayed from the 4 transaction hashes + contract state.
 
 ---
 
-## 🛠️ Tech stack
+## Tech stack
 
 | Layer | Choice |
 |---|---|
@@ -373,14 +373,14 @@ whole loop can be replayed from the 4 transaction hashes + contract state.
 
 ---
 
-## 🚀 Run the tests locally
+## Run the tests locally
 
 ```bash
 git clone https://github.com/0xward/contagion-stop
 cd contagion-stop
 forge install
 forge build
-forge test                 # 17 tests must pass (see design.md §11.3 for the list)
+forge test                 # 63 tests must pass (see design.md §11.3 for the list)
 forge test --gas-report    # measure actual gas of pause() vs the 200,000 limit
 ```
 
@@ -395,7 +395,7 @@ do not run it without an explicit go-ahead. Funding: ±0.18 ETH Base Sepolia +
 
 ---
 
-## 📁 Repo layout
+## Repo layout
 
 ```
 reactive-contagion-stop/
@@ -426,20 +426,7 @@ reactive-contagion-stop/
 
 ---
 
-## 🗺️ Roadmap
-
-- [x] Design + pre-build research (50 blockers checked, verdict: BOLEH LANJUT)
-- [ ] Contracts + 17 Foundry tests green (in progress, parallel worker)
-- [ ] Testnet deploy (19–20 Nov) — see `DEPLOY-PLAN.md`
-- [ ] Full loop test + latency measurement (21–22 Nov)
-- [ ] Dashboard frontend (21–23 Nov, parallel)
-- [ ] Demo video < 3 min (23–24 Nov)
-- [ ] Submit (28 Nov–2 Dec; safe target 5 Dec noon WIB)
-- [ ] Post-demo: `confirmedPaused` per incident; expand fan-out beyond 2 chains (test max callbacks per `react()` first)
-
----
-
-## 📄 License
+## License
 
 MIT — see `LICENSE`.
 
