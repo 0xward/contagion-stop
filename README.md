@@ -10,9 +10,6 @@
 [![Foundry](https://img.shields.io/badge/Foundry-tested-black)](https://book.getfoundry.sh)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-🎬 Demo video (< 3 min): [YouTube unlisted — PLACEHOLDER, add after recording] · 📄 Demo script: `DEMO.md` · ✅ Loop verification: `VERIFICATION.md`
-🌐 Live demo: [PLACEHOLDER — dashboard URL, add after frontend deploy] · DoraHacks submission: [PLACEHOLDER — add after submit]
-
 > **Status: testnet only. Not audited. Do not use with real funds.**
 > All contract addresses, transaction hashes, and latency numbers below are
 > **measured on testnet, 14 Nov 2026** (deploy + 5 loop scenarios, all passing).
@@ -379,8 +376,8 @@ whole loop can be replayed from the 4 transaction hashes + contract state.
 ## 🚀 Run the tests locally
 
 ```bash
-git clone https://github.com/<GITHUB-USER>/<REPO-NAME>   # PLACEHOLDER — repo remote belum dibuat; isi nama + URL nyata setelah remote dibuat
-cd <REPO-NAME>                                   # PLACEHOLDER — ganti dengan nama folder repo nyata
+git clone https://github.com/0xward/contagion-stop
+cd contagion-stop
 forge install
 forge build
 forge test                 # 17 tests must pass (see design.md §11.3 for the list)
@@ -444,7 +441,7 @@ reactive-contagion-stop/
 
 ## 📄 License
 
-MIT — see `LICENSE` (PLACEHOLDER — add file at repo creation).
+MIT — see `LICENSE`.
 
 ---
 
