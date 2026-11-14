@@ -143,21 +143,21 @@ export const GAS_LIMITS = {
   callback: 200000
 } as const;
 
-/** Palette "ContagionStop Light — Nous Blue" (restyle 15 Nov 2026). Biru + putih
- * terang: biru Nous #0000f2 (aksen) + #0847c4 (hover/gelap) di atas
- * near-white; teks tetap near-black; status dibedakan teks + border,
- * bukan warna saja. */
+/** Palette "ContagionStop Terminal" (restyle 15 Nov 2026). Dark terminal:
+ * near-black #010207 background, violet #8b5cf6 accent, green #22c55e
+ * success, red #ef4444 danger, yellow #eab308 warning; status is told
+ * apart by text + border as well as color. */
 export const PALETTE = {
-  background: '#FAFAF9',
-  surface: '#FFFFFF',
-  surfaceElevated: '#F5F5F4',
-  border: '#E5E5E5',
-  textPrimary: '#0A0A0A',
-  textSecondary: '#525252',
-  accent: '#0000f2',
-  accentText: '#0000f2',
-  success: '#0000f2',
-  danger: '#0A0A0A',
-  warning: '#525252',
-  info: '#737373'
+  background: '#010207',
+  surface: '#0A0A0A',
+  surfaceElevated: '#141414',
+  border: '#1E1E1E',
+  textPrimary: '#F0F0F0',
+  textSecondary: '#A0A0A0',
+  accent: '#8b5cf6',
+  accentText: '#8b5cf6',
+  success: '#22c55e',
+  danger: '#ef4444',
+  warning: '#eab308',
+  info: '#8b5cf6'
 } as const;

@@ -1,0 +1,220 @@
+/* ============================================================
+   ContagionStop Terminal — animation layer (research §2, §5)
+   CSS-only ambient effects + one-shot state animations.
+   Rules enforced here:
+   - Only `transform` / `opacity` are animated (compositor-only).
+   - No animation blinks faster than 3x/second (WCAG 2.3.1).
+   - Scanlines / vignette / flicker live ONLY above 900px
+     (research §5.2: atmosphere layers die on phones).
+   - Baseline = final meaningful state; animations are opt-in on top.
+     `prefers-reduced-motion` and `html[data-motion='off']` (manual
+     Motion toggle) kill every animation and hide the CRT overlays.
+   ============================================================ */
+
+@keyframes term-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes term-flicker {
+  0%,
+  100% {
+    opacity: 0.04;
+  }
+  50% {
+    opacity: 0.028;
+  }
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes term-glitch {
+  0% {
+    opacity: 1;
+    transform: translate(0);
+  }
+  20% {
+    opacity: 0.7;
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(2px, -1px);
+  }
+  60% {
+    opacity: 0.85;
+    transform: translate(-1px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+@keyframes containment-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ---- Blinking block cursor (research rank 4) ---- */
+.term-cursor {
+  display: inline-block;
+  color: var(--primary);
+  animation: term-blink 1s step-end infinite;
+}
+
+/* ---- LIVE pulse dot (research rank 5) ---- */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* ---- Marquee strip (research rank 8) ---- */
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 45s linear infinite;
+}
+
+.tx-marquee:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+.tx-marquee[data-paused='true'] .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* ---- Glitch, one place only: the hero status word (rank 10) ---- */
+.term-glitch {
+  display: inline-block;
+  animation: term-glitch 0.9s steps(2, end) 1 both;
+}
+
+/* ---- Containment progress bar (rank 7): scaleX only, never width ---- */
+.containment-fill {
+  transform-origin: left center;
+  transition: transform 0.6s ease;
+  will-change: transform;
+}
+
+.containment-shimmer {
+  overflow: hidden;
+  position: relative;
+}
+
+.containment-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  animation: containment-shimmer 2s linear infinite;
+}
+
+/* ---- CRT layers: scanlines + vignette + flicker (rank 6) ----
+   Desktop only (>= 900px), pointer-events none, subtle (<= 4%). */
+@media (min-width: 900px) {
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(255, 255, 255, 0.5) 2px,
+      rgba(255, 255, 255, 0.5) 4px
+    );
+    opacity: 0.04;
+    animation: term-flicker 3s ease-in-out infinite;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 60%,
+      rgba(0, 0, 0, 0.35) 100%
+    );
+  }
+}
+
+/* ---- Kill switches (research §5.1) ---- */
+@media (prefers-reduced-motion: reduce) {
+  .term-cursor,
+  .live-dot,
+  .animate-marquee,
+  .term-glitch,
+  .containment-shimmer::after {
+    animation: none !important;
+  }
+  .containment-fill {
+    transition: none;
+  }
+  body::before,
+  body::after {
+    display: none !important;
+  }
+}
+
+html[data-motion='off'] .term-cursor,
+html[data-motion='off'] .live-dot,
+html[data-motion='off'] .animate-marquee,
+html[data-motion='off'] .term-glitch,
+html[data-motion='off'] .containment-shimmer::after {
+  animation: none !important;
+}
+
+html[data-motion='off'] .containment-fill {
+  transition: none;
+}
+
+html[data-motion='off'] body::before,
+html[data-motion='off'] body::after {
+  display: none !important;
+}

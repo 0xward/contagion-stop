@@ -4,6 +4,8 @@ import { CountdownCircleTimer } from 'react-countdown-circle-timer';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
+import { NumberTicker } from '@/components/magicui/number-ticker';
+import { useMotionAllowed } from '@/components/terminal/use-motion-allowed';
 import { LATENCY_BENCHMARKS } from '@/lib/config';
 import type { Incident, LatencyMetrics } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -32,13 +34,22 @@ function LatencyMetric({
   label,
   value,
   sub,
-  large = false
+  large = false,
+  numericValue,
+  decimalPlaces = 1,
+  suffix = ''
 }: {
   label: string;
   value: string;
   sub?: string;
   large?: boolean;
+  /** When set, the value counts via NumberTicker (only on meaningful change). */
+  numericValue?: number;
+  decimalPlaces?: number;
+  suffix?: string;
 }) {
+  const motionAllowed = useMotionAllowed();
+
   return (
     <div className='flex flex-col gap-0.5'>
       <span className='text-muted-foreground text-[11px] font-medium tracking-wide uppercase'>
@@ -50,7 +61,22 @@ function LatencyMetric({
           large ? 'text-3xl font-semibold' : 'text-lg font-medium'
         )}
       >
-        {value}
+        {numericValue !== undefined ? (
+          motionAllowed ? (
+            <>
+              <NumberTicker
+                value={numericValue}
+                decimalPlaces={decimalPlaces}
+                className='text-primary'
+              />
+              {suffix}
+            </>
+          ) : (
+            `${numericValue.toFixed(decimalPlaces)}${suffix}`
+          )
+        ) : (
+          value
+        )}
       </span>
       {sub ? <span className='text-muted-foreground text-xs'>{sub}</span> : null}
     </div>
@@ -71,7 +97,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
   const total = incident?.confirmedTotal ?? 2;
   const ringTotal = Math.max(total, 1);
   const ringColor =
-    confirmed === 0 ? '#0000f2' : confirmed < total ? '#737373' : '#0000f2';
+    confirmed === 0 ? '#525252' : confirmed < total ? '#8b5cf6' : '#22c55e';
 
   const isMock = incident?.isMock ?? latency?.isMock ?? false;
   const isContained = incident?.status === 'CONTAINED';
@@ -99,14 +125,26 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
           )}
           <div className='min-w-0 flex-1'>
             <p className='text-sm font-semibold'>
-              {isTripped &&
-                `⚠ TRIPPED — Incident ACTIVE, containment in progress ${confirmed}/${total}`}
-              {isContained &&
-                `✓ CONTAINED — all siblings confirmed paused${
-                  incident?.containedInSeconds != null
-                    ? ` in ${formatSeconds(incident.containedInSeconds)} (T2 − T0)`
-                    : ''
-                }. Unpause manually per deployment after audit.`}
+              {isTripped && (
+                <>
+                  <span key='tripped' className='term-glitch'>
+                    TRIPPED
+                  </span>
+                  {` — Incident ACTIVE, containment in progress ${confirmed}/${total}`}
+                </>
+              )}
+              {isContained && (
+                <>
+                  <span key='contained' className='term-glitch'>
+                    CONTAINED
+                  </span>
+                  {` — all siblings confirmed paused${
+                    incident?.containedInSeconds != null
+                      ? ` in ${formatSeconds(incident.containedInSeconds)} (T2 − T0)`
+                      : ''
+                  }. Unpause manually per deployment after audit.`}
+                </>
+              )}
               {!incident && 'All deployments ACTIVE — no incident in progress.'}
             </p>
             {incident ? (
@@ -126,6 +164,34 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
           ) : null}
         </div>
 
+        {/* ---- Containment progress (transform scaleX, never width) ---- */}
+        {incident ? (
+          <div>
+            <div className='flex items-center justify-between font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase'>
+              <span>Containment</span>
+              <span className='tabular-nums'>
+                {confirmed}/{total} — {Math.round((confirmed / ringTotal) * 100)}%
+              </span>
+            </div>
+            <div
+              className='mt-1.5 h-2 w-full overflow-hidden bg-muted'
+              role='progressbar'
+              aria-valuenow={Math.round((confirmed / ringTotal) * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label='Containment progress'
+            >
+              <div
+                className={cn(
+                  'containment-fill containment-shimmer h-full',
+                  confirmed >= total ? 'bg-success' : 'bg-primary'
+                )}
+                style={{ transform: `scaleX(${confirmed / ringTotal})` }}
+              />
+            </div>
+          </div>
+        ) : null}
+
         <div className='flex flex-col gap-6 lg:flex-row lg:items-start'>
           {/* ---- Confirmation ring ---- */}
           <div className='flex shrink-0 items-center gap-4'>
@@ -137,7 +203,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
               strokeWidth={10}
               trailStrokeWidth={10}
               colors={ringColor}
-              trailColor='#E5E5E5'
+              trailColor='#1e1e1e'
             >
               {() => (
                 <div className='flex flex-col items-center'>
@@ -157,8 +223,9 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
               {incident ? (
                 <>
                   {incident.confirmedSiblings.map((id) => (
-                    <span key={id} className='text-foreground'>
-                      {id} ✓
+                    <span key={id} className='inline-flex items-center gap-1 text-foreground'>
+                      {id}
+                      <Icons.check className='size-3.5' />
                     </span>
                   ))}
                   {incident.pendingSiblings.map((id) => (
@@ -186,16 +253,25 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
               value={latency ? formatSeconds(latency.fullLoopSeconds) : '—'}
               sub={latency ? 'max(T2a, T2b) − T0' : 'Not measured yet'}
               large
+              numericValue={latency?.fullLoopSeconds}
+              decimalPlaces={1}
+              suffix=' s'
             />
             <LatencyMetric
               label='Event → react (T1 − T0)'
               value={latency ? formatSeconds(latency.eventToReactSeconds) : '—'}
               sub={latency ? 'Unichain → Lasna' : 'Not measured yet'}
+              numericValue={latency?.eventToReactSeconds}
+              decimalPlaces={1}
+              suffix=' s'
             />
             <LatencyMetric
               label='React → callback · Base'
               value={latency ? formatSeconds(latency.reactToCallbackBaseSeconds) : '—'}
               sub={latency ? `Leg B: ${formatSeconds(latency.legBaseSeconds)}` : 'Not measured yet'}
+              numericValue={latency?.reactToCallbackBaseSeconds}
+              decimalPlaces={1}
+              suffix=' s'
             />
             <LatencyMetric
               label='React → callback · Unichain'
@@ -205,6 +281,9 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
                   ? `Leg C: ${formatSeconds(latency.legUnichainSeconds)}`
                   : 'Not measured yet'
               }
+              numericValue={latency?.reactToCallbackUnichainSeconds}
+              decimalPlaces={1}
+              suffix=' s'
             />
             <LatencyMetric
               label='Gas react()'

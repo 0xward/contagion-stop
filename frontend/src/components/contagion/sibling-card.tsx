@@ -124,7 +124,17 @@ export function SiblingCard({
                 : 'border-foreground/30 bg-muted text-foreground'
             )}
           >
-            {isPaused ? '⏸ PAUSED' : '● ACTIVE'}
+            {isPaused ? (
+              <>
+                <Icons.pause className='mr-1 size-3' />
+                PAUSED
+              </>
+            ) : (
+              <>
+                <span className='mr-1.5 inline-block size-2 rounded-full bg-success' aria-hidden />
+                ACTIVE
+              </>
+            )}
           </Badge>
         </div>
         <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
@@ -146,7 +156,7 @@ export function SiblingCard({
             href={`${sibling.explorerUrl}/address/${sibling.address}`}
             target='_blank'
             rel='noreferrer'
-            className='inline-flex items-center gap-0.5 text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline'
+            className='inline-flex items-center gap-0.5 text-xs text-primary underline underline-offset-2 hover:underline'
             title={`View on ${sibling.explorerUrl}`}
           >
             Explorer

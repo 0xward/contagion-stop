@@ -87,7 +87,7 @@ function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps)
           href={`${EXPLORERS[chainId as keyof typeof EXPLORERS] ?? ''}/tx/${txHash}`}
           target='_blank'
           rel='noreferrer'
-          className='inline-flex items-center gap-1 font-mono text-xs text-primary hover:text-[#0847c4] hover:underline tabular-nums'
+          className='inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline tabular-nums'
         >
           coverDebt() confirmed — {txHash.slice(0, 6)}…{txHash.slice(-4)}
           <Icons.externalLink className='size-3' />
@@ -179,7 +179,17 @@ export function FundingHealth({ health }: FundingHealthProps) {
                     : 'border-border bg-muted text-muted-foreground'
                 )}
               >
-                {health.watcher.status === 'active' ? '● ACTIVE' : '○ INACTIVE'}
+                {health.watcher.status === 'active' ? (
+                  <span className='inline-flex items-center gap-1.5'>
+                    <span
+                      className='inline-block size-2 rounded-full bg-success'
+                      aria-hidden
+                    />
+                    ACTIVE
+                  </span>
+                ) : (
+                  'INACTIVE'
+                )}
               </Badge>
             </div>
             <dl className='flex gap-6 font-mono text-sm tabular-nums'>
@@ -198,7 +208,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
               href={EXPLORERS[5318007]}
               target='_blank'
               rel='noreferrer'
-              className='inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline'
+              className='inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2 hover:underline'
             >
               View on Reactscan
               <Icons.externalLink className='size-3' />
@@ -251,14 +261,14 @@ export function FundingHealth({ health }: FundingHealthProps) {
           <div className='h-48 w-full'>
             <ResponsiveContainer width='100%' height='100%'>
               <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
-                <CartesianGrid strokeDasharray='3 3' stroke='#E5E5E5' vertical={false} />
-                <XAxis dataKey='name' tick={{ fill: '#525252', fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: '#525252', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray='3 3' stroke='#1e1e1e' vertical={false} />
+                <XAxis dataKey='name' tick={{ fill: '#a0a0a0', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#a0a0a0', fontSize: 12 }} tickLine={false} axisLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #E5E5E5',
-                    borderRadius: 8,
+                    backgroundColor: '#0a0a0a',
+                    border: '1px solid #1e1e1e',
+                    borderRadius: 0,
                     fontSize: 12
                   }}
                   formatter={(value, name, props) => [
@@ -266,8 +276,8 @@ export function FundingHealth({ health }: FundingHealthProps) {
                     name
                   ]}
                 />
-                <Bar dataKey='reserves' name='Reserves' fill='#0000f2' radius={[4, 4, 0, 0]} />
-                <Bar dataKey='debt' name='Debt' fill='#A3A3A3' radius={[4, 4, 0, 0]} />
+                <Bar dataKey='reserves' name='Reserves' fill='#8b5cf6' radius={[0, 0, 0, 0]} />
+                <Bar dataKey='debt' name='Debt' fill='#737373' radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

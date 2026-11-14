@@ -142,8 +142,9 @@ const columns: ColumnDef<IncidentFeatures, Incident, unknown>[] = [
           </span>
           <span className='text-xs text-muted-foreground'>
             {incident.confirmedSiblings.map((id) => (
-              <span key={id} className='mr-2 text-foreground'>
-                {id} ✓
+              <span key={id} className='mr-2 inline-flex items-center gap-1 text-foreground'>
+                {id}
+                <Icons.check className='size-3' />
               </span>
             ))}
             {incident.pendingSiblings.map((id) => (
@@ -174,7 +175,7 @@ const columns: ColumnDef<IncidentFeatures, Incident, unknown>[] = [
           )}
         >
           {status === 'CONTAINED' ? <Icons.check className='size-3' /> : <Icons.warning className='size-3' />}
-          {status === 'CONTAINED' ? '✓ CONTAINED' : '⚠ ACTIVE'}
+          {status === 'CONTAINED' ? 'CONTAINED' : 'ACTIVE'}
         </Badge>
       );
     }
@@ -190,7 +191,7 @@ const columns: ColumnDef<IncidentFeatures, Incident, unknown>[] = [
           href={explorerTxUrl(incident.originChainId, incident.emergencyPauseTxHash)}
           target='_blank'
           rel='noreferrer'
-          className='inline-flex items-center gap-1 font-mono text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline tabular-nums'
+          className='inline-flex items-center gap-1 font-mono text-xs text-primary underline underline-offset-2 hover:underline tabular-nums'
         >
           {truncateHex(incident.emergencyPauseTxHash)}
           <Icons.externalLink className='size-3' />

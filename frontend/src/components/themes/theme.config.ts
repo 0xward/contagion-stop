@@ -2,11 +2,11 @@
  * Default theme that loads when no user preference is set
  * Change this value to set a different default theme
  */
-export const DEFAULT_THEME = 'contagionstop';
+export const DEFAULT_THEME = 'contagionstop-terminal';
 
 export const THEMES = [
   {
-    name: 'ContagionStop Dark',
-    value: 'contagionstop'
+    name: 'ContagionStop Terminal',
+    value: 'contagionstop-terminal'
   }
 ];

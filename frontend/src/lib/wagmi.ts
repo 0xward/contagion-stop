@@ -31,13 +31,13 @@ export const chains: [AppKitNetwork, ...AppKitNetwork[]] = [
   lasna
 ];
 
-/** Dot color per chain — Nous Blue (restyle 15 Nov 2026): all chains
- * share the same blue dot #0000f2; chains are told apart by text, not
- * color. Helper kept so existing usages do not break. */
+/** Dot color per chain — Terminal violet: all chains share the same
+ * violet dot #8b5cf6; chains are told apart by text, not color.
+ * Helper kept so existing usages do not break. */
 export const CHAIN_DOT_COLOR: Record<number, string> = {
-  [unichainSepolia.id]: '#0000f2',
-  [baseSepolia.id]: '#0000f2',
-  [lasna.id]: '#0000f2'
+  [unichainSepolia.id]: '#8b5cf6',
+  [baseSepolia.id]: '#8b5cf6',
+  [lasna.id]: '#8b5cf6'
 };
 
 export function getChainName(chainId: number): string {
@@ -46,7 +46,7 @@ export function getChainName(chainId: number): string {
 }
 
 export function getChainDotColor(chainId: number): string {
-  return CHAIN_DOT_COLOR[chainId] ?? '#0000f2';
+  return CHAIN_DOT_COLOR[chainId] ?? '#8b5cf6';
 }
 
 /**
@@ -94,8 +94,8 @@ export const wagmiConfig = wagmiAdapter.wagmiConfig;
 /**
  * Reown AppKit instance. Called once at module scope, outside any React
  * component, per Reown docs. The modal is opened from the header via the
- * `useAppKit().open()` hook. Light theme + blue accent match the site's
- * Nous Blue palette. AppKit stays fully compatible with wagmi hooks
+ * `useAppKit().open()` hook. Dark theme + violet accent match the site's
+ * Terminal palette. AppKit stays fully compatible with wagmi hooks
  * (useAccount, useReadContract, useWriteContract).
  */
 createAppKit({
@@ -103,8 +103,8 @@ createAppKit({
   networks: chains,
   metadata,
   projectId,
-  themeMode: 'light',
+  themeMode: 'dark',
   themeVariables: {
-    '--w3m-accent': '#0000f2'
+    '--w3m-accent': '#8b5cf6'
   }
 });

@@ -5,8 +5,8 @@ import { getChainName } from '@/lib/wagmi';
 import { useChainId } from 'wagmi';
 
 /**
- * Badge chain aktif (dot biru + nama chain).
- * Nous Blue: dot selalu biru #0000f2, bukan warna per chain.
+ * Badge chain aktif (dot violet + nama chain).
+ * Terminal violet: dot selalu ungu #8b5cf6, bukan warna per chain.
  * Nama chain disembunyikan di layar sangat kecil (<sm) agar header tidak
  * overflow — dot saja cukup sebagai penanda.
  * Dipakai di header dashboard, di samping tombol Connect Wallet.

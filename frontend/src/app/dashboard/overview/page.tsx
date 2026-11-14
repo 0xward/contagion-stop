@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Address } from 'viem';
 import { useAccount, useReadContract } from 'wagmi';
 import PageContainer from '@/components/layout/page-container';
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
+import { BootSequence } from '@/components/terminal/boot-sequence';
+import { LiveLog } from '@/components/terminal/live-log';
 import { HeroStatus } from '@/components/contagion/hero-status';
 import { SiblingGrid } from '@/components/contagion/sibling-grid';
 import { EmergencyPauseDialog } from '@/components/contagion/action-dialogs';
@@ -19,7 +21,8 @@ import { SIBLING_VAULT_ABI } from '@/lib/contracts';
 import {
   ACTIVE_INCIDENT_SCENARIO,
   CALM_STATE,
-  REASON_EXPLOIT
+  REASON_EXPLOIT,
+  RECORDED_WATCHER_ADDRESS
 } from '@/lib/mock-data';
 import type { DashboardMockState, SiblingId } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -95,6 +98,23 @@ export default function OverviewPage() {
 
   const originA = state.siblings.find((s) => s.id === 'A') ?? state.siblings[0];
 
+  /** Boot lines from RECORDED data (watcher address + run #1 facts). */
+  const bootLines = useMemo(() => {
+    const watcher = `${RECORDED_WATCHER_ADDRESS.slice(0, 6)}…${RECORDED_WATCHER_ADDRESS.slice(-4)}`;
+    const status = state.activeIncident
+      ? state.activeIncident.status === 'CONTAINED'
+        ? '> STATUS: CONTAINED — ALL SIBLINGS PAUSED'
+        : '> STATUS: TRIPPED — CONTAINMENT IN PROGRESS'
+      : '> STATUS: ALL ACTIVE — NO INCIDENT IN PROGRESS';
+    return [
+      '> INITIALIZING CONTAINMENT GRID... OK',
+      `> WATCHER ${watcher} CONNECTED — LASNA 5318007`,
+      '> 3 VAULTS LINKED — UNICHAIN 1301 / BASE 84532',
+      '> RECORDED RUN #1 — 14 NOV 2026 — FULL LOOP 3.0 S',
+      status
+    ];
+  }, [state.activeIncident]);
+
   function selectScenario(next: 'calm' | 'incident') {
     setScenario(next);
     setState(next === 'calm' ? CALM_STATE : ACTIVE_INCIDENT_SCENARIO);
@@ -135,6 +155,9 @@ export default function OverviewPage() {
       }
     >
       <div className='flex flex-1 flex-col gap-4'>
+        {/* ---- Boot sequence (terminal, once per tab session) ---- */}
+        <BootSequence lines={bootLines} />
+
         {/* ---- Demo control (recorded run) ---- */}
         <Card>
           <CardHeader className='pb-3'>
@@ -177,13 +200,15 @@ export default function OverviewPage() {
         <HeroStatus incident={state.activeIncident} latency={state.latency} />
 
         {/* ---- Sibling grid: A (Origin), B, C ---- */}
-        <SiblingGrid
-          siblings={state.siblings}
-          live={LIVE}
-          connectedAddress={connectedAddress}
-          onMockEmergencyPause={handleMockEmergencyPause}
-          onMockUnpause={handleMockUnpause}
-        />
+        <section id='vaults' aria-label='Vaults' className='scroll-mt-20'>
+          <SiblingGrid
+            siblings={state.siblings}
+            live={LIVE}
+            connectedAddress={connectedAddress}
+            onMockEmergencyPause={handleMockEmergencyPause}
+            onMockUnpause={handleMockUnpause}
+          />
+        </section>
 
         {/* ---- Loop timeline: event → react → callbacks ---- */}
         <LoopTimeline
@@ -192,8 +217,17 @@ export default function OverviewPage() {
           freezeProof={state.freezeProof}
         />
 
+        {/* ---- Live log: wallet state (LIVE) + recorded run (RECORDED) ---- */}
+        <LiveLog
+          steps={state.timeline}
+          incidents={state.incidentHistory}
+          freezeProof={state.freezeProof}
+        />
+
         {/* ---- Incident history ---- */}
-        <IncidentTable incidents={state.incidentHistory} />
+        <section id='history' aria-label='Incident history' className='scroll-mt-20'>
+          <IncidentTable incidents={state.incidentHistory} />
+        </section>
 
         {/* ---- Funding health ---- */}
         <FundingHealth health={state.funding} />

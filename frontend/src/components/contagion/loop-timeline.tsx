@@ -112,11 +112,12 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
                         variant='outline'
                         className='border-foreground/30 bg-muted text-foreground'
                       >
-                        ✓ DONE
+                        <Icons.check className='mr-1 size-3' />
+                        DONE
                       </Badge>
                     ) : (
                       <Badge variant='outline' className='text-muted-foreground'>
-                        ○ PENDING
+                        PENDING
                       </Badge>
                     )}
                   </div>
@@ -157,7 +158,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
                             href={`${step.explorerUrl}/tx/${step.txHash}`}
                             target='_blank'
                             rel='noreferrer'
-                            className='inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline'
+                            className='inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:underline'
                           >
                             {truncateHash(step.txHash)}
                             <Icons.externalLink className='size-3' />
@@ -207,7 +208,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
               href={`${freezeProof.explorerUrl}/tx/${freezeProof.txHash}`}
               target='_blank'
               rel='noreferrer'
-              className='inline-flex items-center gap-1 font-mono text-xs text-primary underline underline-offset-2 hover:text-[#0847c4] hover:underline tabular-nums'
+              className='inline-flex items-center gap-1 font-mono text-xs text-primary underline underline-offset-2 hover:underline tabular-nums'
             >
               {truncateHash(freezeProof.txHash)}
               <Icons.externalLink className='size-3' />
