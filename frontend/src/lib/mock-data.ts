@@ -163,9 +163,9 @@ export const RECORDED_ACTIVE_INCIDENT: Incident = {
 export const RECORDED_TIMELINE: TimelineStep[] = [
   {
     step: 1,
-    label: "EmergencyPaused — pemicu",
+    label: "EmergencyPaused — trigger",
     description:
-      "Owner vault A memanggil emergencyPause(EXPLOIT-001); A mem-pause dirinya sendiri.",
+      "Vault A owner calls emergencyPause(EXPLOIT-001); A pauses itself.",
     chainId: 1301,
     chainName: "Unichain Sepolia",
     explorerUrl: "https://sepolia.uniscan.xyz",
@@ -182,7 +182,7 @@ export const RECORDED_TIMELINE: TimelineStep[] = [
     step: 2,
     label: "react() — watcher Lasna",
     description:
-      "Watcher mencatat incident dan meminta 2 callback pause() (fan-out).",
+      "Watcher records the incident and requests 2 pause() callbacks (fan-out).",
     chainId: 5318007,
     chainName: "Lasna",
     explorerUrl: "https://lasna.reactscan.net",
@@ -372,7 +372,7 @@ export const ACTIVE_INCIDENT_SCENARIO: DashboardMockState = {
   incidentHistory: RECORDED_INCIDENT_HISTORY,
   freezeProof: {
     description:
-      "deposit() di vault B setelah pause — revert, deployment membeku (blok Base Sepolia 58733692, status gagal).",
+      "deposit() on vault B after the pause — reverts; funds frozen (Base Sepolia block 58733692, failed status).",
     siblingId: "B",
     txHash:
       "0x47c8e697935b07f03114277ae0f526d1f52e6e10240a631bc048e889ae03db76",

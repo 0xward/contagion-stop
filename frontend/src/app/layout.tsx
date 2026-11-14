@@ -20,11 +20,11 @@ export const metadata: Metadata = {
     template: '%s | ContagionStop'
   },
   description:
-    'ContagionStop: pemutus sirkuit lintas-chain. Satu emergencyPause di vault origin menjeda semua sibling vault lewat Reactive (Lasna).',
+    'ContagionStop: cross-chain circuit breaker. One emergencyPause on the origin vault pauses every sibling vault via Reactive (Lasna).',
   openGraph: {
     title: 'ContagionStop — Cross-Chain Circuit Breaker',
     description:
-      'ContagionStop: pemutus sirkuit lintas-chain. Satu emergencyPause di vault origin menjeda semua sibling vault lewat Reactive (Lasna).',
+      'ContagionStop: cross-chain circuit breaker. One emergencyPause on the origin vault pauses every sibling vault via Reactive (Lasna).',
     siteName: 'ContagionStop',
     type: 'website'
   },
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'ContagionStop — Cross-Chain Circuit Breaker',
     description:
-      'ContagionStop: pemutus sirkuit lintas-chain. Satu emergencyPause di vault origin menjeda semua sibling vault lewat Reactive (Lasna).'
+      'ContagionStop: cross-chain circuit breaker. One emergencyPause on the origin vault pauses every sibling vault via Reactive (Lasna).'
   }
 };
 

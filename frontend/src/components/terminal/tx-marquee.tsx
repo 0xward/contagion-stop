@@ -29,6 +29,9 @@ function truncateHash(hash: string): string {
  * carries its own horizontal margin and the marquee gap is 0, so a
  * -50% shift lands exactly on the duplicate copy. Pause button (WCAG
  * 2.2.2) + pause on hover; static under reduced-motion / Motion off.
+ * The track fades out in the last 4rem before the Pause button
+ * (`.marquee-track` mask in terminal.css) and the button is opaque,
+ * so no glyph ever slides under it.
  */
 export function TxMarquee() {
   const [paused, setPaused] = useState(false);
@@ -68,12 +71,12 @@ export function TxMarquee() {
 
   return (
     <div
-      className='tx-marquee flex items-stretch border-b bg-card'
+      className='tx-marquee flex items-stretch overflow-hidden border-b bg-card'
       data-paused={paused ? 'true' : 'false'}
       aria-label='Latest recorded transactions'
     >
       <Marquee
-        className='min-w-0 flex-1'
+        className='marquee-track min-w-0 flex-1'
         style={{ '--gap': '0rem' } as React.CSSProperties}
         pauseOnHover
         repeat={2}
@@ -87,7 +90,7 @@ export function TxMarquee() {
         onClick={() => setPaused((prev) => !prev)}
         aria-pressed={paused}
         aria-label={paused ? 'Resume transaction ticker' : 'Pause transaction ticker'}
-        className='shrink-0 self-center rounded-none border-l font-mono text-[11px] tracking-[0.14em] uppercase'
+        className='relative z-10 shrink-0 self-center rounded-none border-l bg-card font-mono text-[11px] tracking-[0.14em] uppercase'
       >
         {paused ? <Icons.play className='size-3.5' /> : <Icons.pause className='size-3.5' />}
         {paused ? 'Resume' : 'Pause'}

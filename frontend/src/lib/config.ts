@@ -30,25 +30,25 @@ export interface ContractEntry {
 
 export const CONTRACTS: Record<'watcher' | 'vaultA' | 'vaultB' | 'vaultC', ContractEntry> = {
   watcher: {
-    role: 'ContagionWatcher — origin Lasna, memantau EmergencyPaused lalu fan-out callback pause',
+    role: 'ContagionWatcher — Lasna origin, watches for EmergencyPaused then fans out pause callbacks',
     chainId: 5318007,
     chainName: 'Lasna',
     address: '0xb18a213bfa8c1888af39af100d7dd54aa376f7b5'
   },
   vaultA: {
-    role: 'Vault A — Origin (Unichain Sepolia). emergencyPause di sini memicu loop.',
+    role: 'Vault A — Origin (Unichain Sepolia). emergencyPause here triggers the loop.',
     chainId: 1301,
     chainName: 'Unichain Sepolia',
     address: '0xb18A213bfa8c1888af39AF100d7dd54Aa376F7b5'
   },
   vaultB: {
-    role: 'Vault B — Sibling (Base Sepolia). Di-pause lewat callback watcher.',
+    role: 'Vault B — Sibling (Base Sepolia). Paused via watcher callback.',
     chainId: 84532,
     chainName: 'Base Sepolia',
     address: '0xa7e3ceb5686f8d3b03e688efdc6a5a64ed80ca4a'
   },
   vaultC: {
-    role: 'Vault C — Sibling (Unichain Sepolia). Di-pause lewat callback watcher.',
+    role: 'Vault C — Sibling (Unichain Sepolia). Paused via watcher callback.',
     chainId: 1301,
     chainName: 'Unichain Sepolia',
     address: '0xb07a380104ac093485566cfc964540b04518b354'

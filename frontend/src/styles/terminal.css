@@ -119,6 +119,20 @@
   animation-play-state: paused;
 }
 
+/* ---- Marquee strip: text fades out before the Pause button ---- */
+.tx-marquee .marquee-track {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black calc(100% - 4rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    black calc(100% - 4rem),
+    transparent 100%
+  );
+}
+
 /* ---- Glitch, one place only: the hero status word (rank 10) ---- */
 .term-glitch {
   display: inline-block;

@@ -11,7 +11,7 @@ const MIN_WIDTH_PX = 900;
 
 /**
  * Matrix rain canvas (research rank 9) — characters from the project
- * string falling slowly behind the content, element opacity 4%.
+ * string falling slowly behind the content, element opacity 7%.
  * Hard gates: never renders when Motion is off / reduced-motion
  * (`useMotionAllowed`), stops entirely below 900px and while the tab is
  * hidden, and clears itself on unmount. One rAF loop, throttled to 50 ms.
@@ -118,7 +118,7 @@ export function MatrixRain() {
     <canvas
       ref={canvasRef}
       aria-hidden='true'
-      className='pointer-events-none fixed inset-0 z-0 opacity-[0.04]'
+      className='pointer-events-none fixed inset-0 z-0 opacity-[0.07]'
     />
   );
 }
