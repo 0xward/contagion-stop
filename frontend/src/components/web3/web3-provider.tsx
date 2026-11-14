@@ -1,30 +1,15 @@
 'use client';
 
 import { wagmiConfig } from '@/lib/wagmi';
-import { lightTheme, RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
 import { WagmiProvider } from 'wagmi';
 import type * as React from 'react';
 
 /**
- * Provider Web3 ContagionStop: wagmi (3 chain) + RainbowKit.
- * QueryClientProvider sudah dipasang di atas komponen ini oleh
- * `src/components/layout/query-provider.tsx` (wagmi membutuhkannya).
- * Tema RainbowKit diselaraskan ke palette Nous Blue (terang, aksen #0000f2).
+ * Web3 provider for ContagionStop: wagmi (3 chains) + Reown AppKit.
+ * The AppKit instance is created in `src/lib/wagmi.ts` (outside any
+ * component). QueryClientProvider is mounted above this component by
+ * `src/components/layout/query-provider.tsx` (required by wagmi).
  */
 export default function Web3Provider({ children }: { children: React.ReactNode }) {
-  return (
-    <WagmiProvider config={wagmiConfig}>
-      <RainbowKitProvider
-        theme={lightTheme({
-          accentColor: '#0000f2',
-          accentColorForeground: '#FFFFFF',
-          borderRadius: 'none',
-          fontStack: 'system'
-        })}
-      >
-        {children}
-      </RainbowKitProvider>
-    </WagmiProvider>
-  );
+  return <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>;
 }

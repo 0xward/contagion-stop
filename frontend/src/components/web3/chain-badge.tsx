@@ -9,7 +9,7 @@ import { useChainId } from 'wagmi';
  * Nous Blue: dot selalu biru #0000f2, bukan warna per chain.
  * Nama chain disembunyikan di layar sangat kecil (<sm) agar header tidak
  * overflow — dot saja cukup sebagai penanda.
- * Dipakai di header dashboard, di samping ConnectButton.
+ * Dipakai di header dashboard, di samping tombol Connect Wallet.
  */
 export default function ChainBadge() {
   const chainId = useChainId();
