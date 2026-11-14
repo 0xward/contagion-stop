@@ -1,0 +1,71 @@
+import Providers from '@/components/layout/providers';
+import { Toaster } from '@/components/ui/sonner';
+import { DEFAULT_THEME, THEMES } from '@/components/themes/theme.config';
+import ThemeProvider from '@/components/themes/theme-provider';
+import { cn } from '@/lib/utils';
+import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
+import NextTopLoader from 'nextjs-toploader';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/globals.css';
+
+export const metadata: Metadata = {
+  ...(process.env.NEXT_PUBLIC_APP_URL
+    ? { metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL) }
+    : {}),
+  title: {
+    default: 'ContagionStop — Cross-Chain Circuit Breaker',
+    template: '%s | ContagionStop'
+  },
+  description:
+    'ContagionStop: pemutus sirkuit lintas-chain. Satu emergencyPause di vault origin menjeda semua sibling vault lewat Reactive (Lasna).',
+  openGraph: {
+    title: 'ContagionStop — Cross-Chain Circuit Breaker',
+    description:
+      'ContagionStop: pemutus sirkuit lintas-chain. Satu emergencyPause di vault origin menjeda semua sibling vault lewat Reactive (Lasna).',
+    siteName: 'ContagionStop',
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary',
+    title: 'ContagionStop — Cross-Chain Circuit Breaker',
+    description:
+      'ContagionStop: pemutus sirkuit lintas-chain. Satu emergencyPause di vault origin menjeda semua sibling vault lewat Reactive (Lasna).'
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: '#fafaf9'
+};
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const activeThemeValue = cookieStore.get('active_theme')?.value;
+  const isValidTheme = THEMES.some((t) => t.value === activeThemeValue);
+  const themeToApply = isValidTheme ? activeThemeValue! : DEFAULT_THEME;
+
+  return (
+    <html lang='en' suppressHydrationWarning data-theme={themeToApply}>
+      <body className={cn('bg-background overflow-x-hidden overscroll-none font-sans antialiased')}>
+        <NextTopLoader color='var(--primary)' showSpinner={false} />
+        <NuqsAdapter>
+          <ThemeProvider
+            attribute='class'
+            defaultTheme='light'
+            enableSystem={false}
+            forcedTheme='light'
+            disableTransitionOnChange
+            enableColorScheme
+          >
+            <Providers activeThemeValue={themeToApply}>
+              <Toaster />
+              {children}
+            </Providers>
+          </ThemeProvider>
+        </NuqsAdapter>
+      </body>
+    </html>
+  );
+}

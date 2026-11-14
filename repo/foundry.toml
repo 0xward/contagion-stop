@@ -1,0 +1,29 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.29"
+# Pin EVM target eksplisit: solc 0.8.29 default Cancun, tapi Foundry 1.9.0
+# default Prague untuk pengujian — tanpa pin ini kompilasi dan test bisa
+# jalan di target EVM berbeda.
+evm_version = "cancun"
+# Hemat RAM (VM kecil): tanpa IR. Jangan ubah tanpa alasan.
+via_ir = false
+optimizer = true
+optimizer_runs = 200
+
+[rpc_endpoints]
+# RPC per chain (terverifikasi merespons chain ID yang benar, 14 Nov 2026).
+# JANGAN pakai urllib Python ke endpoint ini (HTTP 403 dari VM ini) —
+# skrip deploy/verifikasi wajib pakai cast/curl. Selalu sediakan fallback
+# + retry: RPC publik flaky sesekali (403 intermiten / rate-limit).
+# Base Sepolia (84532): utama sepolia.base.org, fallback OnFinality +
+# PublicNode.
+base-sepolia = "https://sepolia.base.org"
+base-sepolia-onfinality = "https://base-sepolia.api.onfinality.io/public"
+base-sepolia-publicnode = "https://base-sepolia-rpc.publicnode.com"
+# Unichain Sepolia (1301): utama sepolia.unichain.org, fallback PublicNode.
+unichain-sepolia = "https://sepolia.unichain.org"
+unichain-sepolia-publicnode = "https://unichain-sepolia-rpc.publicnode.com"
+# Lasna (5318007).
+lasna = "https://lasna-rpc.rnk.dev/"

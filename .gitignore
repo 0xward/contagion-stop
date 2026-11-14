@@ -1,0 +1,9 @@
+hidden_files/
+node_modules/
+.next/
+cache/
+out/
+.env*
+deployer.key
+*-api-key.json
+.DS_Store
