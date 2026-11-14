@@ -31,10 +31,7 @@
  *   T2b = 1794668461 (+3 dtk, callback pause C di Unichain, blok 67816033)
  *   Loop penuh = 3,0 dtk; CONTAINED setelah 2 dtk (blok Lasna 8335438).
  *   Gas: trip 29.913; react 349.263; callback B 78.314; callback C 78.304.
- * Perbandingan jujur: patokan Tripwire (median 1,4 dtk), SnapGuard (~2 dtk),
- * OmniStop (2.000 ms) adalah loop 1 CHAIN. Loop ini (3,0 dtk, fan-out
- * 2 chain + 2 konfirmasi) LEBIH LAMBAT dari patokan — bandingkan per kaki
- * (B 2,0 dtk; C 3,0 dtk), bukan hanya headline.
+ * Benchmark context: Tripwire (median 1.4 s), SnapGuard (~2 s), OmniStop (2,000 ms) are single-chain loops; this loop (3.0 s, 2-chain fan-out + 2 confirmations) is slower — compare per leg (B 2.0 s; C 3.0 s), not only the headline.
  */
 
 import type {

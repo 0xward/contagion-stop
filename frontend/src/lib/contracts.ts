@@ -1,38 +1,42 @@
 /**
  * ContagionStop — contract ABIs + deployment addresses (LIVE).
  *
- * Kontrak TER-DEPLOY di testnet 14 Nov 2026 — alamat di bawah ini adalah
- * alamat NYATA (lihat README.md / VERIFICATION.md). `LIVE` = true.
- * Tampilkan alamat ini di UI; tautkan ke explorer masing-masing.
+ * Contracts deployed on testnet, 14 Nov 2026 — the addresses below are the
+ * real deployment addresses (see README.md / VERIFICATION.md). `LIVE` = true.
+ * Display these addresses in the UI, linked to their respective explorers.
  *
- * ABI di bawah ini diekstrak langsung dari repo kontrak (read-only) via:
+ * The ABIs below were extracted directly from the contracts repo (read-only):
  *   forge inspect SiblingVault abi --json
  *   forge inspect ContagionWatcher abi --json
- * Repo: <repo kontrak ContagionStop> (src/SiblingVault.sol, src/ContagionWatcher.sol).
- * JANGAN edit ABI dengan tangan — regenerate dari repo bila kontrak berubah.
+ * Source: <ContagionStop contracts repo> (src/SiblingVault.sol,
+ * src/ContagionWatcher.sol). Do not edit the ABI by hand — regenerate from
+ * the repo when the contracts change.
  *
- * PERBEDAAN PENTING vs spesifikasi awal (ux-ui-notes.md) — baca sebelum memakai:
- *  1. SiblingVault TIDAK PUNYA `balance()`. Saldo ETH dibaca via `eth_getBalance`
- *     (wagmi `useBalance`), dan total deposit tercatat via `totalDeposited()`.
- *  2. SiblingVault `pause()` BUKAN tanpa argumen: `pause(address callbackSender_)`,
- *     dan HANYA bisa dipanggil lewat callback proxy dari watcher terdaftar
- *     (`onlyServiceProvider` + `onlyWatcher`). UI TIDAK BOLEH memanggilnya
- *     langsung — panggilan langsung akan revert `NotAuthorized`.
- *  3. TIDAK ADA `debt()` / `reserves()` di kontrak mana pun. Utang dibaca dari
- *     SYSTEM CONTRACT Lasna (`IPayable.debt(address)`, lihat `SYSTEM_CONTRACT_ABI`
- *     di bawah) — untuk watcher langsung ke system contract, untuk tiap vault ke
- *     callback proxy chain-nya. "Reserves" = saldo ETH kontrak itu sendiri
- *     (`eth_getBalance`); tidak ada fungsi `reserves()` di library reactive-lib-omni.
- *  4. Watcher TIDAK PUNYA `incidents` (jamak). Yang ada: `incident(address)`
- *     (tunggal) -> `(trippedAt, reason, active)`, plus `incidentTiming(address)`
- *     -> `(trippedAt, trippedBlock, trippedTxHash)` dan
- *     `confirmationTiming(chainId, sibling)` -> `(confirmedAt, confirmedTxHash)`.
- *     `trippedAt` tidak berdiri sendiri — baca dari tuple `incident()`.
- *  5. `confirmedPaused(uint256, address)` ADA (mapping publik) — sama seperti
- *     spesifikasi. Helper baca: `isPaused(chainId, sibling)` / `isConfirmed(...)`.
- *  6. `coverDebt()` ADA di kedua kontrak (publik, siapa saja boleh memanggil).
- *  7. Watcher `pause()` / `resume()` adalah pause LOKAL watcher (react() jadi
- *     fall-through), BUKAN pause vault. Jangan tertukar dengan `SiblingVault.pause`.
+ * Notable differences from the initial spec (ux-ui-notes.md) — read before use:
+ *  1. SiblingVault has no `balance()`. ETH balance is read via `eth_getBalance`
+ *     (wagmi `useBalance`); total deposits are tracked via `totalDeposited()`.
+ *  2. SiblingVault `pause()` takes an argument: `pause(address callbackSender_)`,
+ *     and can only be called through the callback proxy of a registered
+ *     watcher (`onlyServiceProvider` + `onlyWatcher`). The UI must not call it
+ *     directly — a direct call reverts with `NotAuthorized`.
+ *  3. There is no `debt()` / `reserves()` on any contract. Debt is read from
+ *     the Lasna SYSTEM CONTRACT (`IPayable.debt(address)`, see
+ *     `SYSTEM_CONTRACT_ABI` below) — directly from the system contract for
+ *     the watcher, via the chain's callback proxy for each vault. "Reserves"
+ *     is the contract's own ETH balance (`eth_getBalance`); there is no
+ *     `reserves()` function in reactive-lib-omni.
+ *  4. The watcher has no plural `incidents`. It exposes `incident(address)`
+ *     (singular) -> `(trippedAt, reason, active)`, plus
+ *     `incidentTiming(address)` -> `(trippedAt, trippedBlock, trippedTxHash)`
+ *     and `confirmationTiming(chainId, sibling)` ->
+ *     `(confirmedAt, confirmedTxHash)`. `trippedAt` is only available as part
+ *     of the `incident()` tuple.
+ *  5. `confirmedPaused(uint256, address)` exists (public mapping) — as
+ *     specified. Read helpers: `isPaused(chainId, sibling)` / `isConfirmed(...)`.
+ *  6. `coverDebt()` exists on both contracts (public, callable by anyone).
+ *  7. Watcher `pause()` / `resume()` pauses the watcher locally (react()
+ *     becomes a fall-through), not the vaults. Not to be confused with
+ *     `SiblingVault.pause`.
  */
 
 export const SIBLING_VAULT_ABI = [
@@ -1213,7 +1217,7 @@ export const CONTAGION_WATCHER_ABI = [
 ] as const;
 
 /**
- * System contract ABI (minimal) — HANYA untuk membaca utang.
+ * System contract ABI (minimal) — read-only, for reading debt.
  * System contract Lasna: 0x8888888888888888888888888888888888888888
  * (alamat infrastruktur Reactive, dari src/ContagionTopics.sol — bukan alamat
  * deployment ContagionStop). `debt(contract)` dipakai untuk watcher (Lasna)

@@ -231,7 +231,6 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
           </div>
         </div>
 
-        {/* ---- Benchmark comparison (honest: mock is slower than 1-chain loops) ---- */}
         <div className='border-t pt-4'>
           <p className='text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase'>
             Benchmarks — single-chain loops (stop-loss)

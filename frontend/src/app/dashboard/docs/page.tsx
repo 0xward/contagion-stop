@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Icons } from '@/components/icons';
 
 /**
- * Halaman Docs — indeks dokumen proyek ContagionStop.
- * Dokumen-dokumen ini tinggal di folder proyek (satu level di atas frontend/),
- * bukan di repo web — halaman ini hanya mengindeksnya supaya worker komponen
- * dan juri tahu di mana spesifikasi lengkapnya berada.
+ * Docs page — index of the ContagionStop project documents.
+ * The documents live in the project folder (one level above frontend/), not
+ * in the web repo — this page only indexes them, so readers and judges know
+ * where the full specifications are.
  */
 const DOCS = [
   {

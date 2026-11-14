@@ -1,9 +1,9 @@
 import { NavGroup } from '@/types';
 
 /**
- * Navigasi ContagionStop — sengaja minimal: satu halaman utama (Overview)
- * + Docs. Seksi dashboard (hero, grid sibling, timeline, tabel incident,
- * aksi) semuanya hidup di halaman Overview dan dibuat oleh worker komponen.
+ * ContagionStop navigation — intentionally minimal: one main page
+ * (Overview) + Docs. All dashboard sections (hero, sibling grid,
+ * timeline, incident table, actions) live on the Overview page.
  */
 export const navGroups: NavGroup[] = [
   {

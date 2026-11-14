@@ -43,9 +43,8 @@ export function getChainDotColor(chainId: number): string {
 }
 
 /**
- * wagmi v2 config. Tanpa WalletConnect projectId (tidak ada akun yang dibuat
- * untuk scaffold ini) — konektor injected saja; worker komponen boleh
- * menambahkan WalletConnect bila projectId tersedia.
+ * wagmi v2 config. No WalletConnect projectId — injected connector only.
+ * WalletConnect can be added here when a projectId is available.
  */
 export const wagmiConfig = createConfig({
   chains: [unichainSepolia, baseSepolia, lasna],

@@ -1,13 +1,13 @@
 /**
- * ContagionStop — tipe TypeScript untuk dashboard (LIVE).
+ * ContagionStop — TypeScript types for the dashboard (LIVE).
  *
- * Tipe-tipe ini adalah kontrak antara `mock-data.ts` (data) dan komponen
- * dashboard (worker komponen). Bila struktur data berubah, ubah tipe di sini
- * dulu, lalu sesuaikan data — jangan ubah diam-diam di satu sisi saja.
+ * These types are the shared contract between `mock-data.ts` (data) and the
+ * dashboard components. When the data shape changes, update the types here
+ * first, then adjust the data to match.
  *
- * Semua angka waktu memakai UNIX timestamp (detik, UTC). Semua angka latensi
- * memakai detik dengan 1 desimal. Semua alamat/tx hash memakai string hex
- * `0x...` (alamat deploy nyata, testnet).
+ * All timestamps are UNIX timestamps (seconds, UTC). All latency values are
+ * seconds with 1 decimal. All addresses/tx hashes are `0x...` hex strings
+ * (real deployed addresses, testnet).
  */
 
 export type ChainId = 1301 | 84532 | 5318007;
@@ -127,7 +127,7 @@ export interface LatencyMetrics {
   gasCallbackUnichain: number;
   gasCallbackLimit: number;
   benchmarks: LatencyBenchmarks;
-  /** Keterangan jujur soal perbandingan dengan patokan (wajib tampil di UI). */
+  /** Note on the comparison with the benchmarks (shown in the UI). */
   benchmarkNote: string;
   isMock: boolean;
 }

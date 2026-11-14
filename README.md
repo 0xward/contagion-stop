@@ -261,24 +261,6 @@ while unregistered and correctly ignored (no incident, no `react()`).
 | M8 | Time until CONTAINED | `trippedAt` = 1794668458 | last confirmation = 1794668460 | **2 seconds** |
 | M9 | Confirmation | — | — | **2 / 2 siblings confirmed** |
 
-### Competitor benchmarks (for context, not targets we invented)
-
-| Build | Measured latency | Note |
-|---|---|---|
-| Tripwire (luongs3) | Median **1.4 s** (7 Base blocks) | Keeperless stop-loss/take-profit; 17/18 live rounds filled, **1 callback never arrived** |
-| SnapGuard (Folorunso800) | **~2 s**, loop latency recorded on-chain | Stop-loss/take-profit, paper-trading vault |
-| OmniStop (samimi) | Full loop **2,000 ms** | Stop-loss signal MVP; "executeSwap records the signal only. No funds move." |
-
-**Honesty rule (binding):** if our latency matches or beats the 1.4–2.0 s
-benchmark, we highlight it. If it is slower, we show the number honestly and
-explain why: our loop fans out to **2 chains** (2 callbacks + 2 cross-chain
-confirmations), while the benchmarks are **1-chain** loops (1 callback); per
-destination, our numbers are comparable — and the fair comparison is T2 per
-destination, not just the headline. A slower number with a correct explanation
-is worth more to judges than a missing number.
-
----
-
 ## Prior art we acknowledge
 
 We did not invent the circuit breaker, and we did not invent auto-pause. What
@@ -292,9 +274,6 @@ each with the one difference that matters.
 | **Pursestrings** | A manual STOP button: a human must notice the attack, open a dashboard, press STOP, then wait for a multisig/operator to execute per chain. | **Automatic vs manual.** From `EmergencyPaused` to `pause()` on the last chain, not one transaction is signed by a human. Pursestrings answers "how can a human stop an attack faster"; ContagionStop answers "how does an attack stop even when no human is awake". |
 | **ReactiveVaultGuard** | Detection only: it watches and alerts that something suspicious happened — but after the alert, someone (or something else) still has to act. | **Enforcement vs detection only.** Our callbacks actually execute `pause()` on-chain on every sibling, and `deposit()` afterwards reverts. Detection without enforcement is a fire alarm without sprinklers; ContagionStop is the sprinkler. |
 | **SentinelBridge / Aegis AI** (outside this event) | Auto-`pause()` / `emergencyPause()` cross-chain — via Chainlink CRE (off-chain keeper/oracle network) plus AI (LLaMA / X/Twitter signals). | **No keeper/oracle/AI, deterministic.** Same outcome, none of the three: the trigger is an on-chain event from the protocol itself, the logic is pure Solidity on Lasna, no model, oracle, or keeper network to trust or pay a subscription (LINK) for. See "Why not Chainlink CRE?" below. |
-| **Tripwire** (luongs3, same event) | Keeperless stop-loss/take-profit: price crosses a stop → callback executes the order. Median 1.4 s; 17/18 live rounds filled, 1 callback never arrived (author still investigating). | **Different category.** Trigger = price (oracle/DEX), action = sell. ContagionStop: trigger = protocol security event, action = `pause()` across chains. Tripwire's lost callback is also the reason our confirmation + retry protocol (§4 of the design) exists: in ContagionStop, a callback that never arrives is *visible* (`confirmedPaused == false`, dashboard "1/2 confirmed") and retried — not silently assumed executed. |
-| **SnapGuard** (Folorunso800, same event) | Stop-loss/take-profit ~2 s, paper-trading vault, loop latency recorded on-chain. | **Different category.** Trigger = price, action = order execution (paper trading). No pause, no vault freezing. |
-| **OmniStop** (samimi, same event) | Stop-loss signal MVP, full loop 2,000 ms. The author honestly writes: "executeSwap records the signal only. No funds move." | **Different category.** No funds move, let alone a pause. ContagionStop is the opposite: its callbacks really execute `pause()` and `deposit()` afterwards reverts. |
 
 **Claim scope (do not exceed):** ContagionStop claims "first" ONLY in the
 narrow, honest sense above — the first Reactive-executed circuit breaker,
@@ -418,7 +397,7 @@ reactive-contagion-stop/
 │   ├── DeployLasna.s.sol
 │   └── Fund.s.sol
 ├── README.md
-├── VERIFICATION.md                   # loop reproduction steps + 4 tx hashes (OmniStop pattern)
+├── VERIFICATION.md                   # loop reproduction steps + 4 tx hashes
 ├── DEMO.md                           # video script < 3 min
 └── docs/
     └── demo-script.md                # VO script ±330–340 words @135 WPM
