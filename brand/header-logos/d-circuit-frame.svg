@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 56" width="480" height="56" role="img" aria-label="CONTAGION-STOP">
+  <!-- Varian D — Circuit frame: wordmark navy di dalam bingkai
+       "containment" (kurung sudut) + trace vertikal dengan node
+       persegi hijau (#008000 = warna success/live di palet situs)
+       di kedua ujung — seperti pin sirkuit. Palet: #000080 / #008000. -->
+  <!-- trace kiri + node -->
+  <line x1="10" y1="12" x2="10" y2="44" stroke="#000080" stroke-width="2"/>
+  <rect x="7" y="9" width="6" height="6" fill="#008000"/>
+  <rect x="7" y="41" width="6" height="6" fill="#008000"/>
+  <!-- trace kanan + node -->
+  <line x1="470" y1="12" x2="470" y2="44" stroke="#000080" stroke-width="2"/>
+  <rect x="467" y="9" width="6" height="6" fill="#008000"/>
+  <rect x="467" y="41" width="6" height="6" fill="#008000"/>
+  <!-- kurung sudut -->
+  <path d="M22 20 V10 H34" fill="none" stroke="#000080" stroke-width="2"/>
+  <path d="M458 20 V10 H446" fill="none" stroke="#000080" stroke-width="2"/>
+  <path d="M22 36 V46 H34" fill="none" stroke="#000080" stroke-width="2"/>
+  <path d="M458 36 V46 H446" fill="none" stroke="#000080" stroke-width="2"/>
+  <text x="240" y="37" text-anchor="middle" font-family="Tahoma, 'MS Sans Serif', 'Liberation Sans', Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="3" fill="#000080">CONTAGION-STOP</text>
+</svg>

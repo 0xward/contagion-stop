@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 56" width="460" height="56" role="img" aria-label="CONTAGION-STOP">
+  <!-- Varian B — Shield + pause: perisai outline navy isi silver muda
+       dengan dua bilah pause navy (simbol circuit breaker = pause),
+       diikuti wordmark navy. Gaya glyph sama dengan ikon desktop situs
+       (silver bg, glyph navy). Palet: #dfdfdf / #000080. -->
+  <path d="M8 6 H42 V22 C42 34 35 43 25 50 C15 43 8 34 8 22 Z"
+        fill="#dfdfdf" stroke="#000080" stroke-width="2.5" stroke-linejoin="miter"/>
+  <rect x="19" y="17" width="5" height="15" fill="#000080"/>
+  <rect x="27" y="17" width="5" height="15" fill="#000080"/>
+  <text x="54" y="37" font-family="Tahoma, 'MS Sans Serif', 'Liberation Sans', Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="3" fill="#000080">CONTAGION-STOP</text>
+</svg>
