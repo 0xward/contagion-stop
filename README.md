@@ -52,9 +52,9 @@ and it has two single points of failure: the bot must stay alive (server down
 = nobody pauses), and the multisig must manage to gather (humans asleep =
 nobody pauses). ContagionStop moves both jobs into contracts: the trigger is
 an on-chain event verified from the protocol itself, the execution is a
-Reactive callback that needs no server alive. The only human job left — and
-deliberately left — is the decision to unpause (see below), because that
-decision needs judgement, not speed.
+Reactive callback that needs no server alive. The only human jobs left — and
+deliberately left — are the decision to trip and the decision to unpause
+(see below), because both decisions need judgement, not speed.
 
 ---
 
@@ -181,6 +181,32 @@ are the funds intact? is the attacker still positioned?) — no contract can
 answer those questions. Closing needs seconds; opening needs judgement. Like
 a household circuit breaker: it trips itself on a short circuit, and only a
 human may flip it back after checking.
+
+### The trigger is manual by design
+
+> **"The trigger is manual by design. Automatic detection would be a
+> griefing vector, not a feature."**
+
+ContagionStop deliberately does **not** detect exploits itself. The trip is a
+single on-chain call by the protocol's security owner —
+`emergencyPause(reason)` on the origin vault — and what the system automates
+is the part humans are slow at: freezing every sibling deployment at once,
+in seconds. Three reasons:
+
+- **Automatic detection can be weaponized.** Any signal that can pause a
+  protocol automatically can be faked to pause it maliciously — a griefing
+  vector that freezes user funds on demand. A manual trigger has no
+  false-positive surface by construction: nothing pauses unless the owner
+  decides it should.
+- **Detection is not the bottleneck.** Exploits are noticed within minutes
+  by the community, monitoring, and the protocol team. The slow part has
+  always been the response: gathering a multisig across time zones to pause
+  each deployment one by one, in hours. ContagionStop closes the slow part.
+- **The trigger is not tied to a human.** Today it is `onlyOwner`, but
+  nothing in the design requires a human finger on the button: the owner can
+  hand the call to a monitoring contract, a keeper, or a guardian multisig,
+  and the loop works identically. Manual is the safe default, not an
+  architectural limit.
 
 ## What doesn't count as integration
 
