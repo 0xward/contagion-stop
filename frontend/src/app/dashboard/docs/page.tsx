@@ -91,26 +91,26 @@ const V2_CONTRACTS = [
   {
     name: 'VaultFactory (ETH)',
     chain: 'Unichain Sepolia (1301)',
-    address: '0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3',
-    explorer: 'https://sepolia.uniscan.xyz/address/0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3'
+    address: '0xB13bd9d4649d947d599d5c8250eFe1CF67FaA6da',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xB13bd9d4649d947d599d5c8250eFe1CF67FaA6da'
   },
   {
     name: 'VaultFactory (ETH)',
     chain: 'Base Sepolia (84532)',
-    address: '0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6',
-    explorer: 'https://sepolia.basescan.org/address/0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6'
+    address: '0x9D9C5f379BC9E35593C49b2949db4dD2f83dC8fb',
+    explorer: 'https://sepolia.basescan.org/address/0x9D9C5f379BC9E35593C49b2949db4dD2f83dC8fb'
   },
   {
     name: 'VaultFactoryERC20 (USDC)',
     chain: 'Unichain Sepolia (1301)',
-    address: '0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032',
-    explorer: 'https://sepolia.uniscan.xyz/address/0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032'
+    address: '0xD633d0da6D4c91637d0F3Ff9AD4D0F6378acEA70',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xD633d0da6D4c91637d0F3Ff9AD4D0F6378acEA70'
   },
   {
     name: 'VaultFactoryERC20 (USDC)',
     chain: 'Base Sepolia (84532)',
-    address: '0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77',
-    explorer: 'https://sepolia.basescan.org/address/0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77'
+    address: '0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2',
+    explorer: 'https://sepolia.basescan.org/address/0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2'
   },
   {
     name: 'USDC (asset)',
@@ -243,6 +243,100 @@ const PUBLIC_V2_CONTRACTS = [
     chain: 'Base Sepolia (84532)',
     address: '0x9b9eeee0a375a9391fc25c3fcadabe712d3acc2f',
     explorer: 'https://sepolia.basescan.org/address/0x9b9eeee0a375a9391fc25c3fcadabe712d3acc2f'
+  }
+] as const;
+
+/** Set v3 publik (15 Nov 2026, gelombang 3) — set publik saat ini.
+ * reopen() owner-only (N2); watcher v3 membatasi incident BARU maks 5
+ * per jendela rolling 1 jam (N1). ⚠️ Alamat watcher v3 (Lasna 5318007)
+ * SAMA PERSIS dengan alamat factory ETH v2 di Base Sepolia (84532):
+ * 0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6. Keduanya punya code; tidak
+ * ada tabrakan karena alamat bersifat per-chain — selalu baca alamat ini
+ * berpasangan dengan chain-nya. */
+const PUBLIC_V3_CONTRACTS = [
+  {
+    name: 'PublicVaultV3 Uni #0 (origin, ETH shares)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x9561235B28aA8609648299928Ce162632851dbeC',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x9561235B28aA8609648299928Ce162632851dbeC'
+  },
+  {
+    name: 'PublicVaultV3 Uni #1 (ETH shares)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x89b684B5cb0aCff7Ae33830c9b360ddCee3953E8',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x89b684B5cb0aCff7Ae33830c9b360ddCee3953E8'
+  },
+  {
+    name: 'PublicVaultV3 Base #0 (ETH shares)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x0cf674eb58D3822075eE08A6De0568AF93Af450E',
+    explorer: 'https://sepolia.basescan.org/address/0x0cf674eb58D3822075eE08A6De0568AF93Af450E'
+  },
+  {
+    name: 'PublicVaultERC20V3 USDC (FUNDED — 20 USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x4F10584326e9d96FBB3c65435667e9487C670d8b',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x4F10584326e9d96FBB3c65435667e9487C670d8b'
+  },
+  {
+    name: 'PublicVaultERC20V3 USDC (FUNDED — 20 USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xD536266c3595ba4dc9002771f44cDAe65776F9b3',
+    explorer: 'https://sepolia.basescan.org/address/0xD536266c3595ba4dc9002771f44cDAe65776F9b3'
+  },
+  {
+    name: 'Public ContagionWatcher v3 — Lasna (5318007)',
+    chain: 'Lasna (5318007)',
+    address: '0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6',
+    explorer: 'https://lasna.reactscan.net/address/0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6'
+  },
+  {
+    name: 'PublicVaultV3 implementation (ETH)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xEe319AC96FAb0445ca48D1daa6af4FC312FD21Db',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xEe319AC96FAb0445ca48D1daa6af4FC312FD21Db'
+  },
+  {
+    name: 'VaultFactory (public v3, ETH)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xD18B286C73285aef378B054D355dE43f63809111',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xD18B286C73285aef378B054D355dE43f63809111'
+  },
+  {
+    name: 'PublicVaultV3 implementation (ETH)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xE427B13172Dc65D9218C6067fC6fD89408B47A1a',
+    explorer: 'https://sepolia.basescan.org/address/0xE427B13172Dc65D9218C6067fC6fD89408B47A1a'
+  },
+  {
+    name: 'VaultFactory (public v3, ETH)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe',
+    explorer: 'https://sepolia.basescan.org/address/0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe'
+  },
+  {
+    name: 'PublicVaultERC20V3 implementation (USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x366a79C1E37958F7239d57310dF2c5F94A113bb6',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x366a79C1E37958F7239d57310dF2c5F94A113bb6'
+  },
+  {
+    name: 'VaultFactoryERC20 (public v3, USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xEcaF1E5Bbe943D0a5b58D9933ace161C5D2C3e09',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xEcaF1E5Bbe943D0a5b58D9933ace161C5D2C3e09'
+  },
+  {
+    name: 'PublicVaultERC20V3 implementation (USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xb2119fB0A06c8F032Afb1B71C8d270234b9b05B1',
+    explorer: 'https://sepolia.basescan.org/address/0xb2119fB0A06c8F032Afb1B71C8d270234b9b05B1'
+  },
+  {
+    name: 'VaultFactoryERC20 (public v3, USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xC083d0CafbC93aE662BBe0Ac3442Ba61155d21B0',
+    explorer: 'https://sepolia.basescan.org/address/0xC083d0CafbC93aE662BBe0Ac3442Ba61155d21B0'
   }
 ] as const;
 
@@ -730,9 +824,11 @@ const SECURITY_POINTS = [
 ] as const;
 
 const LIMITATIONS = [
-  'Maximum callbacks per react() is unverified beyond a fan-out of 2; expanding to more chains must be tested first.',
+  'Maximum callbacks per react() is unverified beyond a fan-out of 4 (measured live on the v2 4-vault set and the v3 5-vault set, 15 Nov 2026); expanding beyond 5 siblings must be tested first.',
   'A chain reorganization can leave a sibling paused from an event that later disappears on the origin chain. This fails closed by design: a wrongly paused sibling costs delayed deposits until a manual unpause; a deployment left open during a real exploit costs its funds.',
   'The watcher does not subscribe to unpause events. Unpausing is a per-deployment human decision and the watcher has no action to take on it.',
+  'Per-vault trip cooldown (60 s) only slows aggregate drain, it does not prevent it: rotating trips across the five public vaults can still drain a watcher in minutes. The v3 public watcher bounds this with an aggregate cap — at most 5 NEW incidents per rolling hour (worst case ~0.75 lREACT/hour at the measured 5-vault loop cost) — and a capped trip is dropped, not queued: the tripping vault paused itself, but the siblings stay open until the window resets and the origin is re-tripped, or the vault owners pause each sibling directly.',
+  'A trip that arrives while the watcher itself is paused is lost: there is no queue or replay. After the watcher resumes, the origin must be tripped again (a new incident) for the fan-out to run.',
   'Keterbatasan yang diketahui (main set v1 + vault v2 utama, bytecode per 14–15 Nov 2026): bila dua vault trip berurutan sebelum incident pertama mencapai CONTAINED, konfirmasi Paused dari vault yang sudah paused tidak ter-emit, sehingga incident dapat tersangkut aktif sampai ada intervensi manual (unpause + emergencyPause ulang). Prosedur operator: jangan trip origin kedua sebelum incident pertama berstatus CONTAINED. Perbaikan sudah ada di kode repo (SiblingVault.pause() meng-emit ulang Paused) dan live di instance publik baru. Catatan F6: registerSibling tidak memeriksa code di chain tujuan (tidak mungkin dari Lasna) — verifikasi dilakukan off-chain (checklist app + cast code di chain tujuan sebelum register).'
 ] as const;
 
@@ -957,13 +1053,19 @@ export default function DocsPage() {
               <p className='text-sm font-medium'>
                 Public test deployment v2 — shares (15 Nov 2026, Sourcify
                 exact_match: implementations + factories on both chains +
-                watcher)
+                watcher) — historical, superseded by v3
               </p>
               <p className='text-sm text-muted-foreground'>
                 Three ETH vaults (shares CSV) + one USDC vault (shares
                 CSUSDC, 20 USDC funded + 1 USDC from the fresh-wallet E2E =
                 21 USDC totalAssets) under a new public watcher on Lasna.
-                Trip has a 60-second cooldown per vault. Address note: the
+                Trip has a 60-second cooldown per vault. The cooldown only
+                slows aggregate drain — it does not prevent it (see Known
+                limitations). Reopen is permissionless on this set, so a
+                visitor could cancel CONTAINED mid-incident; that is why
+                v3 makes reopen owner-only. The v2 vaults and watcher are
+                still live on-chain, but the current public set is v3
+                below. Address note: the
                 v2 watcher (Lasna, chain 5318007) shares its address{' '}
                 <code className='font-mono text-xs'>
                   0x4b44497bAD6c270462D0529FCe4E41A7e092669b
@@ -992,6 +1094,49 @@ export default function DocsPage() {
             </div>
             <div className='flex flex-col gap-2'>
               <p className='text-sm font-medium'>
+                Public test deployment v3 — shares, current (15 Nov 2026,
+                Sourcify exact_match: implementations + factories on both
+                chains + watcher)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Three ETH vaults (shares CSV) + two USDC vaults (shares
+                CSUSDC, 20 USDC funded each) under a new public watcher
+                v3 on Lasna. Funds were migrated from the v2 set
+                (sweepExcess + redeem), no faucet involved. Trip has a
+                60-second cooldown per vault, and the watcher caps NEW
+                incidents at 5 per rolling hour — a capped trip emits{' '}
+                <code className='font-mono text-xs'>IncidentCapHit</code>{' '}
+                and requests no callbacks (the tripping vault paused
+                itself; the siblings stay open until the window resets).
+                Reopen is owner-only on this set. Address note: the
+                v3 watcher (Lasna, chain 5318007) shares its address{' '}
+                <code className='font-mono text-xs'>
+                  0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6
+                </code>{' '}
+                with the v2 ETH factory on Base Sepolia (chain 84532).
+                Addresses are per-chain, so there is no collision — always
+                read the address together with its chain.
+              </p>
+              <DocTable>
+                <tbody>
+                  {PUBLIC_V3_CONTRACTS.map((contract) => (
+                    <tr key={`${contract.chain}-${contract.address}`} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{contract.name}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{contract.chain}</td>
+                      <td className='py-2'>
+                        <ExternalLink href={contract.explorer}>
+                          <span className='font-mono text-xs break-all'>
+                            {contract.address}
+                          </span>
+                        </ExternalLink>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
+            <div className='flex flex-col gap-2'>
+              <p className='text-sm font-medium'>
                 Vaults v2 — ERC-20 shares (15 Nov 2026, Sourcify
                 exact_match: implementations + factories on both chains)
               </p>
@@ -1003,7 +1148,15 @@ export default function DocsPage() {
                 vaults are funded with 20 USDC each (15 Nov 2026);
                 funding is a manual step. The app reads all of these live
                 on the Overview page and can create new vaults from the
-                factories on the Deploy your own page.
+                factories on the Deploy your own page. The factories
+                listed here point at implementations deployed 15 Nov 2026
+                from the current repo source, which contains the F1 fix
+                (pause() re-emits Paused when already paused). Vaults
+                created before 15 Nov 2026 from the previous factories
+                use the pre-fix implementation: if two of those vaults
+                trip in sequence before the first incident reaches
+                CONTAINED, the incident can stay active until manual
+                intervention (unpause + emergencyPause again).
               </p>
               <DocTable>
                 <tbody>
@@ -1217,6 +1370,29 @@ export default function DocsPage() {
             </div>
             <div className='flex flex-col gap-3'>
               <p className='text-sm font-medium'>
+                Public v3 E2E — ETH + USDC (15 Nov 2026, watcher v3)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                One full loop on the v3 public watcher (Lasna{' '}
+                <code className='font-mono text-xs'>0xE7bd21cB…cAe0F9E6</code>
+                ). Trip Uni #0 (reason V3-E2E-1){' '}
+                <ExternalLink href='https://sepolia.uniscan.xyz/tx/0xac350def7550963a6992627a3ded74cf5d99f37f72ab9b5dd514d35df02d8a30'>
+                  <span className='font-mono text-xs'>0xac350def…2d8a30</span>
+                </ExternalLink>{' '}
+                → react{' '}
+                <ExternalLink href='https://lasna.reactscan.net/tx/0x82feb96d2ae197565ccafbf5beacd5da05e06f6473001259a7b44af4ebf021a8'>
+                  <span className='font-mono text-xs'>0x82feb96d…f021a8</span>
+                </ExternalLink>{' '}
+                → all five vaults paused, CONTAINED. The loop cost
+                0.1514159 lREACT (watcher 1.0 → 0.8485841) and counted as
+                incident #1 in the cap window. All five vaults were
+                reopened by the deployer afterwards (reopen is owner-only
+                on v3); a reopen simulated from any other wallet reverts
+                with OwnableUnauthorizedAccount.
+              </p>
+            </div>
+            <div className='flex flex-col gap-3'>
+              <p className='text-sm font-medium'>
                 Two-trip race (F1 verification, 15 Nov 2026) + coverDebt
                 with real proxy debt (F8, 15 Nov 2026)
               </p>
@@ -1340,16 +1516,17 @@ export default function DocsPage() {
               </li>
               <li>
                 <span className='font-medium'>Trip.</span> On the Overview
-                page, in &ldquo;Try it live&rdquo;, pick a set (v1 shell or
-                v2 shares) and a vault (U1 is the origin used in the
-                recorded v1 runs; Uni #0 is the origin of the recorded v2
-                run) and press{' '}
+                page, in &ldquo;Try it live&rdquo;, pick a set (v1 shell,
+                v2 shares, or v3 shares — the current set) and a vault (U1
+                is the origin used in the recorded v1 runs; Uni #0 is the
+                origin of the recorded v2 and v3 runs) and press{' '}
                 <span className='font-medium'>Trip incident</span>. Confirm
                 the transaction in your wallet. Expect: the trip transaction
                 confirms within a few seconds, and the page shows
                 &ldquo;Trip confirmed — callbacks expected, not yet
-                confirmed&rdquo;. On v2, trip has a 60-second cooldown per
-                vault.
+                confirmed&rdquo;. On v2/v3, trip has a 60-second cooldown
+                per vault; on v3 the watcher also caps new incidents at 5
+                per rolling hour.
               </li>
               <li>
                 <span className='font-medium'>Wait ~2 seconds.</span> The
@@ -1371,9 +1548,10 @@ export default function DocsPage() {
               <li>
                 <span className='font-medium'>Reopen.</span> Press{' '}
                 <span className='font-medium'>Reopen</span> on each vault
-                (any wallet can do this here) and confirm. Expect: each vault
-                returns to ACTIVE. Reopen on an already-active vault is
-                disabled — it would revert.
+                (any wallet can do this on v1/v2; on v3 reopen is
+                owner-only, so the deployer reopens after a test) and
+                confirm. Expect: each vault returns to ACTIVE. Reopen on
+                an already-active vault is disabled — it would revert.
               </li>
               <li>
                 <span className='font-medium'>Test deposit.</span> Press{' '}
@@ -1397,11 +1575,12 @@ export default function DocsPage() {
               </p>
               <ul className='flex list-disc flex-col gap-2 pl-5'>
                 <li>
-                  On the public test deployment: trip, reopen, and deposit
-                  with any wallet. On the main deployment: the same actions
-                  are enabled only for the vault owner wallet — visitors can
-                  inspect the live state (paused, balances, owner) but cannot
-                  trigger actions.
+                  On the public test deployment v1/v2: trip, reopen, and
+                  deposit with any wallet. On v3: trip and deposit with any
+                  wallet; reopen is owner-only. On the main deployment: the
+                  same actions are enabled only for the vault owner wallet —
+                  visitors can inspect the live state (paused, balances,
+                  owner) but cannot trigger actions.
                 </li>
                 <li>
                   Without a wallet, the Overview page still shows the recorded
@@ -1418,7 +1597,8 @@ export default function DocsPage() {
                 </li>
                 <li>
                   One full loop costs ~0.08–0.11 lREACT (measured, v1
-                  3-vault set) and ~0.10–0.13 lREACT (v2 4-vault set). Each
+                  3-vault set), ~0.10–0.13 lREACT (v2 4-vault set), and
+                  ~0.15 lREACT (v3 5-vault set, measured 0.1514159). Each
                   public watcher&apos;s live balance and loops-left count
                   are shown on the Overview page; each vault holds ~0.001
                   ETH for callback fees.

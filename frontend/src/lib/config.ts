@@ -76,6 +76,18 @@ export const REACT_GAS_LIMIT = 900_000;
  * sumber. */
 export const LOOP_COST_LREACT = '~0.08–0.11 lREACT per loop (measured)' as const;
 
+/** Biaya loop per instance publik (terukur, 15 Nov 2026) — N3: satu
+ * konstanta global salah kalibrasi untuk set 5-vault. v1: 3 vault,
+ * ~0.08–0.11 (LOOP_COST_LREACT di atas). v2: 5 vault, loop terukur
+ * 0.1056 / 0.1210 / 0.0794 (fan-out belum penuh di semua loop) —
+ * pembagi konservatif 0.13. v3: 5 vault, loop E2E terukur 0.1514159 —
+ * pembagi 0.15. Pembagi dipakai untuk hitung loops-left dari saldo
+ * watcher; makin besar pembagi, makin sedikit loop yang ditampilkan. */
+export const PUBLIC_V2_LOOP_COST_LREACT = '~0.13 lREACT per loop (measured, 5-vault set)' as const;
+export const PUBLIC_V2_LOOP_COST_DIVISOR = 0.13;
+export const PUBLIC_V3_LOOP_COST_LREACT = '~0.15 lREACT per loop (measured, 5-vault set)' as const;
+export const PUBLIC_V3_LOOP_COST_DIVISOR = 0.15;
+
 export const APP_NAME = 'ContagionStop';
 
 /* ------------------------------------------------------------------ */
@@ -195,6 +207,79 @@ export const PUBLIC_V2_CONTRACTS: Record<
  * loop lagi (fan-out 5 vault; loop 4-vault terukur ~0,13 lREACT/loop).
  * Angka ini adalah snapshot serah-terima; saldo live dibaca via wagmi. */
 export const PUBLIC_V2_WATCHER_BALANCE_AT_HANDOVER_LREACT = '1.7701604' as const;
+
+/** Lima vault v3 publik + watcher publik v3 (15 Nov 2026, gelombang 3 —
+ * audit pass 2 N1+N2; Sourcify exact_match: impl + factory kedua chain
+ * + watcher). reopen() owner-only; watcher v3 membatasi incident BARU
+ * maks 5 per jendela rolling 1 jam. Dana dimigrasi dari set v2
+ * (sweepExcess + redeem), tanpa faucet. */
+/* ⚠️ Alamat watcher v3 (Lasna 5318007) SAMA PERSIS dengan alamat factory
+ * ETH v2 di Base Sepolia (84532): 0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6.
+ * Keduanya punya code; tidak ada tabrakan karena alamat bersifat
+ * per-chain — selalu tampil berpasangan dengan chain. */
+export const PUBLIC_V3_CONTRACTS: Record<
+  'vaultUni0' | 'vaultUni1' | 'vaultBase0' | 'vaultUsdc' | 'vaultUsdcBase' | 'watcher',
+  PublicContractEntry
+> = {
+  vaultUni0: {
+    role: 'PublicVaultV3 Uni #0 — Origin (Unichain Sepolia). trip() di sini memicu loop; deposit() mints shares.',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0x9561235B28aA8609648299928Ce162632851dbeC'
+  },
+  vaultUni1: {
+    role: 'PublicVaultV3 Uni #1 — Sibling (Unichain Sepolia). Paused via watcher callback.',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0x89b684B5cb0aCff7Ae33830c9b360ddCee3953E8'
+  },
+  vaultBase0: {
+    role: 'PublicVaultV3 Base #0 — Sibling (Base Sepolia). Paused via watcher callback.',
+    chainId: 84532,
+    chainName: 'Base Sepolia',
+    address: '0x0cf674eb58D3822075eE08A6De0568AF93Af450E'
+  },
+  vaultUsdc: {
+    role: 'PublicVaultERC20V3 USDC — Sibling (Unichain Sepolia). deposit(amount, receiver) mints shares CSUSDC; trip() permissionless.',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0x4F10584326e9d96FBB3c65435667e9487C670d8b'
+  },
+  vaultUsdcBase: {
+    role: 'PublicVaultERC20V3 USDC — Sibling (Base Sepolia). deposit(amount, receiver) mints shares CSUSDC; trip() permissionless.',
+    chainId: 84532,
+    chainName: 'Base Sepolia',
+    address: '0xD536266c3595ba4dc9002771f44cDAe65776F9b3'
+  },
+  watcher: {
+    role: 'Public ContagionWatcher v3 — Lasna (5318007), watches the five v3 public vaults above; cap 5 new incidents / rolling hour',
+    chainId: 5318007,
+    chainName: 'Lasna',
+    address: '0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6'
+  }
+};
+
+/** Owner set v3 publik = deployer (satu-satunya yang bisa reopen). */
+export const PUBLIC_V3_OWNER = '0x0FD65c51D9bD790Bf67FDA9BE45A7eB21ed3d99B' as const;
+
+/** Saldo watcher v3 saat serah-terima gelombang 3 (15 Nov 2026, terukur,
+ * setelah E2E v3): 0,8485841 lREACT — sekitar 5 loop lagi (loop 5-vault
+ * terukur 0,1514159 lREACT/loop). Snapshot serah-terima; saldo live
+ * dibaca via wagmi. */
+export const PUBLIC_V3_WATCHER_BALANCE_AT_HANDOVER_LREACT = '0.8485841' as const;
+
+/** Tx hash kunci E2E v3 publik (15 Nov 2026, gelombang 3) — tautan
+ * verifikasi di Docs. Trip Uni #0 → kelima vault paused, CONTAINED,
+ * loop 0,1514159 lREACT; reopen kelimanya oleh deployer. */
+export const PUBLIC_V3_E2E = {
+  trip: '0xac350def7550963a6992627a3ded74cf5d99f37f72ab9b5dd514d35df02d8a30',
+  react: '0x82feb96d2ae197565ccafbf5beacd5da05e06f6473001259a7b44af4ebf021a8',
+  reopenUni0: '0x426254bd1449f03f0fecde05bed701dac15fd77ac113da573ce4355162b05dc6',
+  reopenUni1: '0x4aa271ebcd895e2c9e8f3bf8eaca0c1f6b83dbf7bac76dd582df7c8315adc12b',
+  reopenBase0: '0xcd85f206b8ba17b952a8d41d460c12f4510870b95c278a4af2ee79a82772843b',
+  reopenUsdc: '0x5d01058379a80f366b2660d2df8ad7210e13704cd985f577d5d974f4e2281890',
+  reopenUsdcBase: '0x49e9a4b9301286bebcd4ac72757ccbc0864ce5677ec4f4462f02c5c3160ebc0b'
+} as const;
 
 /** Tx hash kunci E2E v2 publik (15 Nov 2026, gelombang 2) — tautan
  * verifikasi di Docs. Trip Uni #0 → ketiga vault ETH paused, CONTAINED. */
@@ -326,7 +411,14 @@ export const V2_USDC_VAULTS: Record<'unichain' | 'base', V2ContractEntry> = {
   }
 };
 
-/** Factories + implementations v2, per chain. */
+/** Factories + implementations v2, per chain. Gelombang 3 (15 Nov 2026,
+ * audit pass 2 N4): factory + impl BARU dari source repo saat ini
+ * (mengandung fix F1 — pause() meng-emit ulang Paused saat sudah paused).
+ * Factory lama (impl pra-fix F1) — Uni ETH 0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3,
+ * Base ETH 0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6, Uni ERC20
+ * 0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032, Base ERC20
+ * 0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77 — tetap ada on-chain, tapi
+ * Deploy page tidak lagi memakainya. */
 export const V2_FACTORIES: Record<'unichain' | 'base', {
   factoryEth: V2ContractEntry;
   factoryErc20: V2ContractEntry;
@@ -338,25 +430,25 @@ export const V2_FACTORIES: Record<'unichain' | 'base', {
       role: 'VaultFactory — creates ContagionVault (ETH) clones',
       chainId: 1301,
       chainName: 'Unichain Sepolia',
-      address: '0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3'
+      address: '0xB13bd9d4649d947d599d5c8250eFe1CF67FaA6da'
     },
     factoryErc20: {
       role: 'VaultFactoryERC20 — creates ContagionVaultERC20 (USDC) clones',
       chainId: 1301,
       chainName: 'Unichain Sepolia',
-      address: '0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032'
+      address: '0xD633d0da6D4c91637d0F3Ff9AD4D0F6378acEA70'
     },
     implementationEth: {
       role: 'ContagionVault implementation (ETH)',
       chainId: 1301,
       chainName: 'Unichain Sepolia',
-      address: '0xE732a6e1D7F70Dc9502f9e4eDEb026451d911661'
+      address: '0x784Cf3AB7407B221c9387c5FEceD2EaD3Ab14905'
     },
     implementationErc20: {
       role: 'ContagionVaultERC20 implementation (USDC)',
       chainId: 1301,
       chainName: 'Unichain Sepolia',
-      address: '0xb50ABF8959097f7c8Da476671e97f6F30d781daA'
+      address: '0xb6cE574a3D471376FB449017767E736B7A9f2329'
     }
   },
   base: {
@@ -364,25 +456,25 @@ export const V2_FACTORIES: Record<'unichain' | 'base', {
       role: 'VaultFactory — creates ContagionVault (ETH) clones',
       chainId: 84532,
       chainName: 'Base Sepolia',
-      address: '0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6'
+      address: '0x9D9C5f379BC9E35593C49b2949db4dD2f83dC8fb'
     },
     factoryErc20: {
       role: 'VaultFactoryERC20 — creates ContagionVaultERC20 (USDC) clones',
       chainId: 84532,
       chainName: 'Base Sepolia',
-      address: '0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77'
+      address: '0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2'
     },
     implementationEth: {
       role: 'ContagionVault implementation (ETH)',
       chainId: 84532,
       chainName: 'Base Sepolia',
-      address: '0x8809f72C2ce8Af6081D6540Ea7f1C3269F155968'
+      address: '0xB4Cd8EBf93aeAE8010c75512BA93Bf5533656725'
     },
     implementationErc20: {
       role: 'ContagionVaultERC20 implementation (USDC)',
       chainId: 84532,
       chainName: 'Base Sepolia',
-      address: '0xB394E38c8aeb4d8ea1244faE0c229e05089A7edD'
+      address: '0xD6f947E4B7Fc9EC5eD0C2078d982eFedBd5A5652'
     }
   }
 };

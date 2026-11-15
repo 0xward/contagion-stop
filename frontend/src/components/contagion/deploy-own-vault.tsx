@@ -367,6 +367,17 @@ export function DeployOwnVault() {
             (ContagionVaultERC20). Both deploy EIP-1167 clones of the
             verified implementation on that chain.
           </CardDescription>
+          <p className='rounded-none border border-foreground/40 bg-muted p-2 text-xs'>
+            Vaults created here use the current implementation (deployed
+            15 Nov 2026), which includes the fix for a liveness bug: a
+            vault that is already paused still confirms its pause, so a
+            second trip cannot leave an incident stuck. Vaults created
+            before 15 Nov 2026 from the previous factories use the
+            pre-fix implementation and can hit that bug — if two of those
+            vaults trip in sequence before the first incident reaches
+            CONTAINED, the incident stays active until the owner
+            intervenes (unpause + emergencyPause again). See Docs.
+          </p>
         </CardHeader>
         <CardContent className='flex flex-col gap-4'>
           <div className='flex flex-col gap-2'>

@@ -1765,3 +1765,15 @@ export const PUBLIC_ERC20_ABI = [
     stateMutability: 'nonpayable'
   }
 ] as const;
+
+/**
+ * PublicVaultV3 ABI — identik dengan PUBLIC_V2_ABI (semua signature sama;
+ * yang berubah hanya permission reopen(): onlyOwner di PublicVaultV3).
+ */
+export const PUBLIC_V3_ABI = PUBLIC_V2_ABI;
+
+/**
+ * PublicVaultERC20V3 ABI — identik dengan PUBLIC_ERC20_ABI; reopen()
+ * onlyOwner di PublicVaultERC20V3.
+ */
+export const PUBLIC_V3_ERC20_ABI = PUBLIC_ERC20_ABI;

@@ -31,7 +31,15 @@ import {
   PUBLIC_USDC_E2E,
   PUBLIC_V2_CONTRACTS,
   PUBLIC_V2_E2E,
+  PUBLIC_V2_LOOP_COST_DIVISOR,
+  PUBLIC_V2_LOOP_COST_LREACT,
   PUBLIC_V2_WATCHER_BALANCE_AT_HANDOVER_LREACT,
+  PUBLIC_V3_CONTRACTS,
+  PUBLIC_V3_E2E,
+  PUBLIC_V3_LOOP_COST_DIVISOR,
+  PUBLIC_V3_LOOP_COST_LREACT,
+  PUBLIC_V3_OWNER,
+  PUBLIC_V3_WATCHER_BALANCE_AT_HANDOVER_LREACT,
   PUBLIC_WATCHER_BALANCE_AT_HANDOVER_LREACT,
   USDC_ADDRESSES
 } from '@/lib/config';
@@ -41,6 +49,8 @@ import {
   ERC20_VAULT_ABI,
   PUBLIC_ERC20_ABI,
   PUBLIC_V2_ABI,
+  PUBLIC_V3_ABI,
+  PUBLIC_V3_ERC20_ABI,
   PUBLIC_VAULT_ABI
 } from '@/lib/contracts';
 import { useLiveVault } from '@/hooks/use-live-vault';
@@ -68,6 +78,11 @@ import { cn } from '@/lib/utils';
  * Honest labels: test deposits stay in the public vault (withdraw is
  * owner-only); the watcher balance shown is live; the loop cost is the
  * measured range from the two recorded public cycles.
+ *
+ * Sets: v1 (shell vaults), v2 (shares — historical since 15 Nov 2026),
+ * v3 (current — shares, reopen() owner-only, watcher caps new incidents
+ * at 5 per rolling hour). Loop cost is per-set (v1 ~0.08–0.11, v2 ~0.13,
+ * v3 ~0.15 lREACT).
  */
 
 type TxPhase = 'idle' | 'pending' | 'success' | 'error';
@@ -169,9 +184,10 @@ export interface PublicVaultCardProps {
   chainName: string;
   address: Address;
   explorerUrl: string;
-  /** v1 = PublicVault (shell, totalDeposited); v2eth = PublicVaultV2 (shares). */
-  kind: 'v1' | 'v2eth';
-  abi: typeof PUBLIC_VAULT_ABI | typeof PUBLIC_V2_ABI;
+  /** v1 = PublicVault (shell, totalDeposited); v2eth = PublicVaultV2 (shares);
+   * v3eth = PublicVaultV3 (shares, reopen() owner-only). */
+  kind: 'v1' | 'v2eth' | 'v3eth';
+  abi: typeof PUBLIC_VAULT_ABI | typeof PUBLIC_V2_ABI | typeof PUBLIC_V3_ABI;
 }
 
 function PublicVaultCard({
@@ -185,7 +201,7 @@ function PublicVaultCard({
   kind,
   abi
 }: PublicVaultCardProps) {
-  const { isConnected } = useAccount();
+  const { address: wallet, isConnected } = useAccount();
   const connectedChainId = useChainId();
   const { switchToChain, isSwitching } = useChainSwitcher();
   const [switchError, setSwitchError] = useState<SwitchChainFailure | null>(null);
@@ -196,6 +212,10 @@ function PublicVaultCard({
   const live = useLiveVault(address, chainId);
   const isPaused = live.isLive ? live.paused === true : undefined;
   const onWrongChain = isConnected && connectedChainId !== chainId;
+  /** v3 reopen() is owner-only (audit N2): only the deployer wallet can
+   * reopen a v3 vault; any other wallet's reopen reverts. */
+  const isV3 = kind === 'v3eth';
+  const isV3Owner = isV3 && wallet?.toLowerCase() === PUBLIC_V3_OWNER.toLowerCase();
 
   async function handleSwitch() {
     const result = await switchToChain(chainId);
@@ -221,7 +241,7 @@ function PublicVaultCard({
       kind: 'deposit',
       hash,
       text:
-        kind === 'v2eth'
+        kind !== 'v1'
           ? 'Deposit confirmed — 0.001 ETH in, shares minted to your wallet (totalAssets rises by 0.001 ETH). Withdraw stays open while paused; redeem your shares from the vault.'
           : 'Deposit confirmed — 0.001 ETH now sits in this public vault. Withdraw is owner-only, so a test deposit stays here.'
     })
@@ -412,7 +432,7 @@ function PublicVaultCard({
 
           <Button
             variant='outline'
-            disabled={!isConnected || onWrongChain || reopen.isPending || isPaused === false}
+            disabled={!isConnected || onWrongChain || reopen.isPending || isPaused === false || (isV3 && !isV3Owner)}
             title={
               !isConnected
                 ? 'Connect a wallet to reopen — any wallet works, no owner needed'
@@ -420,7 +440,9 @@ function PublicVaultCard({
                   ? `Switch to ${chainName} first — your wallet is on a different chain`
                   : isPaused === false
                     ? 'Already active — reopen would revert (ExpectedPause)'
-                    : 'Reopen this vault'
+                    : isV3 && !isV3Owner
+                      ? 'Reopen is owner-only on v3 — only the deployer wallet can reopen; any other wallet reverts'
+                      : 'Reopen this vault'
             }
             onClick={() =>
               reopen.writeContract({
@@ -457,7 +479,7 @@ function PublicVaultCard({
                   ? `Switch to ${chainName} first — your wallet is on a different chain`
                   : isPaused === true
                     ? 'Deposit reverts while paused — that is the freeze proof; reopen first'
-                    : kind === 'v2eth'
+                    : kind !== 'v1'
                       ? 'Deposit 0.001 ETH into this public vault — mints shares to your wallet'
                       : 'Deposit 0.001 ETH into this public vault'
             }
@@ -477,7 +499,7 @@ function PublicVaultCard({
               <Icons.add className='size-4' />
             )}
             Test deposit() — 0.001 ETH
-            {kind === 'v2eth' ? ' — mints shares' : ''}
+            {kind !== 'v1' ? ' — mints shares' : ''}
           </Button>
           <TxLine
             chainId={chainId}
@@ -550,13 +572,19 @@ function PublicUsdcVaultCard({
   chainId,
   chainName,
   address,
-  explorerUrl
+  explorerUrl,
+  reopenOwnerOnly,
+  tripNoticeVaults
 }: {
   label: string;
   chainId: number;
   chainName: string;
   address: Address;
   explorerUrl: string;
+  /** v3: reopen() is owner-only (audit N2). */
+  reopenOwnerOnly?: boolean;
+  /** Text for the trip notice, e.g. 'All five v3 public vaults'. */
+  tripNoticeVaults?: string;
 }) {
   const { address: wallet, isConnected } = useAccount();
   const connectedChainId = useChainId();
@@ -567,6 +595,10 @@ function PublicUsdcVaultCard({
   const [notice, setNotice] = useState<Notice | null>(null);
   const usdc = USDC_ADDRESSES[chainId];
   const amountRaw = parseUnits('1', 6);
+  /** v3 ABI is identical to v2 (only reopen permission changed); the
+   * alias keeps the call sites explicit about which set this card is. */
+  const vaultAbi = reopenOwnerOnly ? PUBLIC_V3_ERC20_ABI : PUBLIC_ERC20_ABI;
+  const isV3Owner = !reopenOwnerOnly || wallet?.toLowerCase() === PUBLIC_V3_OWNER.toLowerCase();
 
   const pausedQ = useReadContract({
     address,
@@ -646,7 +678,7 @@ function PublicUsdcVaultCard({
     setNotice({
       kind: 'trip',
       hash,
-      text: 'Trip confirmed — the watcher callbacks are expected, not yet confirmed. All five v2 public vaults should flip to PAUSED within ~2 s.'
+      text: `Trip confirmed — the watcher callbacks are expected, not yet confirmed. ${tripNoticeVaults ?? 'All five v2 public vaults'} should flip to PAUSED within ~2 s.`
     })
   );
   useReportWrite(reopen.data, reopen.isSuccess, (hash) =>
@@ -807,7 +839,7 @@ function PublicUsdcVaultCard({
               if (!reasonHex) return;
               trip.writeContract({
                 address,
-                abi: PUBLIC_ERC20_ABI,
+                abi: vaultAbi,
                 functionName: 'trip',
                 args: [reasonHex],
                 chainId
@@ -830,11 +862,22 @@ function PublicUsdcVaultCard({
           />
           <Button
             variant='outline'
-            disabled={!isConnected || onWrongChain || reopen.isPending || isPaused === false}
+            disabled={!isConnected || onWrongChain || reopen.isPending || isPaused === false || !isV3Owner}
+            title={
+              !isConnected
+                ? 'Connect a wallet to reopen'
+                : onWrongChain
+                  ? `Switch to ${chainName} first — your wallet is on a different chain`
+                  : isPaused === false
+                    ? 'Already active — reopen would revert'
+                    : reopenOwnerOnly && !isV3Owner
+                      ? 'Reopen is owner-only on v3 — only the deployer wallet can reopen; any other wallet reverts'
+                      : 'Reopen this vault'
+            }
             onClick={() =>
               reopen.writeContract({
                 address,
-                abi: PUBLIC_ERC20_ABI,
+                abi: vaultAbi,
                 functionName: 'reopen',
                 args: [],
                 chainId
@@ -917,7 +960,7 @@ function PublicUsdcVaultCard({
               if (!wallet) return;
               deposit.writeContract({
                 address,
-                abi: PUBLIC_ERC20_ABI,
+                abi: vaultAbi,
                 functionName: 'deposit',
                 args: [amountRaw, wallet],
                 chainId
@@ -995,11 +1038,15 @@ function PublicUsdcVaultCard({
 function PublicWatcherStatus({
   label,
   watcherAddress,
-  handoverBalance
+  handoverBalance,
+  loopCostDivisor = 0.09
 }: {
   label: string;
   watcherAddress: Address;
   handoverBalance: string;
+  /** lREACT per full loop for THIS set (N3: v1 0.09, v2 0.13, v3 0.15);
+   * loops-left = balance / divisor. */
+  loopCostDivisor?: number;
 }) {
   const { data: watcherBalance, isError: watcherBalanceError } = useBalance({
     address: watcherAddress,
@@ -1024,7 +1071,7 @@ function PublicWatcherStatus({
   const watcherBalanceNum =
     watcherBalance !== undefined ? Number.parseFloat(formatEther(watcherBalance.value)) : null;
   const loopsLeft =
-    watcherBalanceNum !== null ? Math.floor(watcherBalanceNum / 0.09) : null;
+    watcherBalanceNum !== null ? Math.floor(watcherBalanceNum / loopCostDivisor) : null;
 
   return (
     <div className='flex flex-col gap-2 rounded-none border p-3'>
@@ -1153,6 +1200,42 @@ export function PublicTestInstance() {
     }
   ];
 
+  const v3EthVaults: PublicVaultCardProps[] = [
+    {
+      id: 'V3-Uni0',
+      label: 'Uni #0 — Origin',
+      role: 'ORIGIN',
+      chainId: PUBLIC_V3_CONTRACTS.vaultUni0.chainId,
+      chainName: PUBLIC_V3_CONTRACTS.vaultUni0.chainName,
+      address: PUBLIC_V3_CONTRACTS.vaultUni0.address as Address,
+      explorerUrl: EXPLORERS[PUBLIC_V3_CONTRACTS.vaultUni0.chainId].url,
+      kind: 'v3eth',
+      abi: PUBLIC_V3_ABI
+    },
+    {
+      id: 'V3-Uni1',
+      label: 'Uni #1 — Sibling',
+      role: 'SIBLING',
+      chainId: PUBLIC_V3_CONTRACTS.vaultUni1.chainId,
+      chainName: PUBLIC_V3_CONTRACTS.vaultUni1.chainName,
+      address: PUBLIC_V3_CONTRACTS.vaultUni1.address as Address,
+      explorerUrl: EXPLORERS[PUBLIC_V3_CONTRACTS.vaultUni1.chainId].url,
+      kind: 'v3eth',
+      abi: PUBLIC_V3_ABI
+    },
+    {
+      id: 'V3-Base0',
+      label: 'Base #0 — Sibling',
+      role: 'SIBLING',
+      chainId: PUBLIC_V3_CONTRACTS.vaultBase0.chainId,
+      chainName: PUBLIC_V3_CONTRACTS.vaultBase0.chainName,
+      address: PUBLIC_V3_CONTRACTS.vaultBase0.address as Address,
+      explorerUrl: EXPLORERS[PUBLIC_V3_CONTRACTS.vaultBase0.chainId].url,
+      kind: 'v3eth',
+      abi: PUBLIC_V3_ABI
+    }
+  ];
+
   return (
     <section id='try-it-live' aria-label='Try it live' className='scroll-mt-20'>
       <Card>
@@ -1167,12 +1250,14 @@ export function PublicTestInstance() {
             </Badge>
           </div>
           <CardDescription>
-            Anyone can trigger these instances — no owner wallet needed. Trip
-            any vault below and the public watcher on Lasna freezes the other
-            vaults in the same set within ~2 seconds. The main deployment
-            above is owner-only; that is the product behavior, not a
-            limitation of this page. Two public sets are live: v1 (shell
-            vaults) and v2 (the real product — ETH + USDC shares).
+            Anyone can trigger these instances — no owner wallet needed to
+            trip or deposit. Trip any vault below and the public watcher on
+            Lasna freezes the other vaults in the same set within ~2
+            seconds. The main deployment above is owner-only; that is the
+            product behavior, not a limitation of this page. Three public
+            sets: v1 (shell vaults), v2 (shares — historical, superseded
+            15 Nov 2026), and v3 (the current set — ETH + USDC shares,
+            owner-only reopen, watcher incident cap).
           </CardDescription>
         </CardHeader>
         <CardContent className='flex flex-col gap-4'>
@@ -1183,17 +1268,21 @@ export function PublicTestInstance() {
               <span className='font-medium'>Trip incident</span> → wait ~2 s →
               watch the vaults in that set flip to PAUSED → press{' '}
               <span className='font-medium'>Reopen</span> on each vault to reset
-              → press <span className='font-medium'>Test deposit()</span> to
+              (v1/v2 only — on v3 reopen is owner-only, so the deployer
+              resets the set after a test) → press{' '}
+              <span className='font-medium'>Test deposit()</span> to
               confirm deposits work again. Every step sends a real transaction
               on a testnet; verify each hash on its explorer.
             </p>
             <p className='text-muted-foreground'>
-              One full loop costs {LOOP_COST_LREACT}. Each vault holds ~0.001
-              ETH for callback fees (the USDC vault holds 0.001 ETH reserve
-              plus 20 USDC). A test deposit to a v1 vault stays there —
-              withdraw is owner-only, so send only testnet dust you do not
-              need back. A deposit to a v2 vault mints shares to your wallet
-              instead.
+              One full loop costs {LOOP_COST_LREACT} on v1,{' '}
+              {PUBLIC_V2_LOOP_COST_LREACT} on v2, and{' '}
+              {PUBLIC_V3_LOOP_COST_LREACT} on v3 (each measured on its own
+              set). Each vault holds ~0.001 ETH for callback fees (the USDC
+              vault holds 0.001 ETH reserve plus 20 USDC). A test deposit to
+              a v1 vault stays there — withdraw is owner-only, so send only
+              testnet dust you do not need back. A deposit to a v2/v3 vault
+              mints shares to your wallet instead.
             </p>
           </div>
 
@@ -1252,17 +1341,22 @@ export function PublicTestInstance() {
           {/* ---- Set v2 ---- */}
           <div className='flex flex-col gap-2 border-t pt-4'>
             <p className='text-sm font-semibold'>
-              Set v2 — shares (PublicVaultV2 ETH + PublicVaultERC20 USDC)
+              Set v2 — shares (PublicVaultV2 ETH + PublicVaultERC20 USDC) —
+              historical, superseded by v3 on 15 Nov 2026
             </p>
             <p className='text-muted-foreground text-sm'>
               Five vaults, one watcher (Lasna{' '}
               <span className='font-mono text-xs break-all tabular-nums'>
                 {PUBLIC_V2_CONTRACTS.watcher.address}
               </span>
-              ). This is the real v2 product: deposits mint ERC-20 shares
+              ). This was the real v2 product: deposits mint ERC-20 shares
               (CSV for ETH, CSUSDC for USDC) and withdraw stays open while
-              paused. Trip has a 60-second cooldown per vault, so one
-              visitor cannot drain the watcher.
+              paused. Trip has a 60-second cooldown per vault — the cooldown
+              only slows aggregate drain, it does not prevent it (rotating
+              trips across five vaults could still drain the watcher in
+              minutes; the v3 watcher caps new incidents instead). Reopen
+              stays permissionless on this set. The vaults and watcher are
+              still live on-chain, but the current public set is v3 below.
             </p>
             <p className='text-muted-foreground text-sm'>
               Recorded E2E v2 (15 Nov 2026): trip Uni #0{' '}
@@ -1302,6 +1396,7 @@ export function PublicTestInstance() {
             label='Public watcher (v2) — Lasna'
             watcherAddress={PUBLIC_V2_CONTRACTS.watcher.address as Address}
             handoverBalance={PUBLIC_V2_WATCHER_BALANCE_AT_HANDOVER_LREACT}
+            loopCostDivisor={PUBLIC_V2_LOOP_COST_DIVISOR}
           />
 
           <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
@@ -1321,6 +1416,96 @@ export function PublicTestInstance() {
               chainName={PUBLIC_V2_CONTRACTS.vaultUsdcBase.chainName}
               address={PUBLIC_V2_CONTRACTS.vaultUsdcBase.address as Address}
               explorerUrl={EXPLORERS[PUBLIC_V2_CONTRACTS.vaultUsdcBase.chainId].url}
+            />
+          </div>
+
+          {/* ---- Set v3 — current ---- */}
+          <div className='flex flex-col gap-2 border-t pt-4'>
+            <p className='text-sm font-semibold'>
+              Set v3 — shares (PublicVaultV3 ETH + PublicVaultERC20V3 USDC) —
+              current
+            </p>
+            <p className='text-muted-foreground text-sm'>
+              Five vaults, one watcher (Lasna{' '}
+              <span className='font-mono text-xs break-all tabular-nums'>
+                {PUBLIC_V3_CONTRACTS.watcher.address}
+              </span>
+              ). The current public set: deposits mint ERC-20 shares
+              (CSV for ETH, CSUSDC for USDC) and withdraw stays open while
+              paused. Trip has a 60-second cooldown per vault, and the
+              watcher caps NEW incidents at 5 per rolling hour — rotating
+              trips can no longer drain it in minutes (worst case ~5 loops
+              per hour). Reopen is owner-only: only the deployer reopens
+              after a test, so a visitor can no longer cancel CONTAINED
+              mid-incident. Funds were migrated from the v2 set
+              (sweepExcess + redeem), no faucet involved.
+            </p>
+            <p className='text-muted-foreground text-sm'>
+              Recorded E2E v3 (15 Nov 2026): trip Uni #0{' '}
+              <a
+                href={`https://sepolia.uniscan.xyz/tx/${PUBLIC_V3_E2E.trip}`}
+                target='_blank'
+                rel='noreferrer'
+                className='font-mono text-xs text-primary underline underline-offset-2 hover:underline'
+              >
+                0xac350def…2d8a30
+              </a>{' '}
+              → react{' '}
+              <a
+                href={`https://lasna.reactscan.net/tx/${PUBLIC_V3_E2E.react}`}
+                target='_blank'
+                rel='noreferrer'
+                className='font-mono text-xs text-primary underline underline-offset-2 hover:underline'
+              >
+                0x82feb96d…f021a8
+              </a>{' '}
+              → all five vaults paused, CONTAINED (loop cost 0.1514159
+              lREACT). All five vaults were reopened by the deployer
+              afterwards — a reopen from any other wallet reverts
+              (OwnableUnauthorizedAccount). Full evidence in the Docs.
+            </p>
+            <p className='rounded-none border border-foreground/40 bg-muted p-2 text-xs'>
+              Address note: the v3 watcher above (Lasna, chain 5318007)
+              shares its address{' '}
+              <span className='font-mono break-all tabular-nums'>
+                0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6
+              </span>{' '}
+              with the v2 ETH factory on Base Sepolia (chain 84532), and
+              the v3 Base ETH implementation shares its address with the
+              v1 vault U1 on Unichain Sepolia (chain 1301). Addresses are
+              per-chain, so there is no collision — but always read the
+              address together with its chain.
+            </p>
+          </div>
+
+          <PublicWatcherStatus
+            label='Public watcher (v3) — Lasna'
+            watcherAddress={PUBLIC_V3_CONTRACTS.watcher.address as Address}
+            handoverBalance={PUBLIC_V3_WATCHER_BALANCE_AT_HANDOVER_LREACT}
+            loopCostDivisor={PUBLIC_V3_LOOP_COST_DIVISOR}
+          />
+
+          <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
+            {v3EthVaults.map((vault) => (
+              <PublicVaultCard key={vault.id} {...vault} />
+            ))}
+            <PublicUsdcVaultCard
+              label='USDC — Sibling'
+              chainId={PUBLIC_V3_CONTRACTS.vaultUsdc.chainId}
+              chainName={PUBLIC_V3_CONTRACTS.vaultUsdc.chainName}
+              address={PUBLIC_V3_CONTRACTS.vaultUsdc.address as Address}
+              explorerUrl={EXPLORERS[PUBLIC_V3_CONTRACTS.vaultUsdc.chainId].url}
+              reopenOwnerOnly
+              tripNoticeVaults='All five v3 public vaults'
+            />
+            <PublicUsdcVaultCard
+              label='USDC — Sibling'
+              chainId={PUBLIC_V3_CONTRACTS.vaultUsdcBase.chainId}
+              chainName={PUBLIC_V3_CONTRACTS.vaultUsdcBase.chainName}
+              address={PUBLIC_V3_CONTRACTS.vaultUsdcBase.address as Address}
+              explorerUrl={EXPLORERS[PUBLIC_V3_CONTRACTS.vaultUsdcBase.chainId].url}
+              reopenOwnerOnly
+              tripNoticeVaults='All five v3 public vaults'
             />
           </div>
         </CardContent>
