@@ -200,7 +200,7 @@ export function SiblingCard({
 
         {debt > 0 ? (
           <div
-            className='flex items-start gap-2 rounded-lg border border-foreground/40 bg-muted p-2 text-xs text-foreground'
+            className='flex items-start gap-2 rounded-none border border-foreground/40 bg-muted p-2 text-xs text-foreground'
             role='alert'
           >
             <Icons.warning className='mt-0.5 size-3.5 shrink-0' />

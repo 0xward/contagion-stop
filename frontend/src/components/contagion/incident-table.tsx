@@ -263,7 +263,7 @@ export function IncidentTable({ incidents }: IncidentTableProps) {
             aria-label='Filter incidents'
           />
         </div>
-        <div className='overflow-x-auto rounded-lg border'>
+        <div className='overflow-x-auto rounded-none border bg-white text-black'>
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

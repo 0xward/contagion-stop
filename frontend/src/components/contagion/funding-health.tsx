@@ -168,7 +168,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
 
         <div className='grid gap-4 md:grid-cols-2'>
           {/* Watcher */}
-          <div className='flex flex-col gap-2 rounded-lg border p-3'>
+          <div className='flex flex-col gap-2 rounded-none border p-3'>
             <div className='flex items-center justify-between'>
               <span className='text-sm font-semibold'>Watcher — Lasna</span>
               <Badge
@@ -224,7 +224,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
           </div>
 
           {/* Siblings */}
-          <div className='flex flex-col gap-2 rounded-lg border p-3'>
+          <div className='flex flex-col gap-2 rounded-none border p-3'>
             <span className='text-sm font-semibold'>Sibling vaults — callback reserves</span>
             <ul className='flex flex-col gap-2'>
               {health.siblings.map((sibling) => {
@@ -261,15 +261,16 @@ export function FundingHealth({ health }: FundingHealthProps) {
           <div className='h-48 w-full'>
             <ResponsiveContainer width='100%' height='100%'>
               <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
-                <CartesianGrid strokeDasharray='3 3' stroke='#1e1e1e' vertical={false} />
-                <XAxis dataKey='name' tick={{ fill: '#a0a0a0', fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: '#a0a0a0', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray='3 3' stroke='#808080' vertical={false} />
+                <XAxis dataKey='name' tick={{ fill: '#404040', fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: '#404040', fontSize: 12 }} tickLine={false} axisLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0a0a0a',
-                    border: '1px solid #1e1e1e',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #808080',
                     borderRadius: 0,
-                    fontSize: 12
+                    fontSize: 12,
+                    color: '#000000'
                   }}
                   formatter={(value, name, props) => [
                     `${value} ${(props?.payload as { unit?: string } | undefined)?.unit ?? ''}`,
@@ -288,7 +289,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
         </div>
 
         {/* Measured cost reference */}
-        <div className='rounded-lg border bg-muted px-3 py-2.5'>
+        <div className='rounded-none border bg-muted px-3 py-2.5'>
           <p className='text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
             Measured cost reference
           </p>

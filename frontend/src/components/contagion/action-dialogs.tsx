@@ -57,7 +57,7 @@ function TxStatus({
   return (
     <div
       className={cn(
-        'flex flex-col gap-1 rounded-lg border p-2 text-xs',
+        'flex flex-col gap-1 rounded-none border p-2 text-xs',
         phase === 'pending' && 'border-border bg-muted',
         phase === 'success' && 'border-foreground/30 bg-muted',
         phase === 'error' && 'border-foreground bg-muted'
@@ -410,7 +410,7 @@ export function DepositTestButton({
       </Button>
       {!live && mockResult === 'reverted' ? (
         <div
-          className='flex flex-col gap-1 rounded-lg border border-foreground bg-muted p-2 text-xs'
+          className='flex flex-col gap-1 rounded-none border border-foreground bg-muted p-2 text-xs'
           role='status'
         >
           <span className='inline-flex items-center gap-2 font-medium text-foreground'>
@@ -425,7 +425,7 @@ export function DepositTestButton({
       ) : null}
       {!live && mockResult === 'success' ? (
         <div
-          className='flex flex-col gap-1 rounded-lg border border-foreground/30 bg-muted p-2 text-xs'
+          className='flex flex-col gap-1 rounded-none border border-foreground/30 bg-muted p-2 text-xs'
           role='status'
         >
           <span className='inline-flex items-center gap-2 font-medium text-foreground'>

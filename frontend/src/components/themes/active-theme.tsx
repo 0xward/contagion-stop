@@ -26,7 +26,12 @@ export function ActiveThemeProvider({
   children: ReactNode;
   initialTheme?: string;
 }) {
-  const themeToUse = initialTheme || DEFAULT_THEME;
+  // Win98 is the only theme (round 2, 15 Nov 2026): normalise anything
+  // else (e.g. a stale `contagionstop-terminal` value handed in from the
+  // server or a stored cookie) to Win98, so a stored Terminal value can
+  // never render dark panels again. The effect below then overwrites the
+  // cookie with Win98, self-healing it on the first visit.
+  const themeToUse = initialTheme === DEFAULT_THEME ? initialTheme : DEFAULT_THEME;
   const [activeTheme, setActiveTheme] = useState<string>(themeToUse);
 
   useEffect(() => {

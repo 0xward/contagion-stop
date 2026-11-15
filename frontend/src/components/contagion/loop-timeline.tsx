@@ -176,7 +176,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
         )}
 
         {latency ? (
-          <div className='rounded-lg border bg-muted px-3 py-2.5'>
+          <div className='rounded-none border bg-muted px-3 py-2.5'>
             <p className='font-mono text-xs leading-relaxed tabular-nums'>
               <span className='text-muted-foreground'>Event → react</span>{' '}
               {latency.eventToReactSeconds.toFixed(1)} s
@@ -192,7 +192,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
         ) : null}
 
         {freezeProof && freezeProof.reverted ? (
-          <div className='flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-foreground/40 bg-muted px-3 py-2.5'>
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-1 rounded-none border border-foreground/40 bg-muted px-3 py-2.5'>
             <Icons.lock className='size-4 text-foreground' />
             <span className='text-sm font-medium text-foreground'>
               deposit() revert — deployment frozen

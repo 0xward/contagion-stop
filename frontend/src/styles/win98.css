@@ -22,6 +22,74 @@
   font-family: Tahoma, 'MS Sans Serif', sans-serif;
 }
 
+/* ---- Win98 token pin (round 2, 15 Nov 2026) ----
+   Defense in depth for the stale-cookie bug: every shadcn panel
+   resolves its colors through Tailwind v4 `--color-*` variables, which
+   are defined per `[data-theme]` on <html> — so a wrong data-theme
+   (e.g. a stored `contagionstop-terminal` cookie) used to turn every
+   card near-black with a violet accent while the hardcoded Win98
+   chrome still looked right. The server now forces Win98 and the
+   cookie self-heals, but these pins make the shell independent of
+   <html> entirely: `--color-*` is redefined on `.win98-scope` itself,
+   the closest ancestor of every panel, so utilities (`bg-card`,
+   `text-muted-foreground`, `bg-primary`, `border-border`, …) resolve
+   to silver / white / navy / black here no matter what data-theme
+   <html> carries. Keep this list in sync with
+   `themes/contagionstop-win98.css`. The AppKit modal and toasts live
+   OUTSIDE .win98-scope (body-level portals) and are intentionally
+   untouched by this pin. ---- */
+.win98-scope {
+  --color-background: #008080;
+  --color-foreground: #000000;
+  --color-card: #c0c0c0;
+  --color-card-foreground: #000000;
+  --color-popover: #c0c0c0;
+  --color-popover-foreground: #000000;
+  --color-primary: #000080;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #dfdfdf;
+  --color-secondary-foreground: #000000;
+  --color-muted: #dfdfdf;
+  --color-muted-foreground: #404040;
+  --color-accent: #dfdfdf;
+  --color-accent-foreground: #000000;
+  --color-destructive: #c00000;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #808080;
+  --color-input: #ffffff;
+  --color-ring: #000080;
+  --color-chart-1: #000080;
+  --color-chart-2: #1084d0;
+  --color-chart-3: #008000;
+  --color-chart-4: #808000;
+  --color-chart-5: #404040;
+  --color-sidebar: #c0c0c0;
+  --color-sidebar-foreground: #000000;
+  --color-sidebar-primary: #000080;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #dfdfdf;
+  --color-sidebar-accent-foreground: #000000;
+  --color-sidebar-border: #808080;
+  --color-sidebar-ring: #000080;
+  --color-success: #008000;
+  --color-warning: #808000;
+  --color-info: #000080;
+  --font-sans: Tahoma, 'MS Sans Serif', 'Pixelated MS Sans Serif', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+}
+
 /* Plain content text inside windows inherits Tahoma too. 98.css sets
    Pixelated on `.window` itself with equal specificity, so this
    same-specificity rule only wins because win98.css loads after

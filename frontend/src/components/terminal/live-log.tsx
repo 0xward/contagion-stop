@@ -234,7 +234,7 @@ export function LiveLog({ steps, incidents, freezeProof }: LiveLogProps) {
           role='log'
           aria-live='off'
           aria-label='Live log — wallet state and recorded run events'
-          className='h-64 overflow-y-auto border bg-white p-3 font-mono text-xs leading-relaxed tabular-nums'
+          className='h-64 overflow-y-auto border bg-white p-3 font-mono text-xs leading-relaxed text-black tabular-nums'
         >
           {rows.length === 0 ? (
             <p className='text-muted-foreground'>Replaying recorded run…</p>

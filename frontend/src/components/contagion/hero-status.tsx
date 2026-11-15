@@ -108,7 +108,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
         {/* ---- Incident banner ---- */}
         <div
           className={cn(
-            'flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:flex-wrap sm:items-start',
+            'flex flex-col gap-3 rounded-none border p-3 sm:flex-row sm:flex-wrap sm:items-start',
             isTripped && 'border-foreground/40 bg-muted',
             isContained && 'border-foreground/40 bg-muted',
             !incident && 'border-foreground/30 bg-muted'
@@ -202,7 +202,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
               strokeWidth={10}
               trailStrokeWidth={10}
               colors={ringColor}
-              trailColor='#1e1e1e'
+              trailColor='#dfdfdf'
             >
               {() => (
                 <div className='flex flex-col items-center'>

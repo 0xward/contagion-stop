@@ -5,10 +5,10 @@ import { getChainName } from '@/lib/wagmi';
 import { useChainId } from 'wagmi';
 
 /**
- * Badge chain aktif (dot violet + nama chain).
- * Terminal violet: dot selalu ungu #8b5cf6, bukan warna per chain.
- * Nama chain disembunyikan di layar sangat kecil (<sm) agar header tidak
- * overflow — dot saja cukup sebagai penanda.
+ * Badge chain aktif (dot navy + nama chain).
+ * Dot memakai token `bg-primary` (navy #000080 di tema Win98), bukan
+ * warna per chain. Nama chain disembunyikan di layar sangat kecil (<sm)
+ * agar header tidak overflow — dot saja cukup sebagai penanda.
  * Dipakai di header dashboard, di samping tombol Connect Wallet.
  */
 export default function ChainBadge() {

@@ -115,21 +115,24 @@ export const GAS_LIMITS = {
   callback: 200000
 } as const;
 
-/** Palette "ContagionStop Terminal" (restyle 15 Nov 2026). Dark terminal:
- * near-black #010207 background, violet #8b5cf6 accent, green #22c55e
- * success, red #ef4444 danger, yellow #eab308 warning; status is told
- * apart by text + border as well as color. */
+/** Palette "ContagionStop Windows 98" (restyle 15 Nov 2026, round 2).
+ * Silver windows #c0c0c0 on a teal #008080 desktop, navy #000080
+ * accent, green #008000 success, red #c00000 danger, olive #808000
+ * warning; status is told apart by text + border as well as color.
+ * (Unused by components today — the shadcn tokens in
+ * styles/themes/contagionstop-win98.css are the source of truth —
+ * but kept in sync so no stale Terminal palette lingers anywhere.) */
 export const PALETTE = {
-  background: '#010207',
-  surface: '#0A0A0A',
-  surfaceElevated: '#141414',
-  border: '#1E1E1E',
-  textPrimary: '#F0F0F0',
-  textSecondary: '#A0A0A0',
-  accent: '#8b5cf6',
-  accentText: '#8b5cf6',
-  success: '#22c55e',
-  danger: '#ef4444',
-  warning: '#eab308',
-  info: '#8b5cf6'
+  background: '#008080',
+  surface: '#C0C0C0',
+  surfaceElevated: '#DFDFDF',
+  border: '#808080',
+  textPrimary: '#000000',
+  textSecondary: '#404040',
+  accent: '#000080',
+  accentText: '#000080',
+  success: '#008000',
+  danger: '#C00000',
+  warning: '#808000',
+  info: '#000080'
 } as const;

@@ -1,6 +1,11 @@
 /* Import individual theme files */
+/* Windows 98 only (round 2, 15 Nov 2026): the Terminal theme file is
+   deliberately NOT imported any more — its dark tokens (#0a0a0a cards,
+   violet #8b5cf6 primary) used to leak back in through a stale
+   `active_theme` cookie on returning visitors. The file itself is kept
+   on disk (plus the backup in contagion-stop-backup-terminal-20261115/)
+   for reference only; do not re-import it. */
 @import './themes/contagionstop-win98.css';
-@import './themes/contagionstop-terminal.css';
 @import './themes/contagionstop.css';
 @import './themes/claude.css';
 @import './themes/discord.css';
