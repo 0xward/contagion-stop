@@ -2,7 +2,6 @@
 
 > **Multisig takes hours. This takes one block.**
 
-[![Reactive Omni](https://img.shields.io/badge/Reactive%20Omni-Every%20Second%20Counts-blue)](https://dorahacks.io)
 [![Base Sepolia](https://img.shields.io/badge/Base%20Sepolia-84532-blue)](https://sepolia.basescan.org)
 [![Unichain Sepolia](https://img.shields.io/badge/Unichain%20Sepolia-1301-blue)](https://sepolia.uniscan.xyz)
 [![Lasna](https://img.shields.io/badge/Lasna-5318007-blue)](https://lasna.reactscan.net)
@@ -17,15 +16,7 @@
 
 ---
 
-## Track — Every Second Counts (Reactive Omni Buildathon)
-
-"Every Second Counts" = the value of this project is measured in seconds: how
-long from a security event on one chain until every sibling deployment is
-frozen. No keeper, no oracle, no AI, no Chainlink CRE — pure Reactive:
-event → Lasna → callback fan-out.
-
-**Prizes (track):** 1st $2,000 + runner-up $250 (paid in REACT).
-**Submission deadline:** 6 Dec 2026, 03:00 WIB (internal safe target: 5 Dec noon WIB).
+No keeper, no oracle, no AI — pure Reactive: event → Lasna → callback fan-out.
 
 ---
 
@@ -299,40 +290,17 @@ while unregistered and correctly ignored (no incident, no `react()`).
 | M8 | Time until CONTAINED | `trippedAt` = 1794668458 | last confirmation = 1794668460 | **2 seconds** |
 | M9 | Confirmation | — | — | **2 / 2 siblings confirmed** |
 
-## Prior art we acknowledge
+## Why no off-chain dependencies?
 
-We did not invent the circuit breaker, and we did not invent auto-pause. What
-is new here is narrow and honest: **the first Reactive-native cross-chain
-circuit breaker in this event** — event → Lasna → callback fan-out as a
-breaker, with no keeper, no oracle, no AI. Every party below is acknowledged,
-each with the one difference that matters.
-
-| Prior art | What it does | How ContagionStop differs |
-|---|---|---|
-| **Pursestrings** | A manual STOP button: a human must notice the attack, open a dashboard, press STOP, then wait for a multisig/operator to execute per chain. | **Automatic vs manual.** From `EmergencyPaused` to `pause()` on the last chain, not one transaction is signed by a human. Pursestrings answers "how can a human stop an attack faster"; ContagionStop answers "how does an attack stop even when no human is awake". |
-| **ReactiveVaultGuard** | Detection only: it watches and alerts that something suspicious happened — but after the alert, someone (or something else) still has to act. | **Enforcement vs detection only.** Our callbacks actually execute `pause()` on-chain on every sibling, and `deposit()` afterwards reverts. Detection without enforcement is a fire alarm without sprinklers; ContagionStop is the sprinkler. |
-| **SentinelBridge / Aegis AI** (outside this event) | Auto-`pause()` / `emergencyPause()` cross-chain — via Chainlink CRE (off-chain keeper/oracle network) plus AI (LLaMA / X/Twitter signals). | **No keeper/oracle/AI, deterministic.** Same outcome, none of the three: the trigger is an on-chain event from the protocol itself, the logic is pure Solidity on Lasna, no model, oracle, or keeper network to trust or pay a subscription (LINK) for. See "Why not Chainlink CRE?" below. |
-
-**Claim scope (do not exceed):** ContagionStop claims "first" ONLY in the
-narrow, honest sense above — the first Reactive-executed circuit breaker,
-without keeper/oracle/AI, **in this event**. It is NOT "the first circuit
-breaker" (that claim would be false: OpenZeppelin `Pausable`, BreakerBox, and
-breakers in major protocols all predate it). Verified 14 Nov 2026: no circuit
-breaker / auto-pause across chains among the 23 builds in this event.
-
----
-
-## Why not Chainlink CRE?
-
-Asked up front, not hidden: CRE is the right tool when the trigger needs
-**off-chain data** (social signals like Aegis AI, or prices from outside the
-chain). Here the trigger is **already on-chain** — an `EmergencyPaused` event
-emitted by the protocol itself. Adding CRE would only add trust assumptions
-(the CRE DON + an AI model that can be fooled), subscription cost, and
-latency, for zero benefit. The simpler, deterministic thing wins when the
-problem is genuinely on-chain. Proof a judge can check: there is not one
-off-chain dependency in this repo (no keeper, bot, oracle, or API key); the
-whole loop can be replayed from the 4 transaction hashes + contract state.
+The trigger is **already on-chain** — an `EmergencyPaused` event emitted by
+the protocol itself. Adding an off-chain keeper, oracle, or AI layer would
+only add trust assumptions, subscription cost, and latency, for zero benefit.
+The simpler, deterministic thing wins when the problem is genuinely on-chain.
+Circuit breakers as a concept predate this project; what is specific here is
+the Reactive-executed cross-chain fan-out — one event, N callbacks, confirmed
+per destination. Proof: there is not one off-chain dependency in this repo (no
+keeper, bot, oracle, or API key); the whole loop can be replayed from the 4
+transaction hashes + contract state.
 
 ---
 
@@ -385,7 +353,7 @@ whole loop can be replayed from the 4 transaction hashes + contract state.
 | Contracts | Solidity 0.8.29, Foundry, `reactive-lib-omni` v0.1.0, OpenZeppelin v5 (`Pausable` + `Ownable`), `evm_version = "cancun"` |
 | Chains | Lasna (5318007, watcher) · Unichain Sepolia (1301, origin A + sibling C) · Base Sepolia (84532, sibling B) |
 | Callback gas limit | 200,000 per callback (proxy overhead measured 130,000; 150,000 is NOT enough) |
-| Frontend | Next.js 16 + shadcn/ui (`dashboard-01` on `Kiranism/next-shadcn-dashboard-starter`) + wagmi v2 + viem + RainbowKit (3 chains) — see `ux-ui-notes.md` |
+| Frontend | Next.js 16 + shadcn/ui + wagmi v2 + viem + Reown AppKit |
 | Video | Xvfb + ffmpeg (headless VM), YouTube unlisted, < 3 min |
 
 ---
@@ -406,9 +374,8 @@ needed for unit tests — the system contract and callback proxy are mocked
 (`test/mocks/`). No private key, no faucet, no deploy is needed to run the
 tests.
 
-**Deploy to testnet:** see [`DEPLOY-PLAN.md`](DEPLOY-PLAN.md) — plan only,
-do not run it without an explicit go-ahead. Funding: ±0.18 ETH Base Sepolia +
-±0.05 ETH Unichain Sepolia + 10 lREACT; SepETH 0.
+**Deploy to testnet:** deploy scripts live in `script/` (Foundry). Funding:
+±0.18 ETH Base Sepolia + ±0.05 ETH Unichain Sepolia + 10 lREACT; SepETH 0.
 
 ---
 
@@ -435,10 +402,7 @@ reactive-contagion-stop/
 │   ├── DeployLasna.s.sol
 │   └── Fund.s.sol
 ├── README.md
-├── VERIFICATION.md                   # loop reproduction steps + 4 tx hashes
-├── DEMO.md                           # video script < 3 min
-└── docs/
-    └── demo-script.md                # VO script ±330–340 words @135 WPM
+└── VERIFICATION.md                   # loop reproduction steps + 4 tx hashes
 ```
 
 ---
@@ -449,5 +413,4 @@ MIT — see `LICENSE`.
 
 ---
 
-*Built during the Reactive Omni Buildathon. Original code; prior art is
-acknowledged explicitly above. Testnet only, not audited.*
+*Original code. Testnet only, not audited.*
