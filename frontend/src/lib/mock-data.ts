@@ -31,7 +31,6 @@
  *   T2b = 1794668461 (+3 dtk, callback pause C di Unichain, blok 67816033)
  *   Loop penuh = 3,0 dtk; CONTAINED setelah 2 dtk (blok Lasna 8335438).
  *   Gas: trip 29.913; react 349.263; callback B 78.314; callback C 78.304.
- * Benchmark context: Tripwire (median 1.4 s), SnapGuard (~2 s), OmniStop (2,000 ms) are single-chain loops; this loop (3.0 s, 2-chain fan-out + 2 confirmations) is slower — compare per leg (B 2.0 s; C 3.0 s), not only the headline.
  */
 
 import type {
@@ -249,16 +248,6 @@ export const RECORDED_LATENCY: LatencyMetrics = {
   gasCallbackBase: 78314,
   gasCallbackUnichain: 78304,
   gasCallbackLimit: 200000,
-  benchmarks: {
-    tripwireSeconds: 1.4,
-    snapGuardSeconds: 2,
-    omniStopSeconds: 2,
-  },
-  benchmarkNote:
-    "Measured on-chain 14 Nov 2026 (scenario 1, block timestamps, 1 s granularity; " +
-    "cross-chain clocks can differ ±1 s): full loop 3.0 s — slower than the benchmarks, " +
-    "which are 1-chain loops (1 callback). Compare per leg (B 2.0 s; C 3.0 s), " +
-    "not only the headline.",
   isMock: true,
 };
 

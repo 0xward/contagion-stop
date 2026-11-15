@@ -146,8 +146,8 @@ each sibling via its proxy).
 
 - Latency is measured in 1-second block timestamps; cross-chain clocks can
   differ by ±1 s.
-- The 3 s full loop is slower than the 1.4–2.0 s single-chain benchmarks —
-  because it fans out to **2 chains** with 2 confirmations. Per destination
-  (2 s / 3 s) it is comparable.
+- The 3 s full loop fans out to **2 chains** with 2 confirmations. Per
+  destination the pause lands in 2 s (Base Sepolia) and 3 s (Unichain
+  Sepolia) — the fan-out, not a single chain, sets the total.
 - The retry path needs operator preconditions (debt covered, sibling
   funded, paused-but-unconfirmed sibling unpaused first) — see Scenario 2.

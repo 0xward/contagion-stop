@@ -68,40 +68,12 @@ export const CALLBACK_GAS_LIMIT = 200_000;
 /** Batas gas react() watcher (ux-ui-notes §4c). */
 export const REACT_GAS_LIMIT = 900_000;
 
-/**
- * Patokan latensi pesaing track Every Second Counts (ux-ui-notes §4c).
- * Data STATIS berlabel — angka ini BUKAN hasil ukur ContagionStop.
- * Konteks wajib: ketiganya loop 1 chain (stop-loss), sementara loop
- * ContagionStop fan-out ke 2 chain — bandingkan per tujuan, bukan headline.
- */
-export const LATENCY_BENCHMARKS = [
-  {
-    name: 'Tripwire',
-    valueMs: 1400,
-    label: 'Median 1,4 dtk',
-    context: 'Loop 1 chain (stop-loss)'
-  },
-  {
-    name: 'SnapGuard',
-    valueMs: 2000,
-    label: '~2 dtk',
-    context: 'Loop 1 chain (stop-loss)'
-  },
-  {
-    name: 'OmniStop',
-    valueMs: 2000,
-    label: '2.000 ms',
-    context: 'Loop 1 chain (sinyal stop-loss)'
-  }
-] as const;
-
 export const APP_NAME = 'ContagionStop';
 
 /* ------------------------------------------------------------------ */
 /* Merged from staging config (2026-11-14) — new exports only.        */
 /* Existing exports above (CONTRACTS, LIVE, EXPLORERS,                 */
-/* CALLBACK_GAS_LIMIT, REACT_GAS_LIMIT, LATENCY_BENCHMARKS, APP_NAME)  */
-/* are untouched.                                                      */
+/* CALLBACK_GAS_LIMIT, REACT_GAS_LIMIT, APP_NAME) are untouched.       */
 /* ------------------------------------------------------------------ */
 
 /** Chain metadata per destination (explorer URL from EXPLORERS above). */

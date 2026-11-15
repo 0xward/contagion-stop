@@ -276,7 +276,7 @@ export function FundingHealth({ health }: FundingHealthProps) {
                     name
                   ]}
                 />
-                <Bar dataKey='reserves' name='Reserves' fill='#8b5cf6' radius={[0, 0, 0, 0]} />
+                <Bar dataKey='reserves' name='Reserves' fill='#000080' radius={[0, 0, 0, 0]} />
                 <Bar dataKey='debt' name='Debt' fill='#737373' radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

@@ -9,6 +9,7 @@ import NextTopLoader from 'nextjs-toploader';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
+import '../styles/98-scoped.css';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#010207'
+  themeColor: '#008080'
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

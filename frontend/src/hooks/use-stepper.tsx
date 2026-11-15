@@ -119,7 +119,7 @@ export function useFormStepper(schemas: ZodType[], options?: UseFormStepperOptio
    * fail the gate). Mounted fields are marked touched, and STEP-SCHEMA issues
    * are painted onto their fields' error state — a blocked Next is never a
    * silent dead-click, even when all rules live in the step schema.
-   * submissionAttempts is NOT incremented, so untouched later steps show no
+   * The attempt counter is NOT incremented, so untouched later steps show no
    * errors when they mount.
    */
   const triggerFormGroup = async (form: AnyFormApi) => {

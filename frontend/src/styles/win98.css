@@ -1,0 +1,291 @@
+/* ============================================================
+   ContagionStop Windows 98 — desktop shell layer (15 Nov 2026)
+   Overrides + shell styling on top of the scoped 98.css import.
+   Loaded after 98-scoped.css, so these unlayered rules win on equal
+   specificity. Rules enforced here:
+   - 98.css sets huge h1-h4 sizes and 75px min-width buttons; both are
+     tamed so shadcn content keeps its intended sizes.
+   - 98.css renders button text via `color: transparent` + text-shadow,
+     which would hide `currentColor` SVG icons — restore icon color.
+   - Only `transform` / `opacity` are animated (compositor-only).
+   - Every animation is killed by `prefers-reduced-motion` and by
+     `html[data-motion='off']` (manual Motion toggle).
+   ============================================================ */
+
+/* ---- Tahoma, not Pixelated, for plain UI text (brief: font retro
+   Tahoma / MS Sans Serif). 98.css inherits "Pixelated MS Sans Serif"
+   into every `.window` descendant; title bars, buttons, inputs and
+   tables keep their explicit Pixelated rules (explicit beats
+   inheritance), while plain content text and headings switch to
+   Tahoma. ---- */
+.win98-scope {
+  font-family: Tahoma, 'MS Sans Serif', sans-serif;
+}
+
+/* Plain content text inside windows inherits Tahoma too. 98.css sets
+   Pixelated on `.window` itself with equal specificity, so this
+   same-specificity rule only wins because win98.css loads after
+   98-scoped.css (see src/app/layout.tsx import order). Title bars,
+   buttons, inputs and tables keep their explicit Pixelated rules. */
+.win98-scope .window {
+  font-family: Tahoma, 'MS Sans Serif', sans-serif;
+}
+
+.win98-scope h1,
+.win98-scope h2,
+.win98-scope h3,
+.win98-scope h4 {
+  font-family: Tahoma, 'MS Sans Serif', sans-serif;
+}
+
+/* ---- Tame 98.css heading sizes (h1 5rem / h2 2.5rem would blow up
+   the shadcn Heading + docs titles) ---- */
+.win98-scope h1 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+.win98-scope h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.win98-scope h3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+.win98-scope h4 {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* ---- Keep SVG icons visible inside 98.css buttons
+   (98.css sets `color: transparent` on buttons; lucide/tablar icons
+   use currentColor for their stroke) ---- */
+.win98-scope button svg {
+  color: #222;
+}
+.win98-scope button:disabled svg {
+  color: grey;
+}
+
+/* Icon-only buttons (dialog close, info buttons) must not inherit the
+   75px 98.css min-width. */
+.win98-scope button:has(> svg:only-child) {
+  min-width: 20px;
+  padding: 0 2px;
+}
+
+/* 98.css `table { white-space: nowrap }` would force wide tables
+   (incident history) to overflow on phones; the tables live inside
+   horizontal-scroll wrappers, but cell text may still wrap. */
+.win98-scope table {
+  white-space: normal;
+}
+
+/* shadcn Card inside a 98.css window: keep the silver card but give it
+   a real bevel instead of the flat 1px border. */
+.win98-scope [data-slot='card'] {
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset 1px 1px #fff,
+    inset -2px -2px grey,
+    inset 2px 2px #dfdfdf;
+  border: none;
+}
+
+/* ---- Desktop shell ---- */
+.win98-desktop {
+  background-color: #008080;
+  /* Subtle Win98-style desktop texture: faint dotted grid, desktop only. */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+/* ---- Window open animation (mount only) ---- */
+@keyframes win98-window-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.win98-scope .window.win98-window-enter {
+  /* No fill mode on purpose: a `both`/`forwards` fill would keep the
+     final keyframe transform applied forever and override the inline
+     drag translate. Without fill the element returns to its own
+     (drag) transform the moment the 0.18s animation ends. */
+  animation: win98-window-in 0.18s ease-out 1;
+}
+
+/* Dragging: no transition fighting, raised above siblings. */
+.win98-window-dragging {
+  z-index: 30;
+  user-select: none;
+}
+
+/* Title bar is the drag handle (desktop only, via the hook). */
+.win98-window-titlebar {
+  touch-action: none;
+}
+.win98-window-titlebar[data-draggable='true'] {
+  cursor: grab;
+}
+.win98-window-titlebar[data-draggable='true']:active {
+  cursor: grabbing;
+}
+
+/* ---- Desktop icons ---- */
+.win98-desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 84px;
+  padding: 4px 2px;
+  background: none;
+  border: 1px dotted transparent;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+.win98-desktop-icon:hover,
+.win98-desktop-icon:focus-visible {
+  border-color: #fff;
+  outline: none;
+}
+.win98-desktop-icon:focus-visible {
+  outline: 1px dotted #fff;
+  outline-offset: -4px;
+}
+.win98-desktop-icon-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #c0c0c0;
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset 1px 1px #fff,
+    inset -2px -2px grey,
+    inset 2px 2px #dfdfdf;
+  color: #000080;
+}
+.win98-desktop-icon-label {
+  font-size: 11px;
+  line-height: 1.25;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* ---- Taskbar ---- */
+.win98-taskbar {
+  background: #c0c0c0;
+  box-shadow:
+    inset 0 1px #dfdfdf,
+    inset 0 2px #fff;
+  border-top: 1px solid #dfdfdf;
+}
+.win98-taskbar .win98-start-button {
+  font-weight: 700;
+  min-width: 0;
+}
+.win98-task-button {
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.win98-task-button[data-active='true'] {
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+  text-shadow: 1px 1px #222;
+  font-weight: 700;
+}
+.win98-taskbar-clock {
+  box-shadow:
+    inset -1px -1px #dfdfdf,
+    inset 1px 1px grey;
+  padding: 2px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ---- Start menu ---- */
+.win98-start-menu {
+  min-width: 220px;
+}
+.win98-start-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 12px;
+  text-align: start;
+  cursor: pointer;
+}
+.win98-start-menu-item:hover,
+.win98-start-menu-item:focus-visible {
+  background: navy;
+  color: #fff;
+  outline: none;
+}
+.win98-start-menu-item:hover svg,
+.win98-start-menu-item:focus-visible svg {
+  color: #fff;
+}
+
+/* ---- Boot splash ---- */
+@keyframes win98-boot-bar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.win98-boot-bar {
+  animation: win98-boot-bar 1.5s linear 1 both;
+}
+@keyframes win98-boot-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.win98-boot-splash[data-leaving='true'] {
+  animation: win98-boot-out 0.25s ease-in 1 both;
+}
+
+/* ---- Blinking cursor (kept from the terminal layer) ---- */
+.win98-cursor {
+  display: inline-block;
+  animation: term-blink 1s step-end infinite;
+}
+
+/* ---- Kill switches: reduced motion + manual Motion toggle ---- */
+@media (prefers-reduced-motion: reduce) {
+  .win98-scope .window.win98-window-enter,
+  .win98-boot-bar,
+  .win98-boot-splash[data-leaving='true'],
+  .win98-cursor {
+    animation: none !important;
+  }
+}
+
+html[data-motion='off'] .win98-scope .window.win98-window-enter,
+html[data-motion='off'] .win98-boot-bar,
+html[data-motion='off'] .win98-boot-splash[data-leaving='true'],
+html[data-motion='off'] .win98-cursor {
+  animation: none !important;
+}

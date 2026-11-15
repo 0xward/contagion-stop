@@ -1,21 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Terminal } from '@/components/magicui/terminal';
 
-export interface BootSequenceProps {
+export interface Win98BootLogProps {
   /** Full lines, typed in order (each already includes its `> ` prompt). */
   lines: string[];
 }
 
 /**
- * Typing + boot sequence (research rank 3) — runs ONCE per tab session
- * when the Overview loads: 18 ms/char, 150 ms between lines, blinking
+ * Boot log in a Windows 98 window (replaces the terminal BootSequence):
+ * the same recorded-run lines, typed once per tab session (18 ms/char,
+ * 150 ms between lines) inside a sunken white panel, with a blinking
  * block cursor at the end. Resting state is the full text: under
  * `prefers-reduced-motion`, with Motion off, or on repeat visits in the
  * same tab, every line renders instantly instead of typing.
  */
-export function BootSequence({ lines }: BootSequenceProps) {
+export function Win98BootLog({ lines }: Win98BootLogProps) {
   const [doneLines, setDoneLines] = useState<string[]>([]);
   const [current, setCurrent] = useState('');
   const [finished, setFinished] = useState(false);
@@ -34,15 +34,25 @@ export function BootSequence({ lines }: BootSequenceProps) {
       setFinished(true);
     };
 
+    // MotionProvider reads localStorage in its own effect, which runs
+    // after this one — check the stored value directly so a stored
+    // "off" never types for a frame.
+    let motionOff = false;
+    try {
+      motionOff = window.localStorage.getItem('terminal-motion') === 'off';
+    } catch {
+      // Storage unavailable — type anyway.
+    }
     if (
       window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
-      document.documentElement.dataset.motion === 'off'
+      document.documentElement.dataset.motion === 'off' ||
+      motionOff
     ) {
       showAll();
       return;
     }
     try {
-      if (window.sessionStorage.getItem('terminal-boot-done') === '1') {
+      if (window.sessionStorage.getItem('win98-bootlog-done') === '1') {
         showAll();
         return;
       }
@@ -71,7 +81,7 @@ export function BootSequence({ lines }: BootSequenceProps) {
       if (cancelled) return;
       setFinished(true);
       try {
-        window.sessionStorage.setItem('terminal-boot-done', '1');
+        window.sessionStorage.setItem('win98-bootlog-done', '1');
       } catch {
         // Storage unavailable — harmless.
       }
@@ -85,15 +95,14 @@ export function BootSequence({ lines }: BootSequenceProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linesKey]);
 
-  // Window chrome comes from Magic UI `Terminal` (registry copy-paste,
-  // `sequence={false}` so it renders plain children); the typing logic
-  // above stays custom so the sequence runs once per tab session and
-  // renders instantly under reduced-motion / Motion off.
   return (
-    <div aria-label='Boot sequence'>
-      <Terminal sequence={false} className='max-h-none max-w-none rounded-none'>
+    <div className='window' aria-label='Boot log'>
+      <div className='title-bar'>
+        <div className='title-bar-text'>BOOT.LOG — C:\CONTAINMENT</div>
+      </div>
+      <div className='window-body'>
         <div
-          className='px-1 py-1 font-mono text-xs leading-relaxed tabular-nums'
+          className='sunken-panel px-2 py-1 font-mono text-xs leading-relaxed tabular-nums'
           role='log'
           aria-live='off'
         >
@@ -105,17 +114,17 @@ export function BootSequence({ lines }: BootSequenceProps) {
           {!finished ? (
             <p className='break-words whitespace-pre-wrap'>
               {current}
-              <span className='term-cursor' aria-hidden='true'>
+              <span className='win98-cursor' aria-hidden='true'>
                 █
               </span>
             </p>
           ) : (
             <p aria-hidden='true'>
-              <span className='term-cursor'>█</span>
+              <span className='win98-cursor'>█</span>
             </p>
           )}
         </div>
-      </Terminal>
+      </div>
     </div>
   );
 }

@@ -95,6 +95,7 @@ import {
   IconUsers,
   IconVideo,
   IconCrown,
+  IconPower,
   IconX
 } from '@tabler/icons-react';
 
@@ -176,6 +177,7 @@ export const Icons = {
   share: IconShare,
   login: IconLogin,
   logout: IconLogout,
+  power: IconPower,
   gripVertical: IconGripVertical,
 
   // Shapes / Indicators

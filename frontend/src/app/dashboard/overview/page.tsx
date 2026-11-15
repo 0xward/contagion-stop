@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-import { BootSequence } from '@/components/terminal/boot-sequence';
+import { Win98BootLog } from '@/components/win98/boot-log';
 import { LiveLog } from '@/components/terminal/live-log';
 import { HeroStatus } from '@/components/contagion/hero-status';
 import { SiblingGrid } from '@/components/contagion/sibling-grid';
@@ -155,8 +155,8 @@ export default function OverviewPage() {
       }
     >
       <div className='flex flex-1 flex-col gap-4'>
-        {/* ---- Boot sequence (terminal, once per tab session) ---- */}
-        <BootSequence lines={bootLines} />
+        {/* ---- Boot log (Win98 window, once per tab session) ---- */}
+        <Win98BootLog lines={bootLines} />
 
         {/* ---- Demo control (recorded run) ---- */}
         <Card>

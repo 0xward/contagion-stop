@@ -91,15 +91,6 @@ export interface TimelineStep {
   isMock: boolean;
 }
 
-export interface LatencyBenchmarks {
-  /** Tripwire — median 1,4 dtk, loop 1 chain (stop-loss). */
-  tripwireSeconds: number;
-  /** SnapGuard — ~2 dtk, loop 1 chain (stop-loss). */
-  snapGuardSeconds: number;
-  /** OmniStop — 2.000 ms, loop 1 chain (sinyal stop-loss). */
-  omniStopSeconds: number;
-}
-
 export interface LatencyMetrics {
   /** T0 — block timestamp tx `emergencyPause` (Unichain Sepolia). */
   t0: number;
@@ -126,9 +117,6 @@ export interface LatencyMetrics {
   gasCallbackBase: number;
   gasCallbackUnichain: number;
   gasCallbackLimit: number;
-  benchmarks: LatencyBenchmarks;
-  /** Note on the comparison with the benchmarks (shown in the UI). */
-  benchmarkNote: string;
   isMock: boolean;
 }
 

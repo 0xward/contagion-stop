@@ -11,6 +11,7 @@
 
 @import './theme.css';
 @import './terminal.css';
+@import './win98.css';
 
 @layer base {
   * {

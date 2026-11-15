@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import { NumberTicker } from '@/components/magicui/number-ticker';
 import { useMotionAllowed } from '@/components/terminal/use-motion-allowed';
-import { LATENCY_BENCHMARKS } from '@/lib/config';
 import type { Incident, LatencyMetrics } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -97,7 +96,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
   const total = incident?.confirmedTotal ?? 2;
   const ringTotal = Math.max(total, 1);
   const ringColor =
-    confirmed === 0 ? '#525252' : confirmed < total ? '#8b5cf6' : '#22c55e';
+    confirmed === 0 ? '#525252' : confirmed < total ? '#000080' : '#008000';
 
   const isMock = incident?.isMock ?? latency?.isMock ?? false;
   const isContained = incident?.status === 'CONTAINED';
@@ -310,30 +309,13 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
           </div>
         </div>
 
-        <div className='border-t pt-4'>
-          <p className='text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase'>
-            Benchmarks — single-chain loops (stop-loss)
-          </p>
-          <div className='flex flex-wrap gap-x-6 gap-y-2'>
-            {LATENCY_BENCHMARKS.map((b) => (
-              <div key={b.name} className='flex flex-col'>
-                <span className='text-sm font-medium'>{b.name}</span>
-                <span className='font-mono text-xs tabular-nums'>{b.label}</span>
-                <span className='text-muted-foreground text-xs'>{b.context}</span>
-              </div>
-            ))}
-          </div>
-          <p className='text-muted-foreground mt-3 text-xs'>
-            {latency
-              ? latency.benchmarkNote
-              : 'Our loop fans out to 2 chains (2 callbacks + 2 cross-chain confirmations), while the benchmarks above are single-chain loops — compare per leg, not only the headline.'}
-          </p>
-          {latency?.isMock ? (
-            <p className='mt-1 text-xs text-foreground'>
+        {latency?.isMock ? (
+          <div className='border-t pt-4'>
+            <p className='text-xs text-foreground'>
               Measured on-chain 14 Nov 2026 (scenario 1) — static snapshot, not live-polled.
             </p>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

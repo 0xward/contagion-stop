@@ -16,9 +16,9 @@ export const TERMINAL_NAV_LINKS = [
 /**
  * Terminal nav (Overview / Vaults / History / Docs). Vaults and History
  * are sections of the Overview page, so they link to its `#vaults` and
- * `#history` anchors. Vertical in the sidebar (violet left bar + tinted
- * background for the active item, like the reference dashboard); horizontal
- * in the mobile header. Active anchor state tracks `location.hash`.
+ * `#history` anchors. Active anchor state tracks `location.hash`.
+ * (Kept as the single nav-link source of truth; the Win98 shell renders
+ * these links as desktop icons, Start-menu items and taskbar buttons.)
  */
 export default function DashboardNav({
   orientation = 'horizontal'

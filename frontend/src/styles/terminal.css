@@ -34,16 +34,6 @@
   }
 }
 
-@keyframes term-flicker {
-  0%,
-  100% {
-    opacity: 0.04;
-  }
-  50% {
-    opacity: 0.028;
-  }
-}
-
 @keyframes marquee-scroll {
   from {
     transform: translateX(0);
@@ -164,39 +154,12 @@
   animation: containment-shimmer 2s linear infinite;
 }
 
-/* ---- CRT layers: scanlines + vignette + flicker (rank 6) ----
-   Desktop only (>= 900px), pointer-events none, subtle (<= 4%). */
-@media (min-width: 900px) {
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 2px,
-      rgba(255, 255, 255, 0.5) 2px,
-      rgba(255, 255, 255, 0.5) 4px
-    );
-    opacity: 0.04;
-    animation: term-flicker 3s ease-in-out infinite;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 60%,
-      rgba(0, 0, 0, 0.35) 100%
-    );
-  }
-}
+/* ---- CRT layers REMOVED (Win98 restyle 15 Nov 2026): scanlines +
+   vignette + flicker do not belong on a Windows 98 desktop. The
+   `term-flicker` keyframe and the body::before/::after overlays were
+   deleted with them; everything else in this file (blink, pulse,
+   marquee, glitch, containment bar) is still used by the Win98 shell
+   (live log, tx ticker, hero). ---- */
 
 /* ---- Kill switches (research §5.1) ---- */
 @media (prefers-reduced-motion: reduce) {
@@ -210,10 +173,6 @@
   .containment-fill {
     transition: none;
   }
-  body::before,
-  body::after {
-    display: none !important;
-  }
 }
 
 html[data-motion='off'] .term-cursor,
@@ -226,9 +185,4 @@ html[data-motion='off'] .containment-shimmer::after {
 
 html[data-motion='off'] .containment-fill {
   transition: none;
-}
-
-html[data-motion='off'] body::before,
-html[data-motion='off'] body::after {
-  display: none !important;
 }

@@ -188,10 +188,6 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
               <span className='text-muted-foreground'> · Leg Unichain</span>{' '}
               {latency.legUnichainSeconds.toFixed(1)} s
             </p>
-            <p className='mt-1.5 text-xs leading-relaxed text-muted-foreground'>
-              Benchmarks (single-chain stop-loss loops, for context — Tripwire median 1.4 s ·
-              SnapGuard ~2 s · OmniStop 2,000 ms): {latency.benchmarkNote}
-            </p>
           </div>
         ) : null}
 
