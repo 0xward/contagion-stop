@@ -1302,6 +1302,7 @@ export const PUBLIC_V2_ADDRESSES = {
   publicVaultV2Uni1: '0x6297D51f2D267aA636C3A0B2C842C118CDBC09be',
   publicVaultV2Base0: '0x405aaB687EE6453161935cCe267d9F2D01eFa540',
   publicVaultUsdc: '0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043',
+  publicVaultUsdcBase: '0x50aDA75e8dba905414d30dAFF46C2692db9fc05c',
   /** Lasna (5318007) — BUKAN Base Sepolia, meski alamatnya sama dengan vault B publik lama. */
   publicWatcherV2: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
 } as const;

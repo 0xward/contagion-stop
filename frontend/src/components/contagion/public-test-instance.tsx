@@ -608,7 +608,7 @@ function PublicUsdcVaultCard({
     setNotice({
       kind: 'trip',
       hash,
-      text: 'Trip confirmed — the watcher callbacks are expected, not yet confirmed. All four v2 public vaults should flip to PAUSED within ~2 s.'
+      text: 'Trip confirmed — the watcher callbacks are expected, not yet confirmed. All five v2 public vaults should flip to PAUSED within ~2 s.'
     })
   );
   useReportWrite(reopen.data, reopen.isSuccess, (hash) =>
@@ -1201,7 +1201,7 @@ export function PublicTestInstance() {
               Set v2 — shares (PublicVaultV2 ETH + PublicVaultERC20 USDC)
             </p>
             <p className='text-muted-foreground text-sm'>
-              Four vaults, one watcher (Lasna{' '}
+              Five vaults, one watcher (Lasna{' '}
               <span className='font-mono text-xs break-all tabular-nums'>
                 {PUBLIC_V2_CONTRACTS.watcher.address}
               </span>
@@ -1260,6 +1260,13 @@ export function PublicTestInstance() {
               chainName={PUBLIC_V2_CONTRACTS.vaultUsdc.chainName}
               address={PUBLIC_V2_CONTRACTS.vaultUsdc.address as Address}
               explorerUrl={EXPLORERS[PUBLIC_V2_CONTRACTS.vaultUsdc.chainId].url}
+            />
+            <PublicUsdcVaultCard
+              label='USDC — Sibling'
+              chainId={PUBLIC_V2_CONTRACTS.vaultUsdcBase.chainId}
+              chainName={PUBLIC_V2_CONTRACTS.vaultUsdcBase.chainName}
+              address={PUBLIC_V2_CONTRACTS.vaultUsdcBase.address as Address}
+              explorerUrl={EXPLORERS[PUBLIC_V2_CONTRACTS.vaultUsdcBase.chainId].url}
             />
           </div>
         </CardContent>

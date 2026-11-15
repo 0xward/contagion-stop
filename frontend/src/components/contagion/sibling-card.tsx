@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Address } from 'viem';
-import { useAccount, useChainId, useReadContract, useSwitchChain } from 'wagmi';
+import { useAccount, useChainId, useReadContract } from 'wagmi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,12 @@ import type { Sibling } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useLiveVault } from '@/hooks/use-live-vault';
 import { AssetLogo } from '@/components/contagion/asset-logo';
+import ChainSwitchError from '@/components/web3/chain-switch-error';
+import {
+  failureOrNull,
+  useChainSwitcher,
+  type SwitchChainFailure
+} from '@/lib/switch-chain';
 import {
   DepositTestButton,
   EmergencyPauseDialog,
@@ -101,8 +107,14 @@ export function SiblingCard({
   // switch — the app never auto-switches chains.
   const { isConnected } = useAccount();
   const connectedChainId = useChainId();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchToChain, isSwitching } = useChainSwitcher();
+  const [switchError, setSwitchError] = useState<SwitchChainFailure | null>(null);
   const onWrongChain = isConnected && connectedChainId !== sibling.chainId;
+
+  async function handleSwitch() {
+    const result = await switchToChain(sibling.chainId);
+    setSwitchError(failureOrNull(result));
+  }
 
   // Live: paused() + eth_getBalance + totalDeposited(). A value is
   // shown only once its own read resolved; until then it is "—".
@@ -231,10 +243,16 @@ export function SiblingCard({
               variant='outline'
               size='sm'
               disabled={isSwitching}
-              onClick={() => switchChain({ chainId: sibling.chainId })}
+              onClick={() => void handleSwitch()}
             >
               Switch to {sibling.chainName}
             </Button>
+            {switchError ? (
+              <ChainSwitchError
+                failure={switchError}
+                onDismiss={() => setSwitchError(null)}
+              />
+            ) : null}
           </div>
         ) : null}
 

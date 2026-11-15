@@ -185,6 +185,12 @@ const PUBLIC_V2_CONTRACTS = [
     explorer: 'https://sepolia.uniscan.xyz/address/0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043'
   },
   {
+    name: 'PublicVaultERC20 USDC (FUNDED — 20 USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x50aDA75e8dba905414d30dAFF46C2692db9fc05c',
+    explorer: 'https://sepolia.basescan.org/address/0x50aDA75e8dba905414d30dAFF46C2692db9fc05c'
+  },
+  {
     name: 'Public ContagionWatcher v2 — Lasna (5318007)',
     chain: 'Lasna (5318007)',
     address: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b',
@@ -225,6 +231,18 @@ const PUBLIC_V2_CONTRACTS = [
     chain: 'Unichain Sepolia (1301)',
     address: '0xA22A250522C1CbD76F79AfE5a864bb238Cf05424',
     explorer: 'https://sepolia.uniscan.xyz/address/0xA22A250522C1CbD76F79AfE5a864bb238Cf05424'
+  },
+  {
+    name: 'PublicVaultERC20 implementation (USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x746eaa86565b13df9ef66a74ad8bb5e6e8ca6dfa',
+    explorer: 'https://sepolia.basescan.org/address/0x746eaa86565b13df9ef66a74ad8bb5e6e8ca6dfa'
+  },
+  {
+    name: 'VaultFactoryERC20 (public v2, USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x9b9eeee0a375a9391fc25c3fcadabe712d3acc2f',
+    explorer: 'https://sepolia.basescan.org/address/0x9b9eeee0a375a9391fc25c3fcadabe712d3acc2f'
   }
 ] as const;
 

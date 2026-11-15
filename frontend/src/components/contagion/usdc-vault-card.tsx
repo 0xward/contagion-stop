@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { formatUnits, parseUnits, type Address } from 'viem';
-import { useAccount, useChainId, useReadContract, useSwitchChain, useWriteContract } from 'wagmi';
+import { useAccount, useChainId, useReadContract, useWriteContract } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,12 @@ import { EXPLORERS, USDC_ADDRESSES, WATCHER_V2 } from '@/lib/config';
 import { ERC20_ABI, ERC20_VAULT_ABI } from '@/lib/contracts';
 import { useLiveVaultErc20 } from '@/hooks/use-live-vault-erc20';
 import { AssetLogo } from '@/components/contagion/asset-logo';
+import ChainSwitchError from '@/components/web3/chain-switch-error';
+import {
+  failureOrNull,
+  useChainSwitcher,
+  type SwitchChainFailure
+} from '@/lib/switch-chain';
 import { cn } from '@/lib/utils';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
@@ -96,11 +102,17 @@ function DepositUsdcForm({
 }) {
   const { address: wallet, isConnected } = useAccount();
   const connectedChainId = useChainId();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchToChain, isSwitching } = useChainSwitcher();
+  const [switchError, setSwitchError] = useState<SwitchChainFailure | null>(null);
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState('1');
   const usdc = USDC_ADDRESSES[chainId];
   const onWrongChain = isConnected && connectedChainId !== chainId;
+
+  async function handleSwitch() {
+    const result = await switchToChain(chainId);
+    setSwitchError(failureOrNull(result));
+  }
 
   let amountRaw: bigint | null = null;
   let amountError: string | null = null;
@@ -236,10 +248,16 @@ function DepositUsdcForm({
             variant='outline'
             size='sm'
             disabled={isSwitching}
-            onClick={() => switchChain({ chainId })}
+            onClick={() => void handleSwitch()}
           >
             Switch to {chainName}
           </Button>
+          {switchError ? (
+            <ChainSwitchError
+              failure={switchError}
+              onDismiss={() => setSwitchError(null)}
+            />
+          ) : null}
         </div>
       ) : null}
       {isPaused ? (

@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { chains, getChainName } from '@/lib/wagmi';
-import { useChainId, useSwitchChain } from 'wagmi';
+import { useChainId } from 'wagmi';
+import ChainSwitchError from '@/components/web3/chain-switch-error';
+import {
+  failureOrNull,
+  useChainSwitcher,
+  type SwitchChainFailure
+} from '@/lib/switch-chain';
 
 /**
  * Logo resmi tiap chain — file di frontend/public/icons/.
@@ -40,18 +46,22 @@ const SWITCHABLE_CHAINS: { id: number; name: string; icon: string }[] =
  * Klik membuka dropdown Win98 (pola yang sama dengan Start menu di
  * taskbar: container `.window` + baris `.win98-start-menu-item`),
  * berisi ketiga testnet dengan logo + centang pada chain aktif.
- * Pindah chain memakai wagmi useSwitchChain: bila wallet terhubung,
- * wallet diminta pindah chain; bila belum terhubung, wagmi hanya
- * memperbarui chainId aktif aplikasi (cabang tanpa koneksi di
- * @wagmi/core switchChain: config.setState), sehingga badge dan
- * bacaan yang mengikuti useChainId() ikut berpindah.
+ * Pindah chain memakai useChainSwitcher (lib/switch-chain.ts, pembungkus
+ * wagmi switchChainAsync): bila wallet terhubung, wallet diminta pindah
+ * chain; bila belum terhubung, wagmi hanya memperbarui chainId aktif
+ * aplikasi (cabang tanpa koneksi di @wagmi/core switchChain:
+ * config.setState), sehingga badge dan bacaan yang mengikuti useChainId()
+ * ikut berpindah. Bila wallet menolak pindah (mis. chain tujuan tidak
+ * disetujui di sesi WalletConnect ini), menu menutup dan panel panduan
+ * reconnect tampil di bawah badge; penolakan pengguna sendiri diam saja.
  * Dipakai di header dashboard, di samping tombol Connect Wallet
  * (juga di sidebar via HeaderWallet orientation="column").
  */
 export default function ChainBadge() {
   const chainId = useChainId();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchToChain, isSwitching } = useChainSwitcher();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [switchError, setSwitchError] = useState<SwitchChainFailure | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Tutup dropdown saat klik di luar / tekan Escape — sama seperti
@@ -79,14 +89,11 @@ export default function ChainBadge() {
       setMenuOpen(false);
       return;
     }
-    try {
-      await switchChain({ chainId: targetId });
-      setMenuOpen(false);
-    } catch {
-      // Wallet menolak pindah chain (atau konektor tidak mendukung) —
-      // biarkan menu tetap terbuka supaya pengguna bisa mencoba lagi
-      // atau memilih chain lain.
-    }
+    const result = await switchToChain(targetId);
+    setMenuOpen(false);
+    // User-rejected stays silent; any other failure shows the
+    // reconnect guidance panel below the badge.
+    setSwitchError(failureOrNull(result));
   };
 
   return (
@@ -153,6 +160,14 @@ export default function ChainBadge() {
               );
             })}
           </div>
+        </div>
+      ) : null}
+      {switchError ? (
+        <div className='absolute top-[calc(100%+4px)] right-0 z-50 w-[min(20rem,calc(100vw-2rem))]'>
+          <ChainSwitchError
+            failure={switchError}
+            onDismiss={() => setSwitchError(null)}
+          />
         </div>
       ) : null}
     </div>

@@ -11,7 +11,6 @@ import {
 import {
   useAccount,
   useReadContract,
-  useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract
 } from 'wagmi';
@@ -30,6 +29,12 @@ import {
   VAULT_FACTORY_ERC20_ABI
 } from '@/lib/contracts';
 import { AssetLogo } from '@/components/contagion/asset-logo';
+import ChainSwitchError from '@/components/web3/chain-switch-error';
+import {
+  failureOrNull,
+  useChainSwitcher,
+  type SwitchChainFailure
+} from '@/lib/switch-chain';
 
 type ChainKey = 'unichain' | 'base';
 type AssetKind = 'ETH' | 'USDC';
@@ -106,7 +111,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export function DeployOwnVault() {
   const { address: connectedAddress, chainId: connectedChainId, isConnected } =
     useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchToChain } = useChainSwitcher();
+  const [deploySwitchError, setDeploySwitchError] = useState<SwitchChainFailure | null>(null);
+  const [lasnaSwitchError, setLasnaSwitchError] = useState<SwitchChainFailure | null>(null);
   const queryClient = useQueryClient();
 
   const [chainKey, setChainKey] = useState<ChainKey>('unichain');
@@ -590,19 +597,31 @@ export function DeployOwnVault() {
               is signed by the connected wallet on {CHAIN_NAMES[chainKey]}.
             </p>
           ) : !onRightChain ? (
-            <div className='flex flex-wrap items-center gap-2'>
-              <p className='text-muted-foreground text-xs'>
-                Connected to chain {connectedChainId ?? 'unknown'} — switch to{' '}
-                {CHAIN_NAMES[chainKey]} to deploy here.
-              </p>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => switchChain({ chainId })}
-              >
-                Switch to {CHAIN_NAMES[chainKey]}
-              </Button>
-            </div>
+            <>
+              <div className='flex flex-wrap items-center gap-2'>
+                <p className='text-muted-foreground text-xs'>
+                  Connected to chain {connectedChainId ?? 'unknown'} — switch to{' '}
+                  {CHAIN_NAMES[chainKey]} to deploy here.
+                </p>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    void switchToChain(chainId).then((result) =>
+                      setDeploySwitchError(failureOrNull(result))
+                    )
+                  }
+                >
+                  Switch to {CHAIN_NAMES[chainKey]}
+                </Button>
+              </div>
+              {deploySwitchError ? (
+                <ChainSwitchError
+                  failure={deploySwitchError}
+                  onDismiss={() => setDeploySwitchError(null)}
+                />
+              ) : null}
+            </>
           ) : null}
           <div className='flex flex-col gap-2'>
             <div>
@@ -711,14 +730,26 @@ export function DeployOwnVault() {
                     sends registerSibling({created.chainId}, vault) on Lasna.
                   </p>
                   {!onLasna ? (
-                    <div>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => switchChain({ chainId: WATCHER_V2.chainId })}
-                      >
-                        Switch to Lasna
-                      </Button>
+                    <div className='flex flex-col gap-2'>
+                      <div>
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() =>
+                            void switchToChain(WATCHER_V2.chainId).then((result) =>
+                              setLasnaSwitchError(failureOrNull(result))
+                            )
+                          }
+                        >
+                          Switch to Lasna
+                        </Button>
+                      </div>
+                      {lasnaSwitchError ? (
+                        <ChainSwitchError
+                          failure={lasnaSwitchError}
+                          onDismiss={() => setLasnaSwitchError(null)}
+                        />
+                      ) : null}
                     </div>
                   ) : (
                     <div>

@@ -327,7 +327,7 @@ export function IncidentTable({ incidents }: IncidentTableProps) {
           per-deployment human action — the watcher does not track it, so it never appears here.
         </p>
         <p className='text-xs text-muted-foreground'>
-          #3: 605 s includes an engineered stall + manual retry — not loop latency.
+          #3: 605 s includes a deliberate test stall and a manual retry — the loop itself took about 3 s.
         </p>
       </CardContent>
     </Card>

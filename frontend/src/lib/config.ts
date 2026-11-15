@@ -135,9 +135,9 @@ export const PUBLIC_WATCHER_BALANCE_AT_HANDOVER_LREACT = '2.6584943' as const;
 /* PublicVaultV2 = ContagionVault + trip(bytes32) + reopen()           */
 /* permissionless + cooldown trip 60 dtk (repo/src/PublicVaultV2.sol); */
 /* PublicVaultERC20 = ContagionVaultERC20 + trip/reopen permissionless */
-/* (repo/src/PublicVaultERC20.sol). Tiga vault ETH + satu vault USDC   */
-/* (20 USDC) di watcher publik BARU — ini produk v2 yang sebenarnya:   */
-/* deposit/withdraw shares, bukan shell v1.                            */
+/* (repo/src/PublicVaultERC20.sol). Tiga vault ETH + dua vault USDC   */
+/* (20 USDC tiap vault) di watcher publik BARU — ini produk v2 yang    */
+/* sebenarnya: deposit/withdraw shares, bukan shell v1.               */
 /*                                                                     */
 /* ⚠️ TABRAKAN ALAMAT ANTAR-CHAIN: watcher publik baru di bawah ini    */
 /* (Lasna 5318007) beralamat SAMA PERSIS dengan vault B publik LAMA    */
@@ -147,9 +147,9 @@ export const PUBLIC_WATCHER_BALANCE_AT_HANDOVER_LREACT = '2.6584943' as const;
 /* dengan chainId/nama chain — jangan pernah tampilkan tanpa chain.    */
 /* ------------------------------------------------------------------ */
 
-/** Empat vault v2 publik + watcher publik baru (Sourcify exact_match: impl + factory kedua chain + watcher). */
+/** Lima vault v2 publik + watcher publik baru (Sourcify exact_match: impl + factory kedua chain + watcher). */
 export const PUBLIC_V2_CONTRACTS: Record<
-  'vaultUni0' | 'vaultUni1' | 'vaultBase0' | 'vaultUsdc' | 'watcher',
+  'vaultUni0' | 'vaultUni1' | 'vaultBase0' | 'vaultUsdc' | 'vaultUsdcBase' | 'watcher',
   PublicContractEntry
 > = {
   vaultUni0: {
@@ -176,8 +176,14 @@ export const PUBLIC_V2_CONTRACTS: Record<
     chainName: 'Unichain Sepolia',
     address: '0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043'
   },
+  vaultUsdcBase: {
+    role: 'PublicVaultERC20 USDC — Sibling (Base Sepolia). deposit(amount, receiver) mints shares CSUSDC; trip() permissionless.',
+    chainId: 84532,
+    chainName: 'Base Sepolia',
+    address: '0x50aDA75e8dba905414d30dAFF46C2692db9fc05c'
+  },
   watcher: {
-    role: 'Public ContagionWatcher v2 — Lasna (5318007), watches the four v2 public vaults above',
+    role: 'Public ContagionWatcher v2 — Lasna (5318007), watches the five v2 public vaults above',
     chainId: 5318007,
     chainName: 'Lasna',
     address: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
@@ -185,9 +191,9 @@ export const PUBLIC_V2_CONTRACTS: Record<
 };
 
 /** Saldo watcher publik baru saat serah-terima gelombang 2 (15 Nov 2026,
- * terukur, setelah E2E v2 + E2E USDC): 1,7701604 lREACT — sekitar 13 loop
- * lagi pada ~0,13 lREACT/loop (fan-out 4 vault). Angka ini adalah snapshot
- * serah-terima; saldo live dibaca via wagmi. */
+ * terukur, setelah E2E v2 + E2E USDC): 1,7701604 lREACT — sekitar 11–12
+ * loop lagi (fan-out 5 vault; loop 4-vault terukur ~0,13 lREACT/loop).
+ * Angka ini adalah snapshot serah-terima; saldo live dibaca via wagmi. */
 export const PUBLIC_V2_WATCHER_BALANCE_AT_HANDOVER_LREACT = '1.7701604' as const;
 
 /** Tx hash kunci E2E v2 publik (15 Nov 2026, gelombang 2) — tautan
