@@ -1,8 +1,5 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
-import { useEffect } from 'react';
-
 // global-error replaces the root layout when it errors, so globals.css is not
 // loaded here — styles must be inline and self-contained.
 export default function GlobalError({
@@ -12,10 +9,6 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
-
   return (
     <html lang='en'>
       <body

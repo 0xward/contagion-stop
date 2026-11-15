@@ -17,9 +17,8 @@ export const metadata: Metadata = {
 /**
  * Privacy Policy — transcribed from the reviewed draft.
  * Verified against the code at draft time: no analytics, no backend,
- * no accounts; two functional first-party cookies; Sentry SDK present
- * but no DSN configured on the live deployment (re-verified at install:
- * no DSN value exists anywhere in the repo and no .env file is present).
+ * no accounts; two functional first-party cookies; no error-reporting
+ * SDK — errors stay in the visitor's browser and are sent nowhere.
  */
 export default function PrivacyPage() {
   return (
@@ -130,10 +129,10 @@ export default function PrivacyPage() {
 
             <LegalSection number='5' title='Error reporting'>
               <p>
-                The site&apos;s code includes the Sentry error-reporting SDK, but{' '}
-                <strong>no Sentry DSN is configured on the live deployment</strong>, so no error data is
-                sent anywhere. If error reporting is ever enabled, this policy will be updated first to
-                say what is sent and where it goes.
+                The site includes <strong>no error-reporting software</strong>. If something goes wrong
+                in your browser, the error stays in your browser — no error data is sent to us or to any
+                third party. If error reporting is ever added, this policy will be updated first to say
+                what is sent and where it goes.
               </p>
             </LegalSection>
 
