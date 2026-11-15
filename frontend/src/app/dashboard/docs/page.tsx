@@ -76,13 +76,13 @@ const V2_CONTRACTS = [
     explorer: 'https://sepolia.basescan.org/address/0xB86060EE2332BD6b3DC9310E88371AE8cA1382b0'
   },
   {
-    name: 'ContagionVaultERC20 — USDC vault (UNFUNDED)',
+    name: 'ContagionVaultERC20 — USDC vault (FUNDED — 20 USDC)',
     chain: 'Unichain Sepolia (1301)',
     address: '0xb1404336db799285787bfb8a61f91e2d93e1bbdd',
     explorer: 'https://sepolia.uniscan.xyz/address/0xb1404336db799285787bfb8a61f91e2d93e1bbdd'
   },
   {
-    name: 'ContagionVaultERC20 — USDC vault (UNFUNDED)',
+    name: 'ContagionVaultERC20 — USDC vault (FUNDED — 20 USDC)',
     chain: 'Base Sepolia (84532)',
     address: '0xd476AFBE349FB7b07110dda8E167095B2A3cee39',
     explorer: 'https://sepolia.basescan.org/address/0xd476AFBE349FB7b07110dda8E167095B2A3cee39'
@@ -574,7 +574,7 @@ export default function DocsPage() {
                 (ERC-4626 semantics, no WETH) and the USDC vaults hold
                 canonical USDC (share CSUSDC, min deposit 1 USDC). One
                 watcher v2 on Lasna watches all four v2 vaults. The USDC
-                vaults are UNFUNDED — totalAssets 0, no deposits yet;
+                vaults are funded with 20 USDC each (15 Nov 2026);
                 funding is a manual step. The app reads all of these live
                 on the Overview page and can create new vaults from the
                 factories on the Deploy your own page.

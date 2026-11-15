@@ -227,8 +227,8 @@ export default function OverviewPage() {
           <UsdcVaultGrid />
           <p className='mt-2 text-xs text-muted-foreground'>
             Both USDC vaults are watched by watcher v2 on Lasna. They are
-            unfunded (totalAssets 0) until funded manually — the cards show
-            the real zero, not a placeholder. To create a vault of your own,
+            funded with 20 USDC each (15 Nov 2026) — the cards show the
+            live totalAssets, not a placeholder. To create a vault of your own,
             use{' '}
             <a
               href='/dashboard/deploy'

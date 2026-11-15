@@ -144,7 +144,7 @@ export const PUBLIC_E2E_CYCLE_1 = {
 /* on both chains); see ../v2-deploy-log.md and                       */
 /* ../v2-erc20-deploy-log.md. The v2 watcher (Lasna) watches both    */
 /* the v2 ETH vaults and the v2 USDC vaults. The USDC vaults are      */
-/* UNFUNDED (totalAssets 0) — funding is a manual step, not done.     */
+/* FUNDED — 20 USDC each (15 Nov 2026); funding was a manual step.    */
 /* ------------------------------------------------------------------ */
 
 export interface V2ContractEntry {

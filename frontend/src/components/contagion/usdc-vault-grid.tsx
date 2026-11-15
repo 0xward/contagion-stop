@@ -6,8 +6,9 @@ import { UsdcVaultCard } from '@/components/contagion/usdc-vault-card';
 /**
  * Grid of the two v2 USDC vaults (Unichain Sepolia + Base Sepolia) —
  * live reads, shown next to the main deployment, never replacing it.
- * Both vaults are unfunded (totalAssets 0) until funded manually; the
- * cards say so instead of showing a placeholder value.
+ * Both vaults are funded with 20 USDC each (15 Nov 2026); the cards
+ * show the live totalAssets, and show an UNFUNDED banner if a vault
+ * ever reads totalAssets 0.
  */
 export function UsdcVaultGrid() {
   return (
