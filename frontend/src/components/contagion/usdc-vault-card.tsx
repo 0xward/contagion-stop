@@ -14,7 +14,6 @@ import { EXPLORERS, USDC_ADDRESSES, WATCHER_V2 } from '@/lib/config';
 import { ERC20_ABI, ERC20_VAULT_ABI } from '@/lib/contracts';
 import { useLiveVaultErc20 } from '@/hooks/use-live-vault-erc20';
 import { AssetLogo } from '@/components/contagion/asset-logo';
-import { chainHeaderStyle } from '@/components/contagion/chain-header-style';
 import { cn } from '@/lib/utils';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
@@ -367,15 +366,10 @@ export function UsdcVaultCard({
   const hasNoEthReserve =
     live.isLive && live.ethBalanceRaw !== undefined && live.ethBalanceRaw === BigInt(0);
   const usdc = USDC_ADDRESSES[chainId];
-  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
-  const header = chainHeaderStyle(chainId);
 
   return (
     <Card className={cn(isPaused && 'border-primary')}>
-      <CardHeader
-        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
-        style={header.style}
-      >
+      <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='USDC' />
           <CardTitle className='text-base'>{label}</CardTitle>
@@ -414,7 +408,7 @@ export function UsdcVaultCard({
             {live.isLive ? 'LIVE' : live.hasFailed ? 'READ FAILED' : 'LOADING'}
           </Badge>
         </div>
-        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {chainName} · chain {chainId}
         </div>

@@ -14,7 +14,6 @@ import { EXPLORERS, WATCHER_V2 } from '@/lib/config';
 import { SIBLING_VAULT_ABI } from '@/lib/contracts';
 import { useLiveVaultEth } from '@/hooks/use-live-vault-eth';
 import { AssetLogo } from '@/components/contagion/asset-logo';
-import { chainHeaderStyle } from '@/components/contagion/chain-header-style';
 import { cn } from '@/lib/utils';
 
 export interface EthVaultCardProps {
@@ -89,8 +88,6 @@ export function EthVaultCard({
 }: EthVaultCardProps) {
   const live = useLiveVaultEth(address, chainId);
   const isPaused = live.isLive ? live.paused === true : false;
-  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
-  const header = chainHeaderStyle(chainId);
 
   const { address: wallet, isConnected } = useAccount();
   const connectedChainId = useChainId();
@@ -137,10 +134,7 @@ export function EthVaultCard({
 
   return (
     <Card className={cn(isPaused && 'border-primary')}>
-      <CardHeader
-        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
-        style={header.style}
-      >
+      <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='ETH' />
           <CardTitle className='text-base'>{label}</CardTitle>
@@ -179,7 +173,7 @@ export function EthVaultCard({
             {live.isLive ? 'LIVE' : live.hasFailed ? 'READ FAILED' : 'LOADING'}
           </Badge>
         </div>
-        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {chainName} · chain {chainId}
         </div>

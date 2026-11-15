@@ -46,7 +46,6 @@ import {
 } from '@/lib/contracts';
 import { useLiveVault } from '@/hooks/use-live-vault';
 import { AssetLogo } from '@/components/contagion/asset-logo';
-import { chainHeaderStyle } from '@/components/contagion/chain-header-style';
 import { JudgeQuickstart } from '@/components/contagion/judge-quickstart';
 import { cn } from '@/lib/utils';
 
@@ -247,15 +246,10 @@ function PublicVaultCard({
     });
   }
 
-  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
-  const header = chainHeaderStyle(chainId);
 
   return (
     <Card>
-      <CardHeader
-        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
-        style={header.style}
-      >
+      <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='ETH' />
           <CardTitle className='text-base'>{label}</CardTitle>
@@ -289,7 +283,7 @@ function PublicVaultCard({
             {live.isLive ? 'LIVE' : live.hasFailed ? 'READ FAILED' : 'LOADING…'}
           </Badge>
         </div>
-        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {chainName} · chain {chainId}
         </div>
@@ -650,15 +644,10 @@ function PublicUsdcVaultCard({
   }): TxPhase =>
     w.isPending ? 'pending' : w.isSuccess ? 'success' : w.isError ? 'error' : 'idle';
 
-  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
-  const header = chainHeaderStyle(chainId);
 
   return (
     <Card>
-      <CardHeader
-        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
-        style={header.style}
-      >
+      <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='USDC' />
           <CardTitle className='text-base'>{label}</CardTitle>
@@ -686,7 +675,7 @@ function PublicUsdcVaultCard({
             )}
           </Badge>
         </div>
-        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {chainName} · chain {chainId}
         </div>

@@ -13,7 +13,6 @@ import type { Sibling } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useLiveVault } from '@/hooks/use-live-vault';
 import { AssetLogo } from '@/components/contagion/asset-logo';
-import { chainHeaderStyle } from '@/components/contagion/chain-header-style';
 import {
   DepositTestButton,
   EmergencyPauseDialog,
@@ -122,8 +121,6 @@ export function SiblingCard({
   const debt = Number.parseFloat(sibling.debtEth) || 0;
   const reservesTotal = reserves + debt;
   const reservesPct = reservesTotal > 0 ? (reserves / reservesTotal) * 100 : 100;
-  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
-  const header = chainHeaderStyle(sibling.chainId);
 
   return (
     <Card
@@ -132,10 +129,7 @@ export function SiblingCard({
         !isPaused && isOrigin && 'border-foreground'
       )}
     >
-      <CardHeader
-        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
-        style={header.style}
-      >
+      <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='ETH' />
           <CardTitle className='text-base'>{sibling.label}</CardTitle>
@@ -169,7 +163,7 @@ export function SiblingCard({
             {valuesAreLive ? 'LIVE' : live.hasFailed ? 'READ FAILED' : 'LOADING…'}
           </Badge>
         </div>
-        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {sibling.chainName} · chain {sibling.chainId}
         </div>
