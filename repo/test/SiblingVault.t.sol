@@ -159,6 +159,19 @@ contract SiblingVaultTest is Test {
         assertTrue(vault.paused());
     }
 
+    function testPauseViaProxyWhenAlreadyPausedReEmitsPaused() public {
+        // F1 (audit 15 Nov 2026): a retried callback on an already-paused
+        // vault must still emit `Paused`, so the watcher receives a fresh
+        // confirmation log for it. A silent no-op left the sibling
+        // unconfirmed forever after a second origin reset confirmations.
+        _pauseViaProxy(watcher);
+        assertTrue(vault.paused());
+        vm.expectEmit(false, false, false, true, address(vault));
+        emit Pausable.Paused(address(vault));
+        _pauseViaProxy(watcher);
+        assertTrue(vault.paused());
+    }
+
     // -- unpause ---------------------------------------------------------------
 
     function testUnpauseOnlyOwner() public {

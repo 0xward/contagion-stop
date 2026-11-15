@@ -149,12 +149,54 @@ contract PublicVaultTest is Test {
         originUni.trip(REASON);
         assertTrue(originUni.paused());
         // No whenNotPaused guard, mirroring emergencyPause: re-trip must
-        // still re-emit (retry signal for the watcher).
+        // still re-emit (retry signal for the watcher). F4 cooldown: the
+        // re-trip is 61 s later, past the 60 s cooldown.
+        vm.warp(block.timestamp + 61);
         vm.prank(stranger);
         vm.expectEmit(true, false, false, true, address(originUni));
         emit SiblingVault.EmergencyPaused(address(originUni), REASON_2);
         originUni.trip(REASON_2);
         assertTrue(originUni.paused());
+    }
+
+    // -- F4: trip cooldown ------------------------------------------------
+
+    function testTripCooldownBlocksSecondTripWithin60s() public {
+        vm.prank(stranger);
+        originUni.trip(REASON);
+        assertEq(originUni.lastTripAt(), block.timestamp);
+        // Second trip in the same second reverts with the next-allowed time.
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(PublicVault.TripCooldown.selector, block.timestamp + 60));
+        originUni.trip(REASON_2);
+        assertTrue(originUni.paused());
+        // At exactly +60 s the trip works again and refreshes the cooldown.
+        vm.warp(block.timestamp + 60);
+        vm.prank(stranger);
+        originUni.trip(REASON_2);
+        assertEq(originUni.lastTripAt(), block.timestamp);
+    }
+
+    function testTripCooldownIsPerVault() public {
+        vm.prank(stranger);
+        originUni.trip(REASON);
+        // A different vault trips immediately: its own cooldown is untouched.
+        vm.prank(stranger);
+        siblingBase.trip(REASON);
+        assertTrue(siblingBase.paused());
+        assertEq(siblingBase.lastTripAt(), block.timestamp);
+    }
+
+    function testReopenDoesNotResetTripCooldown() public {
+        vm.prank(stranger);
+        originUni.trip(REASON);
+        vm.prank(stranger);
+        originUni.reopen();
+        assertFalse(originUni.paused());
+        // Reopening is not a new trip window: the cooldown still applies.
+        vm.prank(stranger);
+        vm.expectRevert(abi.encodeWithSelector(PublicVault.TripCooldown.selector, block.timestamp + 60));
+        originUni.trip(REASON_2);
     }
 
     function testReopenFromNonOwnerReopens() public {
@@ -296,6 +338,8 @@ contract PublicVaultTest is Test {
         // Round 2: re-trip WITHOUT any clearIncident call. The watcher
         // treats this as a RETRY of the still-active incident and only
         // re-requests callbacks to siblings that have NOT confirmed.
+        // F4 cooldown: the re-trip is 61 s later, past the 60 s cooldown.
+        vm.warp(block.timestamp + 61);
         vm.recordLogs();
         vm.prank(stranger);
         originUni.trip(REASON_2);
@@ -337,6 +381,7 @@ contract PublicVaultTest is Test {
         uint256 tripGas = g - gasleft();
         console.log("trip (cold, first pause + emit):", tripGas);
 
+        vm.warp(block.timestamp + 61); // F4 cooldown: re-trip past 60 s
         g = gasleft();
         vm.prank(stranger);
         originUni.trip(REASON_2);

@@ -11,7 +11,8 @@
 
 > **Status: testnet only. Not audited. Do not use with real funds.**
 > All contract addresses, transaction hashes, and latency numbers below are
-> **measured on testnet, 14 Nov 2026** (deploy + 5 loop scenarios, all passing).
+> **measured on testnet, 14–15 Nov 2026** (deploy + 5 loop scenarios, all passing;
+> v2 ETH and USDC loops added 15 Nov).
 > Full evidence: `VERIFICATION.md` + `deploy-log.md`.
 
 ---
@@ -248,8 +249,7 @@ hold canonical USDC (share `CSUSDC`, min deposit 1 USDC, 12 decimals
 offset). One watcher v2 on Lasna watches all four v2 vaults. All
 implementations and factories below are Sourcify-verified `exact_match`
 (creation + runtime); the clones are canonical EIP-1167 minimal proxies of
-the verified implementations. Full evidence: `v2-deploy-log.md` (ETH) and
-`v2-erc20-deploy-log.md` (USDC).
+the verified implementations. The full loop hashes for both are in the tables below.
 
 | Contract | Chain | Address |
 |---|---|---|
@@ -289,26 +289,75 @@ the verified implementations. Full evidence: `v2-deploy-log.md` (ETH) and
 | createVault (ETH) | Unichain Sepolia | `0xfe6dd7cf809079d7daafa3f88f08a4dad452d9242e55854a957d1838f8724883` |
 | createVault (ETH) | Base Sepolia | `0x143653b783d675a01eef57a277d9311b9ca332e6dcaf02ff0b4c73523ba17ca4` |
 
-The v2 ETH vaults ran a full loop end to end (trip → react → callback
-pause → containment, ~1 s trip-to-callback; withdraw while paused
-succeeds). See `v2-deploy-log.md` for the hashes.
+### Full loop v2 (ETH) — E2E-V2-001, 15 Nov 2026
 
-### Funding status — USDC vaults unfunded
+| Step | Chain | Tx hash |
+|---|---|---|
+| Trip `emergencyPause` (origin, Unichain) | Unichain Sepolia | `0x7c84025e613083831745d675b88d6bf3c01aeddf207bbe4ea6c0e748f24d40f2` (block 67871519) |
+| `react()` (fan-out 1) | Lasna | `0x61fc8e180d845c11d95f0e3c75f51bc3220e3212e28a67e94cace846ab2eed35` (block 8387722, gas 325,228) |
+| Callback `pause()` (Base sibling) | Base Sepolia | `0xa9325ee9b97ba5d340794f81c69ca39ad6e142d6761baff04f012b99170e6ab6` (block 59010397, gas 80,932) |
+| Containment `react()` | Lasna | `0xb1b47ff1a3be386d7eddb47408d15847d2c8316011407f6ce6322aee7deb7b7d` (block 8387723) |
 
-Both USDC vaults are empty: `totalAssets` 0, USDC 0, ETH 0 (verified by
-read after registration). Funding is a manual step, not done. The
-deployer already holds enough USDC for the planned 20 USDC per vault
-(80 USDC on Unichain Sepolia, 20 USDC on Base Sepolia, verified 15 Nov
-2026). Funding must go through `deposit()` (after `approve` on USDC):
-a plain USDC transfer to the vault does not update the `totalAssets`
-ledger. The dashboard shows the live zero with the label UNFUNDED —
-AWAITING FUNDING.
+Trip-to-callback ~1 s; containment in the next Lasna block. Loop cost
+0.0793974 lREACT. Withdraw while paused succeeds
+(`0x12e0b97eec542e250f07284148a9803d2a4b07e6171f8c352f4f3d0ce419d6ad`,
+block 59011012, 0.001 ETH out); a deposit while paused reverts
+(`0xdf197f3180d27af98c43767a731ff7a363eabe9197c2b34e393f2c8de925df13`,
+block 59010730, status `0x0`).
 
-Open item: the first pause callback to a USDC vault still runs (the
-proxy fronts the fee), but the debt it leaves can only be covered from
-ETH held by the vault (`coverDebt`), and the USDC vaults currently hold
-no ETH. Decide the ETH reserve before the first live loop on a USDC
-vault.
+### Funding status — USDC vaults funded (15 Nov 2026)
+
+Both USDC vaults hold **20 USDC each** (`totalAssets` 20,000,000, 20e18
+shares), funded 15 Nov 2026 via `deposit()` after `approve` (Unichain
+deposit `0x58f656994811d0afb3d52a9d8f2671ac2c9ef70548f83cd42df1cd108fbb9cf8`,
+block 67877108; Base deposit
+`0x5c02fc0f66e7fcd2ee18f29534e97adde3558379f702d134ddecf496d1495403`,
+block 59038153). Each vault also holds **0.001 ETH** as a callback-fee
+buffer (Unichain
+`0xcddbeddada387f2f9a93e8cb751cc305f4840116dd4079b7b8489cbd4f0372e5`,
+block 67877153; Base
+`0xfed30e4b162cfb7cadae2895d0a7977785be091c6888cc7357d9ee99a4304a80`,
+block 59038568). The buffer works as designed: after two full loops the
+proxy debt on every vault is 0 and no manual `coverDebt()` was needed —
+callback fees were paid from the vaults' ETH balances (~0.00000016 ETH
+on Unichain, ~0.00000063 ETH on Base per callback). A post-loop deposit
+of 1 USDC and withdraw of 1 USDC both succeeded (deposit
+`0x02e471f6e9bf6bb41d99789cd16de7f9ec1974b61d216a4587730faaa52cd841`,
+withdraw
+`0x5469fd1cb85e576fa48ecc35a982e18c40cb25e6c29b4dda3ff30bc19c867f79`),
+returning `totalAssets` to 20,000,000.
+
+#### Full loop E2E-USDC-01 — origin ETH vault, 15 Nov 2026
+
+Trip on the Unichain ETH v2 vault; one `react()` fanned out to **3**
+destinations (USDC vault Unichain, ETH + USDC vaults Base) — fan-out 3,
+proven on-chain.
+
+| Step | Chain | Tx hash |
+|---|---|---|
+| Trip `emergencyPause` (reason E2E-USDC-01) | Unichain Sepolia | `0xf836639b43ac9befb4fb6cb231632f24cee4038ccabfce5328a21511358053eb` (block 67877324) |
+| `react()` (3× `PauseRequested`) | Lasna | `0xf55bf6eac0cd5ef220c19850800e903f520715a64870ad0d099724190e39af22` (block 8393170, gas 222,610) |
+| Callback `pause()` (USDC vault, Unichain) | Unichain Sepolia | `0x93182e78bd4a8f8aedcf8dd4596087325cfc926cd568b77558ce28cb34f16805` (block 67877326) |
+| Callback `pause()` (ETH vault, Base) | Base Sepolia | `0x7d2dd9663c919178f7d3f336fd413298eba8b86a80005b63ff5d5dff1000c814` (block 59039425) |
+| Callback `pause()` (USDC vault, Base) | Base Sepolia | `0x8f1537c483faa35785916bef4dd1ac588155e9492f28fd0c1e05e75a5998ae0d` (block 59039428) |
+
+Containment ~2–3 s after the trip; loop cost 0.105642 lREACT.
+
+#### Full loop E2E-USDC-02 — origin USDC vault, 15 Nov 2026
+
+Trip on the Unichain USDC vault — the watcher reacts to
+`EmergencyPaused` from a USDC vault exactly as from an ETH vault.
+
+| Step | Chain | Tx hash |
+|---|---|---|
+| Trip `emergencyPause` (reason E2E-USDC-02) | Unichain Sepolia | `0xfe37a2ee5f674c38db96e29764ac89be10e8707a7d6bab5b70b72fa7e7d1a0dd` (block 67877922) |
+| `react()` (3× `PauseRequested`) | Lasna | `0xe2d4c87d54eb0ae6cd48914e79069b8b1aefbf32072062e3191a8e7095462a14` (block 8393733) |
+| Callback `pause()` (ETH vault, Unichain) | Unichain Sepolia | `0xe29e058300cdb3807f554ba5588a86999e424f67c54c08b9111087997b92ab17` (block 67877924) |
+| Callback `pause()` (ETH vault, Base) | Base Sepolia | `0x4003fc79e76c3df4c20193a4c981eb2386bbec2e9f7f6aa894b747e1ac481064` (block 59042413) |
+| Callback `pause()` (USDC vault, Base) | Base Sepolia | `0x7406bc5bdc29640735959c2b29ca55ca12e587d8f16dc595afd00cb3e0266d29` (block 59042415) |
+
+Containment 8 s after the trip; loop cost 0.1210131 lREACT. Watcher v2
+balance after both loops: 0.1939475 lREACT.
 
 ### Deploy your own vault
 
@@ -333,17 +382,102 @@ permissionless `trip(bytes32)` + `reopen()`) and a separate public
 that is the product behavior. The public instance exists so the loop can
 be tested by anybody.
 
+Set v1 was replaced 15 Nov 2026 with the F1+F4 build (vaults below);
+the old vaults were unregistered from the watcher. The RECORDED cycles
+1 & 2 ran on the old vaults and are kept as this set's recorded history.
+
 | Contract | Chain | Address |
 |---|---|---|
-| `PublicVault` U1 (origin) | Unichain Sepolia (1301) | `0x2bd64b3ee79eb1f38191e0b185786cb176d8696c` |
-| `PublicVault` U2 | Unichain Sepolia (1301) | `0xf3475038bc53aa50408272F233F5dF73F6CF8F8c` |
-| `PublicVault` B | Base Sepolia (84532) | `0x4b44497bAD6c270462D0529FCe4E41A7e092669b` |
+| `PublicVault` U1 (origin) | Unichain Sepolia (1301) | `0xe427b13172dc65d9218c6067fc6fd89408b47a1a` |
+| `PublicVault` U2 | Unichain Sepolia (1301) | `0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe` |
+| `PublicVault` B | Base Sepolia (84532) | `0x589770D4F1785b0fD20fF0600727Fc4BC7781d52` |
 | `ContagionWatcher` (public) | Lasna (5318007) | `0x73f6e9989057f060801d1ab7d57f6047ff6c5557` |
 
 All four are Sourcify-verified `exact_match`. One full loop costs
-~0.08–0.11 lREACT (measured); the public watcher holds 1.9141524 lREACT
-at handover (15 Nov 2026), about 20 loops, and each vault holds ~0.001 ETH
+~0.08–0.11 lREACT (measured); the public watcher holds 2.6584943 lREACT
+at handover (15 Nov 2026, gelombang 2), about 29 loops, and each vault holds ~0.001 ETH
 for callback fees.
+
+### Public test deployment v2 — shares (15 Nov 2026)
+
+A second public set runs the real v2 product: three `PublicVaultV2`
+(ETH shares, CSV) + one `PublicVaultERC20` (USDC shares, CSUSDC, 20
+USDC funded) under a new public watcher on Lasna. `trip()` /
+`reopen()` are permissionless here too, with a 60-second trip cooldown
+per vault. Deposits mint shares to your wallet.
+
+| Contract | Chain | Address |
+|---|---|---|
+| `PublicVaultV2` Uni #0 (origin) | Unichain Sepolia (1301) | `0x1f14825bBCC1727C134B7396BA77A2B4C37A6535` |
+| `PublicVaultV2` Uni #1 | Unichain Sepolia (1301) | `0x6297D51f2D267aA636C3A0B2C842C118CDBC09be` |
+| `PublicVaultV2` Base #0 | Base Sepolia (84532) | `0x405aaB687EE6453161935cCe267d9F2D01eFa540` |
+| `PublicVaultERC20` USDC (20 USDC) | Unichain Sepolia (1301) | `0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043` |
+| `ContagionWatcher` (public v2) | Lasna (5318007) | `0x4b44497bAD6c270462D0529FCe4E41A7e092669b` |
+
+Implementations + factories (Sourcify `exact_match`): `PublicVaultV2`
+Uni `0xD6f947E4B7Fc9EC5eD0C2078d982eFedBd5A5652`, factory Uni
+`0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2`; `PublicVaultV2` Base
+`0x100efb80D0067F2753C09855ac062A849c29439e`, factory Base
+`0xb50ABF8959097f7c8Da476671e97f6F30d781daA`; `PublicVaultERC20` Uni
+`0xf51Ac3C1b74407E58c5F9f4e91D2cEcC25FFbc08`, factory ERC20 Uni
+`0xA22A250522C1CbD76F79AfE5a864bb238Cf05424`.
+
+> **Address note — read with the chain.** The public v2 watcher above
+> (Lasna, chain 5318007) shares its address
+> `0x4b44497bAD6c270462D0529FCe4E41A7e092669b` with the retired v1 vault B
+> on Base Sepolia (chain 84532). Addresses are per-chain, so there is no
+> collision — but never show this address without its chain.
+
+E2E v2 (15 Nov 2026): trip Uni #0
+[`0xd7c4c39d385b024bfc43dc6f6425a8e7dc358ea402876e84e668de396cc84a0a`](https://sepolia.uniscan.xyz/tx/0xd7c4c39d385b024bfc43dc6f6425a8e7dc358ea402876e84e668de396cc84a0a)
+(block 67886881) → all three ETH vaults paused, CONTAINED (0.1020317
+lREACT). E2E USDC: trip the USDC vault
+[`0xd4f340b468992f6651810de8c6882486c6bd64388d39a96a2e7d54f950389b49`](https://sepolia.uniscan.xyz/tx/0xd4f340b468992f6651810de8c6882486c6bd64388d39a96a2e7d54f950389b49)
+(block 67887012) → all four vaults paused, CONTAINED (0.1278079
+lREACT). The v2 watcher holds 1.7701604 lREACT at handover (15 Nov
+2026, after both E2Es), about 13 loops at ~0.13 lREACT/loop.
+
+Two-trip race (F1 verification, 15 Nov 2026, set v1 baru): trip U1
+[`0x02ade27e58f9dedc445d15250dd5479a4e010b11f3c4a18035dc1673d3ef6648`](https://sepolia.uniscan.xyz/tx/0x02ade27e58f9dedc445d15250dd5479a4e010b11f3c4a18035dc1673d3ef6648)
+(block 67886611) + trip U2
+[`0xb1c08933920b0f7d50f3ccfe203157b2aab2f89348cf635e0b7613959971b50d`](https://sepolia.uniscan.xyz/tx/0xb1c08933920b0f7d50f3ccfe203157b2aab2f89348cf635e0b7613959971b50d)
+(block 67886612) back-to-back before the first containment — both
+incidents CONTAINED in the same Lasna transaction
+[`0xfe667e3e0d499f1bb0570149dd260a100e247274a13edb8c1a232a84802e4b74`](https://lasna.reactscan.net/tx/0xfe667e3e0d499f1bb0570149dd260a100e247274a13edb8c1a232a84802e4b74)
+(block 8401899).
+
+coverDebt with real proxy debt (F8, 15 Nov 2026, scratch instance):
+trip
+[`0x1ae52ec08f4b515734d32e085e6c650df432ffd96fff19f3527a420f474e23a7`](https://sepolia.uniscan.xyz/tx/0x1ae52ec08f4b515734d32e085e6c650df432ffd96fff19f3527a420f474e23a7)
+left vault S with 152.606.850.000 wei debt and its callback blocked;
+`coverDebt()`
+[`0xc559af0511cf8c25778a7d057d61fbb8398cf3402debd424086966dc35cfde10`](https://sepolia.uniscan.xyz/tx/0xc559af0511cf8c25778a7d057d61fbb8398cf3402debd424086966dc35cfde10)
+(block 67887224) paid the debt to zero, and the retry
+[`0x835f7c1fcb67e7f4ee13eb54e89096fde91501560733f8e5608b4bdadb083127`](https://sepolia.uniscan.xyz/tx/0x835f7c1fcb67e7f4ee13eb54e89096fde91501560733f8e5608b4bdadb083127)
+(block 67887240) let the callback through — CONTAINED.
+
+Fresh-wallet E2E for Deploy your own (15 Nov 2026): a fresh wallet
+(not the deployer,
+`0x4c97434A42a74a42b9A3EFfa38247B0B7F124A17`) created a vault from the
+main ETH factory — created
+`0xe0e566c8AAE37ab7fc33743DE46EC8ace721D5a4` exactly matched the Deploy
+page prediction (createVault
+[`0x00302761c519f27d8b233fde12ba388705110d7c0212b2eede2646a5edd1e7a2`](https://sepolia.uniscan.xyz/tx/0x00302761c519f27d8b233fde12ba388705110d7c0212b2eede2646a5edd1e7a2),
+block 67891567) — then the deployer registered it in watcher v2
+([`0xb65f38260744eea454152b87326a0300541224a9c6edd656bfb1493acc064963`](https://lasna.reactscan.net/tx/0xb65f38260744eea454152b87326a0300541224a9c6edd656bfb1493acc064963),
+Lasna block 8406581), the fresh wallet deposited 0.001 ETH
+([`0xe61917e638aa8ba33bd1c57e76c32466a92ecc52bfea60beb570bb5635fd8af0`](https://sepolia.uniscan.xyz/tx/0xe61917e638aa8ba33bd1c57e76c32466a92ecc52bfea60beb570bb5635fd8af0),
+totalAssets 0.001 → 0.002 ETH, 1e21 shares) and tripped it
+([`0xa18fd7e5076eba17a28d10b2647a43b3dd48afed7040a5107871a34bf17dcfac`](https://sepolia.uniscan.xyz/tx/0xa18fd7e5076eba17a28d10b2647a43b3dd48afed7040a5107871a34bf17dcfac),
+block 67891623; react
+[`0xac633113b81cca48c17e9738b8991fa00cba707df82feb51e41cbfc36da74dcc`](https://lasna.reactscan.net/tx/0xac633113b81cca48c17e9738b8991fa00cba707df82feb51e41cbfc36da74dcc),
+Lasna 8406617; containment
+[`0x1ec9243d0dc00a16822d1adba4dd62e94ccddd869e3a332bf7bc482d9ecda7af`](https://lasna.reactscan.net/tx/0x1ec9243d0dc00a16822d1adba4dd62e94ccddd869e3a332bf7bc482d9ecda7af),
+Lasna 8406620; loop cost 0.1526463 lREACT for a 5-vault fan-out).
+All five vaults were unpaused afterwards. The same wallet deposited 1
+USDC into the public USDC vault
+([`0x3c38e78c26327990451b1545e1b370a4c4bd56f1755ece9a921e21153b3c3cda`](https://sepolia.uniscan.xyz/tx/0x3c38e78c26327990451b1545e1b370a4c4bd56f1755ece9a921e21153b3c3cda),
+block 67891700; totalAssets 20 → 21 USDC, 1e18 shares).
 
 **Steps (also on the site, Overview → Try it live):**
 
@@ -475,8 +609,8 @@ transaction hashes + contract state.
   cannot re-fire callbacks at a sibling whose `Paused` event was merely late).
 - **Max callbacks per `react()` unverified.** The docs say "a single reactive
   transaction can request several callbacks" but publish no maximum number.
-  Fan-out of 2 is proven by the docs and by the recorded run; expanding to 5+
-  chains must be tested first.
+  Fan-out of 3 is proven on-chain by the v2/USDC loops (one `react()`
+  emitted 3 `PauseRequested`); expanding to 5+ chains must be tested first.
 - **Fail-closed on reorg.** The Reactive sequencer treats an event observed
   on the origin chain as canonical even if that chain later reorgs — a
   callback can fire from a transaction that ultimately disappears on the
@@ -487,13 +621,19 @@ transaction hashes + contract state.
   during a real exploit costs all its funds). Mitigation: origin chains with
   fast finality (Unichain Sepolia ~1 s/block, Base Sepolia ~200 ms/block),
   and `trippedAt` uses `block.timestamp`, never `block.number`.
-- **Two origins tripping almost simultaneously are serialized by the last
-  trip.** `confirmedPaused` is one global round per `(chainId, sibling)`, not
-  per incident — a new trip resets the round. Impact is limited: there is no
-  automatic retry loop, so nothing is wrongly executed and nothing keeps
-  costing money — only the status can sit at "partially confirmed" until the
-  next trip. Future fix: `confirmedPaused` per incident, or subscribe
-  `Unpaused`.
+- **Two origins tripping almost simultaneously.** Keterbatasan yang
+  diketahui (main set v1 + vault v2 utama, bytecode per 14–15 Nov 2026):
+  bila dua vault trip berurutan sebelum incident pertama mencapai
+  CONTAINED, konfirmasi Paused dari vault yang sudah paused tidak
+  ter-emit, sehingga incident dapat tersangkut aktif sampai ada
+  intervensi manual (unpause + emergencyPause ulang). Prosedur
+  operator: jangan trip origin kedua sebelum incident pertama
+  berstatus CONTAINED. Perbaikan sudah ada di kode repo
+  (SiblingVault.pause() meng-emit ulang Paused) dan live di instance
+  publik baru. Catatan F6: registerSibling tidak memeriksa code di
+  chain tujuan (tidak mungkin dari Lasna) — verifikasi dilakukan
+  off-chain (checklist app + cast code di chain tujuan sebelum
+  register).
 - **The watcher does not track unpause.** It does not subscribe `Unpaused` —
   unpause is a per-deployment human matter and the watcher has no action to
   take on it. An incident becomes CONTAINED when all siblings are confirmed
@@ -526,7 +666,7 @@ git clone https://github.com/0xward/contagion-stop
 cd contagion-stop
 forge install
 forge build
-forge test                 # 63 tests must pass (see design.md §11.3 for the list)
+forge test                 # 198 tests (14 suites) must pass
 forge test --gas-report    # measure actual gas of pause() vs the 200,000 limit
 ```
 
@@ -551,20 +691,53 @@ reactive-contagion-stop/
 │   └── openzeppelin-contracts/        # Pausable + Ownable (v5)
 ├── src/
 │   ├── SiblingVault.sol              # pausable vault + callback pause()
+│   ├── ContagionVault.sol            # v2 ETH vault: ERC-20 shares, ERC-4626 semantics
+│   ├── ContagionVaultERC20.sol       # v2 ERC-20-asset vault (USDC): ERC-20 shares
+│   ├── VaultFactory.sol              # v2 ETH vault factory (EIP-1167 clones)
+│   ├── VaultFactoryERC20.sol         # v2 ERC-20 vault factory (EIP-1167 clones)
 │   ├── ContagionWatcher.sol          # Lasna — subscribe + fan-out + confirmation
-│   └── ContagionTopics.sol           # topic0 constants (keccak, programmatic)
+│   ├── ContagionTopics.sol           # topic0 constants (keccak, programmatic)
+│   └── PublicVault.sol               # permissionless trip/reopen (public test instance)
 ├── test/
 │   ├── SiblingVault.t.sol
+│   ├── ContagionVault.t.sol
+│   ├── ContagionVaultERC20.t.sol
 │   ├── ContagionWatcher.t.sol
-│   ├── ContagionStop.t.sol           # local integration: trip → fan-out → CONTAINED
+│   ├── ContagionIntegration.t.sol    # local integration: trip → fan-out → CONTAINED
+│   ├── ContagionVaultIntegration.t.sol
+│   ├── ContagionVaultERC20Integration.t.sol
+│   ├── VaultFactory.t.sol
+│   ├── VaultFactoryERC20.t.sol
+│   ├── PublicVault.t.sol
+│   ├── ContagionTopics.t.sol
+│   ├── GasReport.t.sol
 │   └── fixtures/                     # LocalSystemContract, LocalCallbackProxy
 ├── script/
 │   ├── DeploySibling.s.sol
 │   ├── DeployLasna.s.sol
-│   └── Fund.s.sol
+│   ├── DeployVaultV2.s.sol
+│   ├── CreateVaultV2.s.sol
+│   ├── DeployVaultERC20.s.sol
+│   ├── CreateVaultERC20.s.sol
+│   ├── DeployPublicVaults.s.sol
+│   ├── DeployPublicWatcher.s.sol
+│   ├── Fund.s.sol
+│   └── FundPublic.s.sol
+├── frontend/                         # Next.js app: dashboard, deploy-your-own, try-it-live
+│   └── src/                          # app/, components/, features/, hooks/, lib/
 ├── README.md
-└── VERIFICATION.md                   # loop reproduction steps + 4 tx hashes
+└── VERIFICATION.md                   # loop reproduction steps + tx hashes
 ```
+
+---
+
+## AI assistance disclosure
+
+AI tools were used to assist in building this project — coding, research,
+and review. This is a voluntary disclosure: every contract, test, and
+on-chain measurement in this repo was checked against the deployed
+contracts and the public explorers, and the evidence in `VERIFICATION.md`
+stands on its own. No part of the loop depends on an AI system at runtime.
 
 ---
 

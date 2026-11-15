@@ -36,6 +36,26 @@ import {SiblingVault} from "./SiblingVault.sol";
 ///    unpausing something that is not paused is a no-op error, not a
 ///    state change.
 contract PublicVault is SiblingVault {
+    /// @notice Revert when `trip()` is called before the cooldown expires.
+    /// `nextAllowedAt_` is the earliest timestamp a new trip is accepted.
+    error TripCooldown(uint256 nextAllowedAt_);
+
+    /// @notice Minimum delay between two `trip()` calls on the SAME vault
+    /// (F4, audit 15 Nov 2026). Each trip past containment is a new
+    /// incident = a full fan-out charged to the public watcher (~0.10-0.12
+    /// lREACT); without a cooldown one visitor could drain the public
+    /// watcher in 16-19 trips. 60 s keeps the demo testable by hand while
+    /// making a drain ~60x slower. The cooldown is per vault (a trip on
+    /// vault A never blocks vault B) and `reopen()` does NOT reset it.
+    /// A genuine urgent re-trip stays possible via the owner-only
+    /// `emergencyPause()` (bypasses this gate by design).
+    uint256 public constant TRIP_COOLDOWN = 60;
+
+    /// @notice Timestamp of the last accepted `trip()` on this vault.
+    /// 0 = never tripped (sentinel: the first trip is always allowed —
+    /// without it, a chain whose timestamp is < 60 would reject the
+    /// first trip; all live chains have timestamps far above 60).
+    uint256 public lastTripAt;
     /// @param callbackProxy_ Callback proxy of this vault's chain (same
     /// values as SiblingVault: Base Sepolia
     /// 0x476F44b11F5C942c58f4c8E3d0300E5710743585, Unichain Sepolia
@@ -51,7 +71,12 @@ contract PublicVault is SiblingVault {
     /// @notice Permissionless trip: pause this vault (if active) and
     /// emit `EmergencyPaused` with this vault as `protocol`, exactly as
     /// `emergencyPause` does — minus the owner check. Anyone may call it.
+    /// @dev F4: at most one accepted trip per `TRIP_COOLDOWN` per vault.
     function trip(bytes32 reason) external {
+        if (lastTripAt != 0 && block.timestamp < lastTripAt + TRIP_COOLDOWN) {
+            revert TripCooldown(lastTripAt + TRIP_COOLDOWN);
+        }
+        lastTripAt = block.timestamp;
         if (!paused()) _pause();
         emit EmergencyPaused(address(this), reason);
     }

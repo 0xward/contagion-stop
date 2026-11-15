@@ -19,7 +19,7 @@ import {
   SYSTEM_CONTRACT_ABI,
   SYSTEM_CONTRACT_ADDRESS
 } from '@/lib/contracts';
-import { LOOP_COST_LREACT } from '@/lib/config';
+import { LOOP_COST_LREACT, WATCHER_V2 } from '@/lib/config';
 import type { FundingHealth, SiblingId } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -118,6 +118,37 @@ export function FundingHealth({ health }: FundingHealthProps) {
   const watcherDebt = watcherDebtLiveNum ?? Number.parseFloat(health.watcher.debtLreact);
   const watcherReserves = watcherReservesLive ?? Number.parseFloat(health.watcher.reservesLreact);
   const watcherValuesLive = watcherReservesLive !== null;
+
+  /* ---- Watcher v2 (Lasna) — watches the v2 ETH + USDC vaults. ---- */
+  /* Same pattern as the public watcher panel: live balance, loops left
+   * from the measured per-loop cost. v2 loops measured 0.1056 lREACT
+   * (USDC loop #1, origin ETH) and 0.1210 lREACT (USDC loop #2, origin
+   * USDC); the divisor 0.12 is the conservative end of that range, so
+   * the count never over-promises. Below one full loop the watcher can
+   * stall mid-loop (react() bills against balance and stays silent
+   * when the balance runs out), so the warning is explicit. */
+  const { data: watcherV2Balance } = useBalance({
+    address: WATCHER_V2.address as Address,
+    chainId: WATCHER_V2.chainId,
+    query: { refetchInterval: 30_000, retry: 1, retryDelay: 1000 }
+  });
+  const { data: watcherV2DebtLive } = useReadContract({
+    address: SYSTEM_CONTRACT_ADDRESS as Address,
+    abi: SYSTEM_CONTRACT_ABI,
+    functionName: 'debt',
+    args: [WATCHER_V2.address as Address],
+    chainId: WATCHER_V2.chainId,
+    query: { refetchInterval: 30_000, retry: 1, retryDelay: 1000 }
+  });
+  const watcherV2BalanceNum =
+    watcherV2Balance !== undefined
+      ? Number.parseFloat(formatEther(watcherV2Balance.value))
+      : null;
+  const watcherV2DebtNum =
+    watcherV2DebtLive !== undefined ? Number.parseFloat(formatEther(watcherV2DebtLive)) : null;
+  const watcherV2LoopsLeft =
+    watcherV2BalanceNum !== null ? Math.floor(watcherV2BalanceNum / 0.12) : null;
+  const watcherV2Low = watcherV2LoopsLeft !== null && watcherV2LoopsLeft < 1;
   const siblingDebts = health.siblings.map((s) => ({
     siblingId: s.siblingId,
     debt: Number.parseFloat(s.debtEth),
@@ -273,6 +304,76 @@ export function FundingHealth({ health }: FundingHealthProps) {
               })}
             </ul>
           </div>
+        </div>
+
+        {/* Watcher v2 — Lasna (vaults v2 ETH + USDC) */}
+        <div className='flex flex-col gap-2 rounded-none border p-3'>
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='text-sm font-semibold'>Watcher v2 — Lasna (vaults v2)</span>
+            <Badge variant='outline' className='border-primary/40 text-primary'>
+              {watcherV2BalanceNum !== null ? 'LIVE' : 'LOADING…'}
+            </Badge>
+            {watcherV2Low ? (
+              <Badge variant='outline' className='border-foreground bg-muted text-foreground'>
+                LESS THAN 1 LOOP LEFT
+              </Badge>
+            ) : null}
+          </div>
+          <dl className='flex flex-wrap gap-x-6 gap-y-1 font-mono text-sm tabular-nums'>
+            <div>
+              <dt className='text-xs text-muted-foreground'>Balance (live)</dt>
+              <dd>
+                {watcherV2BalanceNum !== null
+                  ? `${watcherV2BalanceNum.toFixed(4)} lREACT`
+                  : '…'}
+              </dd>
+            </div>
+            <div>
+              <dt className='text-xs text-muted-foreground'>Debt (live)</dt>
+              <dd>
+                {watcherV2DebtNum !== null ? `${watcherV2DebtNum.toFixed(4)} lREACT` : '…'}
+              </dd>
+            </div>
+            <div>
+              <dt className='text-xs text-muted-foreground'>Loops left (live)</dt>
+              <dd>
+                {watcherV2LoopsLeft !== null
+                  ? `about ${watcherV2LoopsLeft} full loop${watcherV2LoopsLeft === 1 ? '' : 's'} at ~0.12 lREACT each`
+                  : '…'}
+              </dd>
+            </div>
+          </dl>
+          <a
+            href={`${EXPLORERS[WATCHER_V2.chainId as keyof typeof EXPLORERS]}/address/${WATCHER_V2.address}`}
+            target='_blank'
+            rel='noreferrer'
+            className='inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2 hover:underline'
+          >
+            View watcher v2 on Reactscan
+            <Icons.externalLink className='size-3' />
+          </a>
+          {watcherV2Low ? (
+            <p className='text-xs text-foreground' role='alert'>
+              Warning: watcher v2 holds less than one full loop of lREACT
+              (measured loops cost 0.1056–0.1210 lREACT each). Top up before
+              the next trip — a loop that runs out of balance stalls silently
+              mid-loop.
+            </p>
+          ) : (
+            <p className='text-xs text-muted-foreground'>
+              Measured v2 loop cost: 0.1056 lREACT (USDC loop #1) and 0.1210
+              lREACT (USDC loop #2); the ETH v2 loop cost 0.0794 lREACT.
+              Full loop hashes are listed in Docs.
+            </p>
+          )}
+          {watcherV2DebtNum !== null && watcherV2DebtNum > 0 ? (
+            <CoverDebtButton
+              label='Watcher v2'
+              address={WATCHER_V2.address as Address}
+              abi={CONTAGION_WATCHER_ABI}
+              chainId={WATCHER_V2.chainId}
+            />
+          ) : null}
         </div>
 
         {/* Debt vs reserves chart */}

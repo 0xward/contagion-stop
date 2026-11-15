@@ -61,7 +61,17 @@ export function Win98Shell({ children }: { children: React.ReactNode }) {
   const title =
     pathname === '/dashboard/docs'
       ? 'ContagionStop — Docs'
-      : 'ContagionStop — Overview';
+      : pathname === '/dashboard/deploy'
+        ? 'ContagionStop — Deploy'
+        : pathname === '/faq'
+          ? 'ContagionStop — FAQ'
+          : pathname === '/privacy'
+            ? 'ContagionStop — Privacy Policy'
+            : pathname === '/terms'
+              ? 'ContagionStop — Terms of Use'
+              : pathname === '/cookies'
+                ? 'ContagionStop — Cookie Policy'
+                : 'ContagionStop — Overview';
 
   return (
     <div className='win98-scope win98-desktop relative flex min-h-screen flex-col text-foreground'>
@@ -78,9 +88,14 @@ export function Win98Shell({ children }: { children: React.ReactNode }) {
         <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
           <Link
             href='/dashboard/overview'
-            className='text-sm font-bold tracking-[0.18em] text-[#000080] uppercase no-underline'
+            className='shrink-0 no-underline'
+            aria-label='ContagionStop — home'
           >
-            ContagionStop
+            <img
+              src='/icons/contagion-stop-logo.svg'
+              alt='CONTAGION-STOP'
+              className='h-[30px] w-auto'
+            />
           </Link>
           <span className='hidden text-[11px] tracking-[0.14em] text-[#404040] uppercase md:inline'>
             Cross-chain circuit breaker
@@ -118,7 +133,36 @@ export function Win98Shell({ children }: { children: React.ReactNode }) {
             </Win98Window>
             <footer className='mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] tracking-[0.14em] text-white uppercase [text-shadow:1px_1px_0_#000]'>
               <span>ContagionStop — testnet only</span>
-              <span>One pause freezes every sibling</span>
+              <nav
+                aria-label='Legal'
+                className='flex flex-wrap items-center gap-x-2 gap-y-1 normal-case'
+              >
+                <Link href='/faq' className='text-white underline underline-offset-2'>
+                  FAQ
+                </Link>
+                <span aria-hidden='true'>·</span>
+                <Link href='/privacy' className='text-white underline underline-offset-2'>
+                  Privacy
+                </Link>
+                <span aria-hidden='true'>·</span>
+                <Link href='/terms' className='text-white underline underline-offset-2'>
+                  Terms
+                </Link>
+                <span aria-hidden='true'>·</span>
+                <Link href='/cookies' className='text-white underline underline-offset-2'>
+                  Cookies
+                </Link>
+                <span aria-hidden='true'>·</span>
+                <a
+                  href='https://github.com/0xward/contagion-stop'
+                  target='_blank'
+                  rel='noreferrer'
+                  className='text-white underline underline-offset-2'
+                >
+                  GitHub
+                </a>
+              </nav>
+              <span className='hidden md:inline'>One pause freezes every sibling</span>
             </footer>
           </main>
         </div>

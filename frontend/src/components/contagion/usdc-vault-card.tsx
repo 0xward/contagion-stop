@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import type { Address } from 'viem';
+import { useEffect, useRef, useState } from 'react';
+import { formatUnits, parseUnits, type Address } from 'viem';
+import { useAccount, useChainId, useReadContract, useSwitchChain, useWriteContract } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { EXPLORERS, USDC_ADDRESSES, WATCHER_V2 } from '@/lib/config';
+import { ERC20_ABI, ERC20_VAULT_ABI } from '@/lib/contracts';
 import { useLiveVaultErc20 } from '@/hooks/use-live-vault-erc20';
 import { AssetLogo } from '@/components/contagion/asset-logo';
+import { chainHeaderStyle } from '@/components/contagion/chain-header-style';
 import { cn } from '@/lib/utils';
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
 
 export interface UsdcVaultCardProps {
   /** Vault label, e.g. "USDC Vault — Unichain Sepolia". */
@@ -59,6 +67,282 @@ function CopyAddressButton({ address }: { address: string }) {
 }
 
 /**
+ * Deposit USDC into this vault: approve + deposit.
+ *
+ * Flow: the wallet's USDC balance and the vault's allowance are read
+ * live. If the allowance is below the amount, Approve runs first
+ * (approve(vault, amount) on the USDC contract); Deposit then calls
+ * deposit(amount, wallet) on the vault, which mints shares and updates
+ * totalAssets. A plain USDC transfer does NOT update totalAssets, so
+ * there is deliberately no "send USDC" shortcut here. Both writes are
+ * pinned to the vault's chain; on the wrong chain the form offers the
+ * manual switch instead of auto-switching. A deposit reverts while the
+ * vault is paused (EnforcedPause) — the button is disabled then, with
+ * the reason stated.
+ */
+function DepositUsdcForm({
+  vault,
+  chainId,
+  chainName,
+  minDepositUsdc,
+  isPaused,
+  onDeposited
+}: {
+  vault: Address;
+  chainId: number;
+  chainName: string;
+  minDepositUsdc?: string;
+  isPaused: boolean;
+  onDeposited?: () => void;
+}) {
+  const { address: wallet, isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const queryClient = useQueryClient();
+  const [amount, setAmount] = useState('1');
+  const usdc = USDC_ADDRESSES[chainId];
+  const onWrongChain = isConnected && connectedChainId !== chainId;
+
+  let amountRaw: bigint | null = null;
+  let amountError: string | null = null;
+  try {
+    amountRaw = parseUnits(amount.trim() === '' ? '0' : amount.trim(), 6);
+    if (amountRaw <= BigInt(0)) {
+      amountError = 'Amount must be greater than 0.';
+    } else if (
+      minDepositUsdc !== undefined &&
+      amountRaw < parseUnits(minDepositUsdc, 6)
+    ) {
+      amountError = `Below the vault min deposit (${minDepositUsdc} USDC).`;
+    }
+  } catch {
+    amountError = 'Amount is not a valid USDC amount.';
+  }
+
+  const { data: walletBalance } = useReadContract({
+    address: usdc,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [wallet ?? ZERO_ADDRESS],
+    chainId,
+    query: { enabled: isConnected, refetchInterval: 30_000, retry: 1, retryDelay: 1000 }
+  });
+  const { data: allowance } = useReadContract({
+    address: usdc,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: [wallet ?? ZERO_ADDRESS, vault],
+    chainId,
+    query: { enabled: isConnected, refetchInterval: 15_000, retry: 1, retryDelay: 1000 }
+  });
+
+  const approve = useWriteContract();
+  const deposit = useWriteContract();
+
+  // After an approve confirms, re-read the allowance (and the wallet
+  // balance) so the Deposit button enables without a manual refresh.
+  // Guarded per tx hash so the invalidation runs exactly once.
+  const approveReportedRef = useRef<`0x${string}` | null>(null);
+  useEffect(() => {
+    if (!approve.isSuccess || !approve.data || approveReportedRef.current === approve.data) return;
+    approveReportedRef.current = approve.data;
+    void queryClient.invalidateQueries();
+  }, [approve.isSuccess, approve.data, queryClient]);
+  const depositReportedRef = useRef<`0x${string}` | null>(null);
+  useEffect(() => {
+    if (!deposit.isSuccess || !deposit.data || depositReportedRef.current === deposit.data) return;
+    depositReportedRef.current = deposit.data;
+    void queryClient.invalidateQueries();
+    onDeposited?.();
+  }, [deposit.isSuccess, deposit.data, queryClient, onDeposited]);
+
+  const insufficient =
+    amountRaw !== null && walletBalance !== undefined && amountRaw > walletBalance;
+  const needsApprove =
+    amountRaw !== null && (allowance === undefined || allowance < amountRaw);
+  const canDeposit =
+    isConnected &&
+    !onWrongChain &&
+    !isPaused &&
+    amountRaw !== null &&
+    amountError === null &&
+    !insufficient &&
+    !needsApprove;
+
+  function handleApprove() {
+    if (!amountRaw) return;
+    approve.writeContract({
+      address: usdc,
+      abi: ERC20_ABI,
+      functionName: 'approve',
+      args: [vault, amountRaw],
+      chainId
+    });
+  }
+
+  function handleDeposit() {
+    if (!amountRaw || !wallet) return;
+    deposit.writeContract({
+      address: vault,
+      abi: ERC20_VAULT_ABI,
+      functionName: 'deposit',
+      args: [amountRaw, wallet],
+      chainId
+    });
+  }
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <Label htmlFor={`deposit-usdc-${chainId}-${vault.slice(2, 8)}`}>
+        Deposit USDC — mints shares (totalAssets updates)
+      </Label>
+      <div className='flex flex-wrap items-center gap-2'>
+        <Input
+          id={`deposit-usdc-${chainId}-${vault.slice(2, 8)}`}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value.trim())}
+          placeholder='1'
+          inputMode='decimal'
+          className='w-32 font-mono'
+        />
+        <span className='text-xs text-muted-foreground'>USDC</span>
+        <span className='font-mono text-xs tabular-nums'>
+          {walletBalance !== undefined
+            ? `Wallet: ${formatUnits(walletBalance, 6)} USDC`
+            : isConnected
+              ? 'Wallet: …'
+              : 'Connect a wallet to deposit'}
+        </span>
+      </div>
+      {amountError ? (
+        <p className='text-xs text-foreground' role='alert'>
+          {amountError}
+        </p>
+      ) : null}
+      {insufficient ? (
+        <p className='text-xs text-foreground' role='alert'>
+          Error: insufficient USDC balance — your wallet holds{' '}
+          {walletBalance !== undefined ? formatUnits(walletBalance, 6) : '0'} USDC,
+          less than the {amount} USDC you entered. Get testnet USDC from the
+          faucet (see Docs) or enter a smaller amount.
+        </p>
+      ) : null}
+      {onWrongChain ? (
+        <div className='flex flex-col gap-2 rounded-none border border-foreground/40 bg-muted p-2 text-xs'>
+          <span>
+            Your wallet is on a different chain. Switch to {chainName} to
+            deposit into this vault.
+          </span>
+          <Button
+            variant='outline'
+            size='sm'
+            disabled={isSwitching}
+            onClick={() => switchChain({ chainId })}
+          >
+            Switch to {chainName}
+          </Button>
+        </div>
+      ) : null}
+      {isPaused ? (
+        <p className='text-xs text-muted-foreground'>
+          Deposit is disabled while paused — it would revert (EnforcedPause).
+          That revert is the freeze proof; reopen first to deposit again.
+        </p>
+      ) : null}
+      <div className='flex flex-wrap gap-2'>
+        <Button
+          variant='outline'
+          size='sm'
+          disabled={
+            !isConnected || onWrongChain || amountRaw === null || amountError !== null || approve.isPending
+          }
+          onClick={handleApprove}
+          title={
+            !isConnected
+              ? 'Connect a wallet to approve'
+              : needsApprove
+                ? 'Approve the vault to spend this USDC amount'
+                : 'Allowance already covers this amount'
+          }
+        >
+          {approve.isPending ? (
+            <Icons.spinner className='size-3.5 animate-spin' />
+          ) : (
+            <Icons.check className='size-3.5' />
+          )}
+          {needsApprove ? '1 — Approve USDC' : 'Approved'}
+        </Button>
+        <Button
+          variant='default'
+          size='sm'
+          disabled={!canDeposit || deposit.isPending}
+          onClick={handleDeposit}
+          title={
+            !isConnected
+              ? 'Connect a wallet to deposit'
+              : isPaused
+                ? 'Deposit reverts while paused'
+                : insufficient
+                  ? 'Insufficient USDC balance'
+                  : needsApprove
+                    ? 'Approve USDC first'
+                    : 'Deposit USDC and receive shares'
+          }
+        >
+          {deposit.isPending ? (
+            <Icons.spinner className='size-3.5 animate-spin' />
+          ) : (
+            <Icons.add className='size-3.5' />
+          )}
+          2 — Deposit USDC
+        </Button>
+      </div>
+      {approve.isError ? (
+        <p className='text-xs text-foreground' role='alert'>
+          Error: approve failed — {approve.error?.message ?? 'unknown error'}
+        </p>
+      ) : null}
+      {approve.isSuccess && approve.data ? (
+        <p className='text-xs'>
+          <a
+            href={`${EXPLORERS[chainId].url}/tx/${approve.data}`}
+            target='_blank'
+            rel='noreferrer'
+            className='inline-flex items-center gap-1 font-mono break-all text-primary underline underline-offset-2 hover:underline'
+          >
+            Approve confirmed — {approve.data.slice(0, 10)}…{approve.data.slice(-4)}
+            <Icons.externalLink className='size-3 shrink-0' />
+          </a>
+        </p>
+      ) : null}
+      {deposit.isError ? (
+        <p className='text-xs text-foreground' role='alert'>
+          Error: deposit failed — {deposit.error?.message ?? 'unknown error'}
+        </p>
+      ) : null}
+      {deposit.isSuccess && deposit.data ? (
+        <p className='text-xs'>
+          <a
+            href={`${EXPLORERS[chainId].url}/tx/${deposit.data}`}
+            target='_blank'
+            rel='noreferrer'
+            className='inline-flex items-center gap-1 font-mono break-all text-primary underline underline-offset-2 hover:underline'
+          >
+            Deposit confirmed — {deposit.data.slice(0, 10)}…{deposit.data.slice(-4)}
+            <Icons.externalLink className='size-3 shrink-0' />
+          </a>
+          <span className='text-muted-foreground'>
+            {' '}
+            — shares minted, totalAssets updated. Live values above re-read
+            from chain.
+          </span>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
  * One v2 USDC vault card (ContagionVaultERC20, shares ERC-20, asset USDC).
  *
  * Status is always icon + text label, never color alone. totalAssets(),
@@ -83,10 +367,15 @@ export function UsdcVaultCard({
   const hasNoEthReserve =
     live.isLive && live.ethBalanceRaw !== undefined && live.ethBalanceRaw === BigInt(0);
   const usdc = USDC_ADDRESSES[chainId];
+  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
+  const header = chainHeaderStyle(chainId);
 
   return (
     <Card className={cn(isPaused && 'border-primary')}>
-      <CardHeader className='pb-3'>
+      <CardHeader
+        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
+        style={header.style}
+      >
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='USDC' />
           <CardTitle className='text-base'>{label}</CardTitle>
@@ -125,7 +414,7 @@ export function UsdcVaultCard({
             {live.isLive ? 'LIVE' : live.hasFailed ? 'READ FAILED' : 'LOADING'}
           </Badge>
         </div>
-        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {chainName} · chain {chainId}
         </div>
@@ -268,6 +557,18 @@ export function UsdcVaultCard({
             </span>
           </div>
         ) : null}
+
+        {/* Deposit — approve + deposit, live balance + allowance checks. */}
+        <div className='border-t pt-3'>
+          <DepositUsdcForm
+            vault={address}
+            chainId={chainId}
+            chainName={chainName}
+            minDepositUsdc={live.minDepositUsdc}
+            isPaused={isPaused}
+            onDeposited={() => live.refetch()}
+          />
+        </div>
       </CardContent>
     </Card>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Address } from 'viem';
-import { useReadContract } from 'wagmi';
+import { useAccount, useChainId, useReadContract, useSwitchChain } from 'wagmi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import type { Sibling } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useLiveVault } from '@/hooks/use-live-vault';
 import { AssetLogo } from '@/components/contagion/asset-logo';
+import { chainHeaderStyle } from '@/components/contagion/chain-header-style';
 import {
   DepositTestButton,
   EmergencyPauseDialog,
@@ -72,9 +73,12 @@ function CopyAddressButton({ address }: { address: string }) {
  * distinguished with an ORIGIN label + blue border. Debt is read from the
  * Lasna system contract / callback proxy (never `debt()` on the vault —
  * it does not exist in the ABI). Balance, totalDeposited, and paused()
- * are read LIVE via wagmi; when a read has not resolved (or the RPC
- * refuses it) the card falls back to the recorded 14 Nov 2026 snapshot
- * and says so — a stale value is never shown as live.
+ * are read LIVE via wagmi; until the reads resolve the card shows "—"
+ * and a LOADING label — a recorded value is never shown as live (the
+ * recorded snapshot lives in the incident/timeline sections, labelled
+ * RECORDED there). Writes are pinned to the vault's chain (chainId) so
+ * a wallet on the wrong chain cannot send them to the wrong network;
+ * the banner below offers the manual switch instead.
  */
 export function SiblingCard({
   sibling,
@@ -85,25 +89,41 @@ export function SiblingCard({
   const { data: owner } = useReadContract({
     address: sibling.address as Address,
     abi: SIBLING_VAULT_ABI,
-    functionName: 'owner'
+    functionName: 'owner',
+    chainId: sibling.chainId
   });
   const isOwner =
     owner !== undefined &&
     connectedAddress !== undefined &&
     owner.toLowerCase() === connectedAddress.toLowerCase();
 
-  // Live: paused() + eth_getBalance + totalDeposited().
+  // Wrong-chain guard (same pattern as PublicVaultCard): writes are
+  // pinned to this vault's chain, and the banner offers the manual
+  // switch — the app never auto-switches chains.
+  const { isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const onWrongChain = isConnected && connectedChainId !== sibling.chainId;
+
+  // Live: paused() + eth_getBalance + totalDeposited(). A value is
+  // shown only once its own read resolved; until then it is "—".
+  // NOTE: useLiveVault's isLive only requires paused() — balance and
+  // totalDeposited get their own defined-check here so a recorded
+  // snapshot value is never labelled LIVE.
   const live = useLiveVault(sibling.address as Address, sibling.chainId);
-  const isPaused = live.isLive ? live.paused === true : sibling.status === 'PAUSED';
-  const balanceEth = live.balanceEth ?? sibling.balanceEth;
-  const totalDepositedEth = live.totalDepositedEth ?? sibling.totalDepositedEth;
-  const valuesAreLive = live.isLive;
+  const isPaused = live.isLive ? live.paused === true : undefined;
+  const balanceEth = live.balanceEth;
+  const totalDepositedEth = live.totalDepositedEth;
+  const valuesAreLive =
+    live.isLive && balanceEth !== undefined && totalDepositedEth !== undefined;
 
   const isOrigin = sibling.role === 'ORIGIN';
   const reserves = Number.parseFloat(sibling.reservesEth) || 0;
   const debt = Number.parseFloat(sibling.debtEth) || 0;
   const reservesTotal = reserves + debt;
   const reservesPct = reservesTotal > 0 ? (reserves / reservesTotal) * 100 : 100;
+  // Header card berwarna per chain (title bar Win98) — lihat chain-header-style.ts.
+  const header = chainHeaderStyle(sibling.chainId);
 
   return (
     <Card
@@ -112,7 +132,10 @@ export function SiblingCard({
         !isPaused && isOrigin && 'border-foreground'
       )}
     >
-      <CardHeader className='pb-3'>
+      <CardHeader
+        className={cn('chain-header', header.darkText && 'chain-header--dark', 'pb-3')}
+        style={header.style}
+      >
         <div className='flex flex-wrap items-center gap-2'>
           <AssetLogo asset='ETH' />
           <CardTitle className='text-base'>{sibling.label}</CardTitle>
@@ -121,28 +144,32 @@ export function SiblingCard({
             variant='outline'
             className={cn(
               'ml-auto',
-              isPaused
+              isPaused === true
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-foreground/30 bg-muted text-foreground'
             )}
           >
-            {isPaused ? (
+            {isPaused === true ? (
               <>
                 <Icons.pause className='mr-1 size-3' />
                 PAUSED
               </>
-            ) : (
+            ) : isPaused === false ? (
               <>
                 <span className='mr-1.5 inline-block size-2 rounded-full bg-success' aria-hidden />
                 ACTIVE
               </>
+            ) : live.hasFailed ? (
+              'STATE UNKNOWN'
+            ) : (
+              'STATE LOADING…'
             )}
           </Badge>
           <Badge variant='outline' className='border-primary/40 text-primary'>
-            {valuesAreLive ? 'LIVE' : 'RECORDED'}
+            {valuesAreLive ? 'LIVE' : live.hasFailed ? 'READ FAILED' : 'LOADING…'}
           </Badge>
         </div>
-        <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
+        <div className='chain-header-sub text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
           {sibling.chainName} · chain {sibling.chainId}
         </div>
@@ -177,19 +204,45 @@ export function SiblingCard({
           </span>
         </div>
 
-        {/* Balance / deposits — live when the reads resolved, else recorded. */}
+        {/* Balance / deposits — live only; "—" until each read resolves. */}
         <div className='flex justify-between gap-2 text-xs'>
-          <span className='text-muted-foreground'>
-            Balance {valuesAreLive ? '(live)' : '(recorded 14 Nov 2026)'}
+          <span className='text-muted-foreground'>Balance (live)</span>
+          <span className='font-mono tabular-nums'>
+            {balanceEth !== undefined ? `${balanceEth} ETH` : '—'}
           </span>
-          <span className='font-mono tabular-nums'>{balanceEth} ETH</span>
         </div>
         <div className='flex justify-between gap-2 text-xs'>
-          <span className='text-muted-foreground'>
-            Total deposited {valuesAreLive ? '(live)' : '(recorded 14 Nov 2026)'}
+          <span className='text-muted-foreground'>Total deposited (live)</span>
+          <span className='font-mono tabular-nums'>
+            {totalDepositedEth !== undefined ? `${totalDepositedEth} ETH` : '—'}
           </span>
-          <span className='font-mono tabular-nums'>{totalDepositedEth} ETH</span>
         </div>
+
+        {live.hasFailed ? (
+          <p className='rounded-none border border-foreground/40 bg-muted p-2 text-xs' role='status'>
+            Live reads failed in this browser — the chain RPCs could not be
+            reached. The contracts are still usable: verify state on the
+            explorer link above, or try again. Sending a transaction still
+            works when your wallet can reach its own RPC.
+          </p>
+        ) : null}
+
+        {onWrongChain ? (
+          <div className='flex flex-col gap-2 rounded-none border border-foreground/40 bg-muted p-2 text-xs'>
+            <span>
+              Your wallet is on a different chain. Switch to {sibling.chainName} to
+              send transactions to this vault.
+            </span>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={isSwitching}
+              onClick={() => switchChain({ chainId: sibling.chainId })}
+            >
+              Switch to {sibling.chainName}
+            </Button>
+          </div>
+        ) : null}
 
         {/* Reserves vs debt — recorded snapshot (see Funding health). */}
         <div className='flex flex-col gap-1.5'>

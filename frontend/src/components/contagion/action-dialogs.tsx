@@ -77,7 +77,7 @@ function TxStatus({
         <span className='inline-flex items-start gap-2 text-foreground'>
           <Icons.alertCircle className='mt-0.5 size-3.5 shrink-0' />
           <span className='break-words'>
-            Transaction reverted / failed: {errorMessage ?? 'unknown error'}
+            Error: Transaction reverted / failed: {errorMessage ?? 'unknown error'}
           </span>
         </span>
       ) : null}
@@ -188,7 +188,8 @@ export function EmergencyPauseDialog({
       address: sibling.address as Address,
       abi: SIBLING_VAULT_ABI,
       functionName: 'emergencyPause',
-      args: [reasonHex]
+      args: [reasonHex],
+      chainId: sibling.chainId
     });
   }
 
@@ -290,7 +291,8 @@ export function UnpauseDialog({
       address: sibling.address as Address,
       abi: SIBLING_VAULT_ABI,
       functionName: 'unpause',
-      args: []
+      args: [],
+      chainId: sibling.chainId
     });
   }
 
@@ -378,7 +380,8 @@ export function DepositTestButton({
       address: sibling.address as Address,
       abi: SIBLING_VAULT_ABI,
       functionName: 'deposit',
-      value: parseEther('0.001')
+      value: parseEther('0.001'),
+      chainId: sibling.chainId
     });
   }
 

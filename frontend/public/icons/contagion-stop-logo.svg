@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 56" width="420" height="56" role="img" aria-label="CONTAGION-STOP">
+  <defs>
+    <!-- gradien title bar aktif Win98: navy -> #1084d0 (chart-2 di palet situs) -->
+    <linearGradient id="tb" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000080"/>
+      <stop offset="1" stop-color="#1084d0"/>
+    </linearGradient>
+  </defs>
+  <!-- Varian E — Title bar: bilah gradien navy khas title bar aktif
+       Win98, teks putih + ikon pause putih dalam kotak. Paling berani,
+       tapi semua warna dari palet situs. Palet: #000080 / #1084d0 / #fff. -->
+  <rect x="2" y="5" width="416" height="46" fill="url(#tb)"/>
+  <!-- bevel luar -->
+  <rect x="2" y="5" width="416" height="2" fill="#ffffff"/>
+  <rect x="2" y="5" width="2" height="46" fill="#ffffff"/>
+  <rect x="2" y="49" width="416" height="2" fill="#0a0a0a"/>
+  <rect x="416" y="5" width="2" height="46" fill="#0a0a0a"/>
+  <!-- ikon pause -->
+  <rect x="16" y="17" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <rect x="23" y="23" width="4" height="10" fill="#ffffff"/>
+  <rect x="30" y="23" width="4" height="10" fill="#ffffff"/>
+  <!-- teks putih + bayangan navy gelap 1px -->
+  <text x="233" y="38" text-anchor="middle" font-family="Tahoma, 'MS Sans Serif', 'Liberation Sans', Arial, sans-serif" font-size="27" font-weight="700" letter-spacing="3" fill="#000040">CONTAGION-STOP</text>
+  <text x="232" y="37" text-anchor="middle" font-family="Tahoma, 'MS Sans Serif', 'Liberation Sans', Arial, sans-serif" font-size="27" font-weight="700" letter-spacing="3" fill="#ffffff">CONTAGION-STOP</text>
+</svg>

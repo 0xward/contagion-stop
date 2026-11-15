@@ -2,6 +2,7 @@
 pragma solidity ^0.8.29;
 
 import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
@@ -24,6 +25,7 @@ contract ContagionIntegrationTest is Test {
     uint256 public constant UNI = 1301;
     uint256 public constant BASE = 84532;
     bytes32 public constant REASON = bytes32("INCIDENT-1");
+    bytes32 public constant REASON_2 = bytes32("INCIDENT-2");
 
     address public owner = makeAddr("owner");
 
@@ -125,6 +127,29 @@ contract ContagionIntegrationTest is Test {
     function _confirmPaused(SiblingVault vault, uint256 chainId) internal {
         // OZ Paused(address): account is non-indexed (data), LOG1.
         _reactAsSystem(_log(ContagionTopics.PAUSED_TOPIC, 0, abi.encode(address(vault)), 1, address(vault), chainId));
+    }
+
+    /// @notice Count the `Paused` logs in `logs` emitted by `emitter_`.
+    function _countPausedLogsFrom(Vm.Log[] memory logs, address emitter_) internal pure returns (uint256 n) {
+        bytes32 pausedTopic = keccak256("Paused(address)");
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics.length > 0 && logs[i].topics[0] == pausedTopic && logs[i].emitter == emitter_) n++;
+        }
+    }
+
+    /// @notice Feed every `Paused` log in `logs` back to the watcher as the
+    /// confirmation it is. Deliberately feeds ONLY logs the vaults really
+    /// emitted (captured with `vm.recordLogs()` around the callback
+    /// execution) — fabricating a confirmation here would let this test
+    /// pass even with the F1 bug still present.
+    function _feedCapturedPausedLogs(Vm.Log[] memory logs) internal {
+        bytes32 pausedTopic = keccak256("Paused(address)");
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics.length == 0 || logs[i].topics[0] != pausedTopic) continue;
+            address emitter = logs[i].emitter;
+            uint256 chainId = emitter == address(siblingBase) ? BASE : UNI;
+            _reactAsSystem(_log(ContagionTopics.PAUSED_TOPIC, 0, logs[i].data, 1, emitter, chainId));
+        }
     }
 
     // -- full loop ---------------------------------------------------------------
@@ -234,5 +259,82 @@ contract ContagionIntegrationTest is Test {
         );
         assertEq(system.callbackRequestCount(), 0);
         assertFalse(siblingBase.paused());
+    }
+
+    // -- F1: two origins trip in sequence -> both incidents CONTAINED --------
+
+    function testTwoOriginTripsBothReachContained() public {
+        // Incident A: originUni trips. Execute ONLY the Base callback, so
+        // the incident is still active (siblingUni2 unconfirmed) when the
+        // second origin trips — the exact F1 window.
+        _tripOrigin();
+        assertEq(system.callbackRequestCount(), 2);
+        (uint256 c0,,,) = system.callbackRequests(0);
+        uint256 baseIdx = (c0 == BASE) ? 0 : 1;
+        vm.recordLogs();
+        _executeCallback(baseIdx);
+        Vm.Log[] memory logsA = vm.getRecordedLogs();
+        assertTrue(siblingBase.paused());
+        assertEq(_countPausedLogsFrom(logsA, address(siblingBase)), 1, "Base callback must emit Paused");
+        _feedCapturedPausedLogs(logsA);
+        assertTrue(watcher.confirmedPaused(BASE, address(siblingBase)));
+        (,, bool activeA) = watcher.incident(address(originUni));
+        assertTrue(activeA); // siblingUni2 still unconfirmed
+
+        // Incident B: the ALREADY-PAUSED Base sibling trips before
+        // containment. New incident -> confirmations reset, fan-out retries
+        // to both Unichain vaults (originUni is already paused).
+        vm.prank(owner);
+        siblingBase.emergencyPause(REASON_2);
+        _reactAsSystem(
+            _log(
+                ContagionTopics.EMERGENCY_PAUSED_TOPIC,
+                uint256(uint160(address(siblingBase))),
+                abi.encode(REASON_2),
+                2,
+                address(siblingBase),
+                BASE
+            )
+        );
+        assertFalse(watcher.confirmedPaused(UNI, address(originUni)));
+        assertFalse(watcher.confirmedPaused(UNI, address(siblingUni2)));
+        assertTrue(watcher.confirmedPaused(BASE, address(siblingBase))); // new origin self-confirms
+        assertEq(system.callbackRequestCount(), 4);
+        (uint256 c2, address r2,,) = system.callbackRequests(2);
+        (uint256 c3, address r3,,) = system.callbackRequests(3);
+        assertTrue(c2 == UNI && c3 == UNI);
+        assertTrue(
+            (r2 == address(originUni) && r3 == address(siblingUni2))
+                || (r2 == address(siblingUni2) && r3 == address(originUni))
+        );
+        (,, bool activeB) = watcher.incident(address(siblingBase));
+        assertTrue(activeB);
+
+        // Execute both retry callbacks and feed back ONLY the Paused logs
+        // the vaults really emitted. Pre-F1 the retry on originUni was a
+        // silent no-op (no Paused log), so incident A and B could never
+        // reach CONTAINED; post-F1 it re-emits Paused and the loop closes.
+        vm.recordLogs();
+        _executeCallback(2);
+        _executeCallback(3);
+        Vm.Log[] memory logsB = vm.getRecordedLogs();
+        assertTrue(originUni.paused());
+        assertTrue(siblingUni2.paused());
+        assertEq(
+            _countPausedLogsFrom(logsB, address(originUni)),
+            1,
+            "retry pause on already-paused origin must re-emit Paused (F1)"
+        );
+        assertEq(_countPausedLogsFrom(logsB, address(siblingUni2)), 1, "fresh pause must emit Paused");
+        _feedCapturedPausedLogs(logsB);
+
+        // BOTH incidents CONTAINED — the F1 deadlock is closed.
+        (,, bool activeAfterA) = watcher.incident(address(originUni));
+        (,, bool activeAfterB) = watcher.incident(address(siblingBase));
+        assertFalse(activeAfterA);
+        assertFalse(activeAfterB);
+        assertTrue(watcher.confirmedPaused(UNI, address(originUni)));
+        assertTrue(watcher.confirmedPaused(UNI, address(siblingUni2)));
+        assertTrue(watcher.confirmedPaused(BASE, address(siblingBase)));
     }
 }

@@ -84,6 +84,10 @@ export const APP_NAME = 'ContagionStop';
 /* (repo/src/PublicVault.sol). E2E 2 siklus penuh dari wallet          */
 /* bukan-owner sudah lolos (loop penuh ~2 dtk); bukti lengkap di       */
 /* ../public-deploy-log.md. Instance ditinggalkan AKTIF (paused false).*/
+/* Gelombang 2 (15 Nov 2026): ketiga vault DIGANTI dengan vault baru  */
+/* (kode F1+F4) dan didaftarkan ke watcher lama yang sama; vault lama  */
+/* di-unregister. Riwayat RECORDED siklus 1 & 2 (vault lama) tetap    */
+/* tampil di bawah — jangan hapus.                                     */
 /* ------------------------------------------------------------------ */
 
 export interface PublicContractEntry {
@@ -93,25 +97,25 @@ export interface PublicContractEntry {
   address: Address;
 }
 
-/** Tiga public vault + public watcher (Sourcify exact_match keempatnya). */
+/** Tiga public vault v1 BARU + public watcher lama (Sourcify exact_match keempatnya). */
 export const PUBLIC_CONTRACTS: Record<'vaultU1' | 'vaultU2' | 'vaultB' | 'watcher', PublicContractEntry> = {
   vaultU1: {
     role: 'PublicVault U1 — Origin (Unichain Sepolia). trip() di sini memicu loop.',
     chainId: 1301,
     chainName: 'Unichain Sepolia',
-    address: '0x2bd64b3ee79eb1f38191e0b185786cb176d8696c'
+    address: '0xe427b13172dc65d9218c6067fc6fd89408b47a1a'
   },
   vaultU2: {
     role: 'PublicVault U2 — Sibling (Unichain Sepolia). Paused via watcher callback.',
     chainId: 1301,
     chainName: 'Unichain Sepolia',
-    address: '0xf3475038bc53aa50408272F233F5dF73F6CF8F8c'
+    address: '0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe'
   },
   vaultB: {
     role: 'PublicVault B — Sibling (Base Sepolia). Paused via watcher callback.',
     chainId: 84532,
     chainName: 'Base Sepolia',
-    address: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
+    address: '0x589770D4F1785b0fD20fF0600727Fc4BC7781d52'
   },
   watcher: {
     role: 'Public ContagionWatcher — Lasna, watches for EmergencyPaused then fans out pause callbacks',
@@ -121,10 +125,126 @@ export const PUBLIC_CONTRACTS: Record<'vaultU1' | 'vaultU2' | 'vaultB' | 'watche
   }
 };
 
-/** Saldo watcher public saat instance diserahkan (15 Nov 2026, terukur):
- * 1,9141524 lREACT — sekitar 20 loop lagi pada ~0,09 lREACT/loop. Angka
- * ini adalah snapshot serah-terima; saldo live dibaca via wagmi. */
-export const PUBLIC_WATCHER_BALANCE_AT_HANDOVER_LREACT = '1.9141524' as const;
+/** Saldo watcher public lama saat serah-terima gelombang 2 (15 Nov 2026,
+ * terukur): 2,6584943 lREACT — sekitar 29 loop lagi pada ~0,09 lREACT/loop.
+ * Angka ini adalah snapshot serah-terima; saldo live dibaca via wagmi. */
+export const PUBLIC_WATCHER_BALANCE_AT_HANDOVER_LREACT = '2.6584943' as const;
+
+/* ------------------------------------------------------------------ */
+/* Public test deployment v2 — shares (15 Nov 2026, gelombang 2).     */
+/* PublicVaultV2 = ContagionVault + trip(bytes32) + reopen()           */
+/* permissionless + cooldown trip 60 dtk (repo/src/PublicVaultV2.sol); */
+/* PublicVaultERC20 = ContagionVaultERC20 + trip/reopen permissionless */
+/* (repo/src/PublicVaultERC20.sol). Tiga vault ETH + satu vault USDC   */
+/* (20 USDC) di watcher publik BARU — ini produk v2 yang sebenarnya:   */
+/* deposit/withdraw shares, bukan shell v1.                            */
+/*                                                                     */
+/* ⚠️ TABRAKAN ALAMAT ANTAR-CHAIN: watcher publik baru di bawah ini    */
+/* (Lasna 5318007) beralamat SAMA PERSIS dengan vault B publik LAMA    */
+/* (Base Sepolia 84532) — 0x4b44497bAD6c270462D0529FCe4E41A7e092669b.     */
+/* Keduanya punya code; tidak ada tabrakan karena alamat bersifat      */
+/* per-chain. Di SEMUA tempat, alamat ini WAJIB tampil berpasangan     */
+/* dengan chainId/nama chain — jangan pernah tampilkan tanpa chain.    */
+/* ------------------------------------------------------------------ */
+
+/** Empat vault v2 publik + watcher publik baru (Sourcify exact_match: impl + factory kedua chain + watcher). */
+export const PUBLIC_V2_CONTRACTS: Record<
+  'vaultUni0' | 'vaultUni1' | 'vaultBase0' | 'vaultUsdc' | 'watcher',
+  PublicContractEntry
+> = {
+  vaultUni0: {
+    role: 'PublicVaultV2 Uni #0 — Origin (Unichain Sepolia). trip() di sini memicu loop; deposit() mints shares.',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0x1f14825bBCC1727C134B7396BA77A2B4C37A6535'
+  },
+  vaultUni1: {
+    role: 'PublicVaultV2 Uni #1 — Sibling (Unichain Sepolia). Paused via watcher callback.',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0x6297D51f2D267aA636C3A0B2C842C118CDBC09be'
+  },
+  vaultBase0: {
+    role: 'PublicVaultV2 Base #0 — Sibling (Base Sepolia). Paused via watcher callback.',
+    chainId: 84532,
+    chainName: 'Base Sepolia',
+    address: '0x405aaB687EE6453161935cCe267d9F2D01eFa540'
+  },
+  vaultUsdc: {
+    role: 'PublicVaultERC20 USDC — Sibling (Unichain Sepolia). deposit(amount, receiver) mints shares CSUSDC; trip() permissionless.',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043'
+  },
+  watcher: {
+    role: 'Public ContagionWatcher v2 — Lasna (5318007), watches the four v2 public vaults above',
+    chainId: 5318007,
+    chainName: 'Lasna',
+    address: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
+  }
+};
+
+/** Saldo watcher publik baru saat serah-terima gelombang 2 (15 Nov 2026,
+ * terukur, setelah E2E v2 + E2E USDC): 1,7701604 lREACT — sekitar 13 loop
+ * lagi pada ~0,13 lREACT/loop (fan-out 4 vault). Angka ini adalah snapshot
+ * serah-terima; saldo live dibaca via wagmi. */
+export const PUBLIC_V2_WATCHER_BALANCE_AT_HANDOVER_LREACT = '1.7701604' as const;
+
+/** Tx hash kunci E2E v2 publik (15 Nov 2026, gelombang 2) — tautan
+ * verifikasi di Docs. Trip Uni #0 → ketiga vault ETH paused, CONTAINED. */
+export const PUBLIC_V2_E2E = {
+  trip: '0xd7c4c39d385b024bfc43dc6f6425a8e7dc358ea402876e84e668de396cc84a0a',
+  reopenUni0: '0x85633025d68695b342f8418d6492d4d9ab48b0a63191d1cfb0fb6b5d7f434f39',
+  reopenUni1: '0x2e6c001a4f9513b71dabf74194506deb885de0d858114d80ec894f2946ba1417',
+  reopenBase0: '0xdf6e0819d2431ec1784e12503889cf21c1e4783ca92b08f85b88960451a8f327'
+} as const;
+
+/** Tx hash kunci E2E USDC publik (15 Nov 2026, gelombang 2) — trip vault
+ * USDC → keempat vault watcher baru paused, CONTAINED. */
+export const PUBLIC_USDC_E2E = {
+  trip: '0xd4f340b468992f6651810de8c6882486c6bd64388d39a96a2e7d54f950389b49',
+  deposit: '0x03bd7073489a4518ec634017a8178e85e2d2050400e8d1684135e119b5290e1a',
+  reopenUsdc: '0x0899c7dca55f3ce43fd3b178feb6cc00e4485fde41df0f4c0302f612c6d79400'
+} as const;
+
+/** Uji live dua-trip (verifikasi F1, 15 Nov 2026, gelombang 2) — dua
+ * origin trip berurutan sebelum containment pertama; kedua incident
+ * CONTAINED dalam tx Lasna yang sama. Instance: set v1 baru, watcher lama. */
+export const TWO_TRIP_F1 = {
+  tripU1: '0x02ade27e58f9dedc445d15250dd5479a4e010b11f3c4a18035dc1673d3ef6648',
+  tripU2: '0xb1c08933920b0f7d50f3ccfe203157b2aab2f89348cf635e0b7613959971b50d',
+  containedBoth: '0xfe667e3e0d499f1bb0570149dd260a100e247274a13edb8c1a232a84802e4b74'
+} as const;
+
+/** Uji live coverDebt skenario utang (F8, 15 Nov 2026, gelombang 2) —
+ * instance scratch (bukan main set, bukan publik): vault S tanpa dana
+ * trip → utang 152.606.850.000 wei → callback terblokir → danai 0,001 ETH
+ * → coverDebt → utang 0 → retry emergencyPause → callback jalan lagi,
+ * CONTAINED. */
+export const F8_COVER_DEBT = {
+  tripT: '0x1ae52ec08f4b515734d32e085e6c650df432ffd96fff19f3527a420f474e23a7',
+  coverDebt: '0xc559af0511cf8c25778a7d057d61fbb8398cf3402debd424086966dc35cfde10',
+  retryPause: '0x835f7c1fcb67e7f4ee13eb54e89096fde91501560733f8e5608b4bdadb083127'
+} as const;
+
+/** E2E fresh-wallet untuk /dashboard/deploy (15 Nov 2026, gelombang 3) —
+ * wallet segar (bukan deployer) createVault via factory ETH utama →
+ * alamat hasil SAMA dengan prediksi deploy page → registerSibling →
+ * deposit 0,001 ETH → trip → CONTAINED (5 vault) → semua di-unpause. */
+export const FRESH_WALLET_E2E = {
+  freshWallet: '0x4c97434A42a74a42b9A3EFfa38247B0B7F124A17',
+  vault: '0xe0e566c8AAE37ab7fc33743DE46EC8ace721D5a4',
+  fundEth: '0x6f31dedb7cccc47dbd13e758c751a5d4eaf3fb0286fbc7075fd08e04a6c2be32',
+  fundUsdc: '0xd154f1d8196e786e43c705003970477644ec42546a4d56b82584a9b974c3144c',
+  createVault: '0x00302761c519f27d8b233fde12ba388705110d7c0212b2eede2646a5edd1e7a2',
+  registerSibling: '0xb65f38260744eea454152b87326a0300541224a9c6edd656bfb1493acc064963',
+  depositEth: '0xe61917e638aa8ba33bd1c57e76c32466a92ecc52bfea60beb570bb5635fd8af0',
+  trip: '0xa18fd7e5076eba17a28d10b2647a43b3dd48afed7040a5107871a34bf17dcfac',
+  react: '0xac633113b81cca48c17e9738b8991fa00cba707df82feb51e41cbfc36da74dcc',
+  contained: '0x1ec9243d0dc00a16822d1adba4dd62e94ccddd869e3a332bf7bc482d9ecda7af',
+  approveUsdc: '0xc515ccc1d3539e8a625cd3c5a7eec1a9d19f97746e4821ca44c83d0866782a81',
+  depositUsdc: '0x3c38e78c26327990451b1545e1b370a4c4bd56f1755ece9a921e21153b3c3cda'
+} as const;
 
 /** Tx hash kunci E2E public instance (siklus 1, 15 Nov 2026) — tautan
  * verifikasi di Docs. */

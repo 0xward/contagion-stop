@@ -1276,13 +1276,38 @@ export const ADDRESSES = {
  * Public test deployment (15 Nov 2026) — PublicVault + public watcher.
  * Sama seperti ADDRESSES, ditambah trip()/reopen() permissionless
  * (lihat PUBLIC_VAULT_ABI di bawah).
+ * Gelombang 2 (15 Nov 2026): ketiga vault DIGANTI dengan vault baru
+ * (kode F1+F4); watcher lama tidak berubah; vault lama di-unregister.
  */
 export const PUBLIC_ADDRESSES = {
-  publicVaultU1: '0x2bd64b3ee79eb1f38191e0b185786cb176d8696c',
-  publicVaultU2: '0xf3475038bc53aa50408272F233F5dF73F6CF8F8c',
-  publicVaultB: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b',
+  publicVaultU1: '0xe427b13172dc65d9218c6067fc6fd89408b47a1a',
+  publicVaultU2: '0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe',
+  publicVaultB: '0x589770D4F1785b0fD20fF0600727Fc4BC7781d52',
   publicWatcher: '0x73f6e9989057f060801d1ab7d57f6047ff6c5557'
 } as const;
+
+/**
+ * Public test deployment v2 (15 Nov 2026, gelombang 2) — PublicVaultV2
+ * (ETH shares) + PublicVaultERC20 (USDC) + watcher publik baru.
+ *
+ * ⚠️ TABRAKAN ALAMAT ANTAR-CHAIN: `publicWatcherV2` di bawah ini
+ * (Lasna 5318007) beralamat SAMA PERSIS dengan vault B publik LAMA
+ * (Base Sepolia 84532) — 0x4b44497bAD6c270462D0529FCe4E41A7e092669b.
+ * Keduanya punya code; tidak ada tabrakan karena alamat bersifat
+ * per-chain. Di SEMUA tempat, alamat ini WAJIB tampil berpasangan
+ * dengan chainId/nama chain — jangan pernah tampilkan tanpa chain.
+ */
+export const PUBLIC_V2_ADDRESSES = {
+  publicVaultV2Uni0: '0x1f14825bBCC1727C134B7396BA77A2B4C37A6535',
+  publicVaultV2Uni1: '0x6297D51f2D267aA636C3A0B2C842C118CDBC09be',
+  publicVaultV2Base0: '0x405aaB687EE6453161935cCe267d9F2D01eFa540',
+  publicVaultUsdc: '0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043',
+  /** Lasna (5318007) — BUKAN Base Sepolia, meski alamatnya sama dengan vault B publik lama. */
+  publicWatcherV2: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
+} as const;
+
+/* PUBLIC_V2_ABI + PUBLIC_ERC20_ABI didefinisikan di akhir file, setelah
+ * ETH_VAULT_ABI dan ERC20_VAULT_ABI (mereka me-spread kedua ABI itu). */
 
 /**
  * PublicVault ABI = SIBLING_VAULT_ABI + trip(bytes32) + reopen().
@@ -1447,6 +1472,26 @@ export const ERC20_ABI = [
   },
   {
     type: 'function',
+    name: 'allowance',
+    inputs: [
+      { name: 'owner', type: 'address', internalType: 'address' },
+      { name: 'spender', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'approve',
+    inputs: [
+      { name: 'spender', type: 'address', internalType: 'address' },
+      { name: 'amount', type: 'uint256', internalType: 'uint256' }
+    ],
+    outputs: [{ name: '', type: 'bool', internalType: 'bool' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
     name: 'decimals',
     inputs: [],
     outputs: [{ name: '', type: 'uint8', internalType: 'uint8' }],
@@ -1465,6 +1510,88 @@ export const ERC20_ABI = [
     inputs: [],
     outputs: [{ name: '', type: 'string', internalType: 'string' }],
     stateMutability: 'view'
+  }
+] as const;
+
+/**
+ * ContagionVault (ETH, v2) ABI = SIBLING_VAULT_ABI (deposit() payable,
+ * no-arg; emergencyPause/unpause/coverDebt/paused/owner/watcher) +
+ * the ERC-20 share reads. NOTE: this deliberately does NOT include the
+ * ERC-20 vault deposit(uint256,address) — the ETH vault's deposit takes
+ * no arguments and is payable; using ERC20_VAULT_ABI here would make
+ * the overloaded deposit() ambiguous for wagmi.
+ * Signatures copied from repo/src/ContagionVault.sol.
+ */
+export const ETH_VAULT_ABI = [
+  ...SIBLING_VAULT_ABI,
+  {
+    type: 'function',
+    name: 'totalAssets',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'totalSupply',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    inputs: [{ name: 'account', type: 'address', internalType: 'address' }],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'name',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'decimals',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint8', internalType: 'uint8' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'minDeposit',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'withdraw',
+    inputs: [
+      { name: 'assets', type: 'uint256', internalType: 'uint256' },
+      { name: 'receiver', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: 'shares', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'redeem',
+    inputs: [
+      { name: 'shares', type: 'uint256', internalType: 'uint256' },
+      { name: 'receiver', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: 'assets', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable'
   }
 ] as const;
 
@@ -1585,5 +1712,55 @@ export const VAULT_FACTORY_ERC20_ABI = [
       { name: 'symbol', type: 'string', indexed: false, internalType: 'string' }
     ],
     anonymous: false
+  }
+] as const;
+
+/**
+ * PublicVaultV2 ABI = ETH_VAULT_ABI + trip(bytes32) + reopen().
+ * Keduanya permissionless: trip() mem-pause vault dan meng-emit
+ * EmergencyPaused yang sama seperti emergencyPause() (minus cek owner,
+ * plus cooldown 60 dtk per vault); reopen() memanggil _unpause() dan
+ * revert (ExpectedPause) bila vault sudah aktif. deposit() payable
+ * diwarisi apa adanya (mints shares).
+ */
+export const PUBLIC_V2_ABI = [
+  ...ETH_VAULT_ABI,
+  {
+    type: 'function',
+    name: 'trip',
+    inputs: [{ name: 'reason', type: 'bytes32', internalType: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'reopen',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  }
+] as const;
+
+/**
+ * PublicVaultERC20 ABI = ERC20_VAULT_ABI + trip(bytes32) + reopen().
+ * Sama seperti PUBLIC_V2_ABI, untuk vault USDC: deposit(amount, receiver)
+ * mints shares CSUSDC setelah approve(); trip() permissionless dengan
+ * cooldown 60 dtk per vault; reopen() permissionless.
+ */
+export const PUBLIC_ERC20_ABI = [
+  ...ERC20_VAULT_ABI,
+  {
+    type: 'function',
+    name: 'trip',
+    inputs: [{ name: 'reason', type: 'bytes32', internalType: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'reopen',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable'
   }
 ] as const;

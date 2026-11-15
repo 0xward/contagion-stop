@@ -12,6 +12,7 @@ import { Win98BootLog } from '@/components/win98/boot-log';
 import { LiveLog } from '@/components/terminal/live-log';
 import { HeroStatus } from '@/components/contagion/hero-status';
 import { SiblingGrid } from '@/components/contagion/sibling-grid';
+import { EthVaultGrid } from '@/components/contagion/eth-vault-grid';
 import { UsdcVaultGrid } from '@/components/contagion/usdc-vault-grid';
 import { PublicTestInstance } from '@/components/contagion/public-test-instance';
 import { EmergencyPauseDialog } from '@/components/contagion/action-dialogs';
@@ -98,7 +99,8 @@ export default function OverviewPage() {
   const { data: ownerA } = useReadContract({
     address: CONTRACTS.vaultA.address as Address,
     abi: SIBLING_VAULT_ABI,
-    functionName: 'owner'
+    functionName: 'owner',
+    chainId: CONTRACTS.vaultA.chainId
   });
   const isOwnerA =
     ownerA !== undefined &&
@@ -217,6 +219,20 @@ export default function OverviewPage() {
             connectedAddress={connectedAddress}
             onEmergencyPauseSuccess={handleLiveEmergencyPause}
           />
+        </section>
+
+        {/* ---- ETH vaults v2: live reads + deposit, next to the USDC vaults ---- */}
+        <section id='vaults-eth-v2' aria-label='ETH vaults v2 — live on-chain state' className='scroll-mt-20'>
+          <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
+            Vaults v2 — ETH (ERC-20 shares) — live on-chain state
+          </p>
+          <EthVaultGrid />
+          <p className='mt-2 text-xs text-muted-foreground'>
+            Both ETH vaults are watched by watcher v2 on Lasna. They hold
+            0.003 ETH totalAssets each (15 Nov 2026) — the cards show the
+            live totalAssets, not a placeholder. Deposit ETH to receive
+            shares; withdraw stays open while paused.
+          </p>
         </section>
 
         {/* ---- USDC vaults v2: live reads, next to the main deployment ---- */}

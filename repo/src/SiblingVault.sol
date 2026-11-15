@@ -114,8 +114,23 @@ contract SiblingVault is AbstractCallback, Ownable, Pausable, ReentrancyGuard {
     /// the callback proxy over the address(0) placeholder. Idempotent:
     /// a retried callback on an already-paused vault succeeds instead of
     /// reverting (a failed callback would still be charged in full).
+    /// @dev F1 (audit 15 Nov 2026): when the vault is ALREADY paused, the
+    /// callback still emits `Paused(address(this))`. The watcher confirms a
+    /// sibling only from a fresh `Paused` log (topic0 + emitter); a silent
+    /// no-op here left the sibling unconfirmed forever after a second
+    /// origin tripped and reset all confirmations, so the incident could
+    /// never reach CONTAINED. The emission is honest: the vault IS paused.
+    /// `ContagionVault` / `ContagionVaultERC20` inherit this function
+    /// unchanged, so the fix covers the v2 vaults too. Note the data arg
+    /// differs from OZ `_pause()` (which emits `_msgSender()`, i.e. the
+    /// callback proxy): the watcher ignores the data and reads only the
+    /// emitter, and `address(this)` names the vault that is actually paused.
     function pause(address callbackSender_) external onlyServiceProvider onlyWatcher(callbackSender_) {
-        if (!paused()) _pause();
+        if (!paused()) {
+            _pause();
+        } else {
+            emit Paused(address(this));
+        }
     }
 
     /// @notice Manual unpause ONLY. Never called by any callback: reopening

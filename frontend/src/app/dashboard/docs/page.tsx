@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import PageContainer from '@/components/layout/page-container';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -127,28 +128,103 @@ const V2_CONTRACTS = [
 
 const PUBLIC_CONTRACTS = [
   {
-    name: 'PublicVault U1 (origin)',
+    name: 'PublicVault U1 (origin) — v1 baru, 15 Nov 2026',
     chain: 'Unichain Sepolia (1301)',
-    address: '0x2bd64b3ee79eb1f38191e0b185786cb176d8696c',
-    explorer: 'https://sepolia.uniscan.xyz/address/0x2bd64b3ee79eb1f38191e0b185786cb176d8696c'
+    address: '0xe427b13172dc65d9218c6067fc6fd89408b47a1a',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xe427b13172dc65d9218c6067fc6fd89408b47a1a'
   },
   {
-    name: 'PublicVault U2',
+    name: 'PublicVault U2 — v1 baru, 15 Nov 2026',
     chain: 'Unichain Sepolia (1301)',
-    address: '0xf3475038bc53aa50408272F233F5dF73F6CF8F8c',
-    explorer: 'https://sepolia.uniscan.xyz/address/0xf3475038bc53aa50408272F233F5dF73F6CF8F8c'
+    address: '0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe'
   },
   {
-    name: 'PublicVault B',
+    name: 'PublicVault B — v1 baru, 15 Nov 2026',
     chain: 'Base Sepolia (84532)',
-    address: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b',
-    explorer: 'https://sepolia.basescan.org/address/0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
+    address: '0x589770D4F1785b0fD20fF0600727Fc4BC7781d52',
+    explorer: 'https://sepolia.basescan.org/address/0x589770D4F1785b0fD20fF0600727Fc4BC7781d52'
   },
   {
     name: 'Public ContagionWatcher',
     chain: 'Lasna (5318007)',
     address: '0x73f6e9989057f060801d1ab7d57f6047ff6c5557',
     explorer: 'https://lasna.reactscan.net/address/0x73f6e9989057f060801d1ab7d57f6047ff6c5557'
+  }
+] as const;
+
+/** Set v2 publik (15 Nov 2026, gelombang 2) — produk v2 yang sebenarnya.
+ * ⚠️ Alamat watcher v2 di bawah ini (Lasna 5318007) SAMA PERSIS dengan
+ * alamat vault B publik LAMA (Base Sepolia 84532):
+ * 0x4b44497bAD6c270462D0529FCe4E41A7e092669b. Keduanya punya code; tidak
+ * ada tabrakan karena alamat bersifat per-chain — selalu baca alamat ini
+ * berpasangan dengan chain-nya. */
+const PUBLIC_V2_CONTRACTS = [
+  {
+    name: 'PublicVaultV2 Uni #0 (origin, ETH shares)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x1f14825bBCC1727C134B7396BA77A2B4C37A6535',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x1f14825bBCC1727C134B7396BA77A2B4C37A6535'
+  },
+  {
+    name: 'PublicVaultV2 Uni #1 (ETH shares)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x6297D51f2D267aA636C3A0B2C842C118CDBC09be',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x6297D51f2D267aA636C3A0B2C842C118CDBC09be'
+  },
+  {
+    name: 'PublicVaultV2 Base #0 (ETH shares)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x405aaB687EE6453161935cCe267d9F2D01eFa540',
+    explorer: 'https://sepolia.basescan.org/address/0x405aaB687EE6453161935cCe267d9F2D01eFa540'
+  },
+  {
+    name: 'PublicVaultERC20 USDC (FUNDED — 20 USDC + 1 USDC fresh-wallet E2E = 21 USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xa363E9591CC85C4BDcc4F08c5e7711F5A792e043'
+  },
+  {
+    name: 'Public ContagionWatcher v2 — Lasna (5318007)',
+    chain: 'Lasna (5318007)',
+    address: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b',
+    explorer: 'https://lasna.reactscan.net/address/0x4b44497bAD6c270462D0529FCe4E41A7e092669b'
+  },
+  {
+    name: 'PublicVaultV2 implementation (ETH)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xD6f947E4B7Fc9EC5eD0C2078d982eFedBd5A5652',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xD6f947E4B7Fc9EC5eD0C2078d982eFedBd5A5652'
+  },
+  {
+    name: 'VaultFactory (public v2, ETH)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2'
+  },
+  {
+    name: 'PublicVaultV2 implementation (ETH)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x100efb80D0067F2753C09855ac062A849c29439e',
+    explorer: 'https://sepolia.basescan.org/address/0x100efb80D0067F2753C09855ac062A849c29439e'
+  },
+  {
+    name: 'VaultFactory (public v2, ETH)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xb50ABF8959097f7c8Da476671e97f6F30d781daA',
+    explorer: 'https://sepolia.basescan.org/address/0xb50ABF8959097f7c8Da476671e97f6F30d781daA'
+  },
+  {
+    name: 'PublicVaultERC20 implementation (USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xf51Ac3C1b74407E58c5F9f4e91D2cEcC25FFbc08',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xf51Ac3C1b74407E58c5F9f4e91D2cEcC25FFbc08'
+  },
+  {
+    name: 'VaultFactoryERC20 (public v2, USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xA22A250522C1CbD76F79AfE5a864bb238Cf05424',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xA22A250522C1CbD76F79AfE5a864bb238Cf05424'
   }
 ] as const;
 
@@ -211,6 +287,181 @@ const PUBLIC_E2E_TXS = [
   }
 ] as const;
 
+const PUBLIC_V2_E2E_TXS = [
+  {
+    step: 'E2E v2 — trip Uni #0 (PUB2-E2E1)',
+    chain: 'Unichain Sepolia',
+    hash: '0xd7c4c39d385b024bfc43dc6f6425a8e7dc358ea402876e84e668de396cc84a0a',
+    shortHash: '0xd7c4c39d…84a0a',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xd7c4c39d385b024bfc43dc6f6425a8e7dc358ea402876e84e668de396cc84a0a',
+    detail: 'Block 67886881 · ketiga vault ETH paused, CONTAINED'
+  },
+  {
+    step: 'E2E v2 — reopen Uni #0',
+    chain: 'Unichain Sepolia',
+    hash: '0x85633025d68695b342f8418d6492d4d9ab48b0a63191d1cfb0fb6b5d7f434f39',
+    shortHash: '0x85633025…34f39',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x85633025d68695b342f8418d6492d4d9ab48b0a63191d1cfb0fb6b5d7f434f39',
+    detail: 'Block 67886916 · permissionless'
+  },
+  {
+    step: 'E2E v2 — reopen Uni #1',
+    chain: 'Unichain Sepolia',
+    hash: '0x2e6c001a4f9513b71dabf74194506deb885de0d858114d80ec894f2946ba1417',
+    shortHash: '0x2e6c001a…ba1417',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x2e6c001a4f9513b71dabf74194506deb885de0d858114d80ec894f2946ba1417',
+    detail: 'Block 67886941 · permissionless'
+  },
+  {
+    step: 'E2E v2 — reopen Base #0',
+    chain: 'Base Sepolia',
+    hash: '0xdf6e0819d2431ec1784e12503889cf21c1e4783ca92b08f85b88960451a8f327',
+    shortHash: '0xdf6e0819…8f327',
+    explorer: 'https://sepolia.basescan.org/tx/0xdf6e0819d2431ec1784e12503889cf21c1e4783ca92b08f85b88960451a8f327',
+    detail: 'Block 59087391 · permissionless'
+  }
+] as const;
+
+const PUBLIC_USDC_E2E_TXS = [
+  {
+    step: 'E2E USDC — deposit 20 USDC (funding)',
+    chain: 'Unichain Sepolia',
+    hash: '0x03bd7073489a4518ec634017a8178e85e2d2050400e8d1684135e119b5290e1a',
+    shortHash: '0x03bd7073…290e1a',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x03bd7073489a4518ec634017a8178e85e2d2050400e8d1684135e119b5290e1a',
+    detail: 'Block 67887000 · totalAssets 20 USDC'
+  },
+  {
+    step: 'E2E USDC — trip vault USDC (PUBUSDC-E2E)',
+    chain: 'Unichain Sepolia',
+    hash: '0xd4f340b468992f6651810de8c6882486c6bd64388d39a96a2e7d54f950389b49',
+    shortHash: '0xd4f340b4…49b49',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xd4f340b468992f6651810de8c6882486c6bd64388d39a96a2e7d54f950389b49',
+    detail: 'Block 67887012 · keempat vault watcher baru paused, CONTAINED'
+  },
+  {
+    step: 'E2E USDC — reopen vault USDC',
+    chain: 'Unichain Sepolia',
+    hash: '0x0899c7dca55f3ce43fd3b178feb6cc00e4485fde41df0f4c0302f612c6d79400',
+    shortHash: '0x0899c7dc…79400',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x0899c7dca55f3ce43fd3b178feb6cc00e4485fde41df0f4c0302f612c6d79400',
+    detail: 'Block 67887052 · permissionless'
+  }
+] as const;
+
+const TWO_TRIP_TXS = [
+  {
+    step: 'Two-trip — trip U1 (2TRIP-C)',
+    chain: 'Unichain Sepolia',
+    hash: '0x02ade27e58f9dedc445d15250dd5479a4e010b11f3c4a18035dc1673d3ef6648',
+    shortHash: '0x02ade27e…f6648',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x02ade27e58f9dedc445d15250dd5479a4e010b11f3c4a18035dc1673d3ef6648',
+    detail: 'Block 67886611 · IncidentTripped Lasna 8401896'
+  },
+  {
+    step: 'Two-trip — trip U2 (2TRIP-D)',
+    chain: 'Unichain Sepolia',
+    hash: '0xb1c08933920b0f7d50f3ccfe203157b2aab2f89348cf635e0b7613959971b50d',
+    shortHash: '0xb1c08933…1b50d',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xb1c08933920b0f7d50f3ccfe203157b2aab2f89348cf635e0b7613959971b50d',
+    detail: 'Block 67886612 · IncidentTripped Lasna 8401897 — sebelum containment pertama'
+  },
+  {
+    step: 'Two-trip — containment kedua incident',
+    chain: 'Lasna',
+    hash: '0xfe667e3e0d499f1bb0570149dd260a100e247274a13edb8c1a232a84802e4b74',
+    shortHash: '0xfe667e3e…e4b74',
+    explorer: 'https://lasna.reactscan.net/tx/0xfe667e3e0d499f1bb0570149dd260a100e247274a13edb8c1a232a84802e4b74',
+    detail: 'Block 8401899 · kedua incident CONTAINED dalam tx yang sama'
+  }
+] as const;
+
+const F8_TXS = [
+  {
+    step: 'F8 — trip T (vault S berutang)',
+    chain: 'Unichain Sepolia',
+    hash: '0x1ae52ec08f4b515734d32e085e6c650df432ffd96fff19f3527a420f474e23a7',
+    shortHash: '0x1ae52ec0…4e23a7',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x1ae52ec08f4b515734d32e085e6c650df432ffd96fff19f3527a420f474e23a7',
+    detail: 'Block 67887138 · utang S 152.606.850.000 wei; callback terblokir'
+  },
+  {
+    step: 'F8 — coverDebt() S',
+    chain: 'Unichain Sepolia',
+    hash: '0xc559af0511cf8c25778a7d057d61fbb8398cf3402debd424086966dc35cfde10',
+    shortHash: '0xc559af05…cfde10',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xc559af0511cf8c25778a7d057d61fbb8398cf3402debd424086966dc35cfde10',
+    detail: 'Block 67887224 · utang S 152.606.850.000 → 0'
+  },
+  {
+    step: 'F8 — retry emergencyPause T',
+    chain: 'Unichain Sepolia',
+    hash: '0x835f7c1fcb67e7f4ee13eb54e89096fde91501560733f8e5608b4bdadb083127',
+    shortHash: '0x835f7c1f…083127',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x835f7c1fcb67e7f4ee13eb54e89096fde91501560733f8e5608b4bdadb083127',
+    detail: 'Block 67887240 · S paused=true (callback jalan lagi), CONTAINED'
+  }
+] as const;
+
+const FRESH_E2E_TXS = [
+  {
+    step: 'Fresh E2E — createVault (fresh wallet, factory utama)',
+    chain: 'Unichain Sepolia',
+    hash: '0x00302761c519f27d8b233fde12ba388705110d7c0212b2eede2646a5edd1e7a2',
+    shortHash: '0x00302761…d1e7a2',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x00302761c519f27d8b233fde12ba388705110d7c0212b2eede2646a5edd1e7a2',
+    detail: 'Block 67891567 · created 0xe0e566c8…D5a4 == predicted'
+  },
+  {
+    step: 'Fresh E2E — registerSibling (deployer, Lasna)',
+    chain: 'Lasna',
+    hash: '0xb65f38260744eea454152b87326a0300541224a9c6edd656bfb1493acc064963',
+    shortHash: '0xb65f3826…4963',
+    explorer: 'https://lasna.reactscan.net/tx/0xb65f38260744eea454152b87326a0300541224a9c6edd656bfb1493acc064963',
+    detail: 'Block 8406581 · registeredSibling(1301, fresh) = true'
+  },
+  {
+    step: 'Fresh E2E — deposit 0,001 ETH (fresh)',
+    chain: 'Unichain Sepolia',
+    hash: '0xe61917e638aa8ba33bd1c57e76c32466a92ecc52bfea60beb570bb5635fd8af0',
+    shortHash: '0xe61917e6…fd8af0',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xe61917e638aa8ba33bd1c57e76c32466a92ecc52bfea60beb570bb5635fd8af0',
+    detail: 'Block 67891608 · totalAssets 0,001 → 0,002 ETH; shares fresh 1e21'
+  },
+  {
+    step: 'Fresh E2E — trip emergencyPause FRESH-E2E1 (fresh)',
+    chain: 'Unichain Sepolia',
+    hash: '0xa18fd7e5076eba17a28d10b2647a43b3dd48afed7040a5107871a34bf17dcfac',
+    shortHash: '0xa18fd7e5…dcfac',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xa18fd7e5076eba17a28d10b2647a43b3dd48afed7040a5107871a34bf17dcfac',
+    detail: 'Block 67891623 · kelima vault paused'
+  },
+  {
+    step: 'Fresh E2E — react()',
+    chain: 'Lasna',
+    hash: '0xac633113b81cca48c17e9738b8991fa00cba707df82feb51e41cbfc36da74dcc',
+    shortHash: '0xac633113…4dcc',
+    explorer: 'https://lasna.reactscan.net/tx/0xac633113b81cca48c17e9738b8991fa00cba707df82feb51e41cbfc36da74dcc',
+    detail: 'Block 8406617 · IncidentTripped origin fresh'
+  },
+  {
+    step: 'Fresh E2E — IncidentContained',
+    chain: 'Lasna',
+    hash: '0x1ec9243d0dc00a16822d1adba4dd62e94ccddd869e3a332bf7bc482d9ecda7af',
+    shortHash: '0x1ec9243d…da7af',
+    explorer: 'https://lasna.reactscan.net/tx/0x1ec9243d0dc00a16822d1adba4dd62e94ccddd869e3a332bf7bc482d9ecda7af',
+    detail: 'Block 8406620 · incident(fresh).active = false; biaya loop 0,1526463 lREACT'
+  },
+  {
+    step: 'Fresh E2E — deposit 1 USDC ke vault USDC publik (fresh)',
+    chain: 'Unichain Sepolia',
+    hash: '0x3c38e78c26327990451b1545e1b370a4c4bd56f1755ece9a921e21153b3c3cda',
+    shortHash: '0x3c38e78c…3c3cda',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x3c38e78c26327990451b1545e1b370a4c4bd56f1755ece9a921e21153b3c3cda',
+    detail: 'Block 67891700 · totalAssets 20 → 21 USDC; shares fresh 1e18'
+  }
+] as const;
+
 const LOOP_TXS = [
   {
     step: '1. emergencyPause (trigger)',
@@ -251,6 +502,125 @@ const LOOP_TXS = [
     shortHash: '0xf73ce63e…5f74a3d0c',
     explorer: 'https://lasna.reactscan.net/tx/0xf73ce63e667c8d6223e4611d6ceed2af0425bd0b69d6e0e1222672c5f74a3d0c',
     detail: 'Block 8335438 · IncidentContained'
+  }
+] as const;
+
+const V2_ETH_LOOP_TXS = [
+  {
+    step: 'Trip — emergencyPause origin (E2E-V2-001)',
+    chain: 'Unichain Sepolia',
+    hash: '0x7c84025e613083831745d675b88d6bf3c01aeddf207bbe4ea6c0e748f24d40f2',
+    shortHash: '0x7c84025e…d40f2',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x7c84025e613083831745d675b88d6bf3c01aeddf207bbe4ea6c0e748f24d40f2',
+    detail: 'Block 67871519 · 32,649 gas'
+  },
+  {
+    step: 'react() — fan-out',
+    chain: 'Lasna',
+    hash: '0x61fc8e180d845c11d95f0e3c75f51bc3220e3212e28a67e94cace846ab2eed35',
+    shortHash: '0x61fc8e18…eed35',
+    explorer: 'https://lasna.reactscan.net/tx/0x61fc8e180d845c11d95f0e3c75f51bc3220e3212e28a67e94cace846ab2eed35',
+    detail: 'Block 8387722 · 325,228 gas · IncidentTripped + PauseRequested (Base)'
+  },
+  {
+    step: 'Callback pause() — sibling (Base)',
+    chain: 'Base Sepolia',
+    hash: '0xa9325ee9b97ba5d340794f81c69ca39ad6e142d6761baff04f012b99170e6ab6',
+    shortHash: '0xa9325ee9…e6ab6',
+    explorer: 'https://sepolia.basescan.org/tx/0xa9325ee9b97ba5d340794f81c69ca39ad6e142d6761baff04f012b99170e6ab6',
+    detail: 'Block 59010397 · 80,932 gas · ~1 s after the trip'
+  },
+  {
+    step: 'Containment confirmed',
+    chain: 'Lasna',
+    hash: '0xb1b47ff1a3be386d7eddb47408d15847d2c8316011407f6ce6322aee7deb7b7d',
+    shortHash: '0xb1b47ff1…b7b7d',
+    explorer: 'https://lasna.reactscan.net/tx/0xb1b47ff1a3be386d7eddb47408d15847d2c8316011407f6ce6322aee7deb7b7d',
+    detail: 'Block 8387723 · 170,847 gas · SiblingConfirmed + IncidentContained'
+  }
+] as const;
+
+/** USDC loops #1 + #2 (15 Nov 2026) — same watcher v2, four vaults. */
+const V2_USDC_LOOP_TXS = [
+  {
+    step: 'Loop #1 — trip, origin ETH v2 (E2E-USDC-01)',
+    chain: 'Unichain Sepolia',
+    hash: '0xf836639b43ac9befb4fb6cb231632f24cee4038ccabfce5328a21511358053eb',
+    shortHash: '0xf836639b…053eb',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xf836639b43ac9befb4fb6cb231632f24cee4038ccabfce5328a21511358053eb',
+    detail: 'Block 67877324'
+  },
+  {
+    step: 'Loop #1 — react()',
+    chain: 'Lasna',
+    hash: '0xf55bf6eac0cd5ef220c19850800e903f520715a64870ad0d099724190e39af22',
+    shortHash: '0xf55bf6ea…9af22',
+    explorer: 'https://lasna.reactscan.net/tx/0xf55bf6eac0cd5ef220c19850800e903f520715a64870ad0d099724190e39af22',
+    detail: 'Block 8393170 · 222,610 gas · IncidentTripped + PauseRequested ×3'
+  },
+  {
+    step: 'Loop #1 — callback pause() USDC vault (Uni)',
+    chain: 'Unichain Sepolia',
+    hash: '0x93182e78bd4a8f8aedcf8dd4596087325cfc926cd568b77558ce28cb34f16805',
+    shortHash: '0x93182e78…16805',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0x93182e78bd4a8f8aedcf8dd4596087325cfc926cd568b77558ce28cb34f16805',
+    detail: 'Block 67877326 · ~2–3 s after the trip'
+  },
+  {
+    step: 'Loop #1 — callback pause() ETH vault (Base)',
+    chain: 'Base Sepolia',
+    hash: '0x7d2dd9663c919178f7d3f336fd413298eba8b86a80005b63ff5d5dff1000c814',
+    shortHash: '0x7d2dd966…0c814',
+    explorer: 'https://sepolia.basescan.org/tx/0x7d2dd9663c919178f7d3f336fd413298eba8b86a80005b63ff5d5dff1000c814',
+    detail: 'Block 59039425'
+  },
+  {
+    step: 'Loop #1 — callback pause() USDC vault (Base)',
+    chain: 'Base Sepolia',
+    hash: '0x8f1537c483faa35785916bef4dd1ac588155e9492f28fd0c1e05e75a5998ae0d',
+    shortHash: '0x8f1537c4…8ae0d',
+    explorer: 'https://sepolia.basescan.org/tx/0x8f1537c483faa35785916bef4dd1ac588155e9492f28fd0c1e05e75a5998ae0d',
+    detail: 'Block 59039428 · cost 0.105642 lREACT'
+  },
+  {
+    step: 'Loop #2 — trip, origin USDC (E2E-USDC-02)',
+    chain: 'Unichain Sepolia',
+    hash: '0xfe37a2ee5f674c38db96e29764ac89be10e8707a7d6bab5b70b72fa7e7d1a0dd',
+    shortHash: '0xfe37a2ee…1a0dd',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xfe37a2ee5f674c38db96e29764ac89be10e8707a7d6bab5b70b72fa7e7d1a0dd',
+    detail: 'Block 67877922'
+  },
+  {
+    step: 'Loop #2 — react()',
+    chain: 'Lasna',
+    hash: '0xe2d4c87d54eb0ae6cd48914e79069b8b1aefbf32072062e3191a8e7095462a14',
+    shortHash: '0xe2d4c87d…62a14',
+    explorer: 'https://lasna.reactscan.net/tx/0xe2d4c87d54eb0ae6cd48914e79069b8b1aefbf32072062e3191a8e7095462a14',
+    detail: 'Block 8393733 · IncidentTripped + PauseRequested ×3'
+  },
+  {
+    step: 'Loop #2 — callback pause() ETH vault (Uni)',
+    chain: 'Unichain Sepolia',
+    hash: '0xe29e058300cdb3807f554ba5588a86999e424f67c54c08b9111087997b92ab17',
+    shortHash: '0xe29e0583…2ab17',
+    explorer: 'https://sepolia.uniscan.xyz/tx/0xe29e058300cdb3807f554ba5588a86999e424f67c54c08b9111087997b92ab17',
+    detail: 'Block 67877924'
+  },
+  {
+    step: 'Loop #2 — callback pause() ETH vault (Base)',
+    chain: 'Base Sepolia',
+    hash: '0x4003fc79e76c3df4c20193a4c981eb2386bbec2e9f7f6aa894b747e1ac481064',
+    shortHash: '0x4003fc79…81064',
+    explorer: 'https://sepolia.basescan.org/tx/0x4003fc79e76c3df4c20193a4c981eb2386bbec2e9f7f6aa894b747e1ac481064',
+    detail: 'Block 59042413'
+  },
+  {
+    step: 'Loop #2 — callback pause() USDC vault (Base)',
+    chain: 'Base Sepolia',
+    hash: '0x7406bc5bdc29640735959c2b29ca55ca12e587d8f16dc595afd00cb3e0266d29',
+    shortHash: '0x7406bc5b…66d29',
+    explorer: 'https://sepolia.basescan.org/tx/0x7406bc5bdc29640735959c2b29ca55ca12e587d8f16dc595afd00cb3e0266d29',
+    detail: 'Block 59042415 · contained in ~8 s · cost 0.1210131 lREACT'
   }
 ] as const;
 
@@ -321,7 +691,7 @@ const SECURITY_POINTS = [
   },
   {
     title: 'Idempotent pause',
-    text: 'Calling pause() on an already-paused sibling is a silent no-op and emits no Paused event.'
+    text: 'Calling pause() on an already-paused sibling is a silent no-op and emits no Paused event — in the main set (bytecode per 14–15 Nov 2026). The fixed build (in the repo and live on the public instances) re-emits Paused when already paused, so a second origin tripping mid-incident still reaches CONTAINED; see Known limitations.'
   },
   {
     title: 'Manual unpause only',
@@ -344,7 +714,8 @@ const SECURITY_POINTS = [
 const LIMITATIONS = [
   'Maximum callbacks per react() is unverified beyond a fan-out of 2; expanding to more chains must be tested first.',
   'A chain reorganization can leave a sibling paused from an event that later disappears on the origin chain. This fails closed by design: a wrongly paused sibling costs delayed deposits until a manual unpause; a deployment left open during a real exploit costs its funds.',
-  'The watcher does not subscribe to unpause events. Unpausing is a per-deployment human decision and the watcher has no action to take on it.'
+  'The watcher does not subscribe to unpause events. Unpausing is a per-deployment human decision and the watcher has no action to take on it.',
+  'Keterbatasan yang diketahui (main set v1 + vault v2 utama, bytecode per 14–15 Nov 2026): bila dua vault trip berurutan sebelum incident pertama mencapai CONTAINED, konfirmasi Paused dari vault yang sudah paused tidak ter-emit, sehingga incident dapat tersangkut aktif sampai ada intervensi manual (unpause + emergencyPause ulang). Prosedur operator: jangan trip origin kedua sebelum incident pertama berstatus CONTAINED. Perbaikan sudah ada di kode repo (SiblingVault.pause() meng-emit ulang Paused) dan live di instance publik baru. Catatan F6: registerSibling tidak memeriksa code di chain tujuan (tidak mungkin dari Lasna) — verifikasi dilakukan off-chain (checklist app + cast code di chain tujuan sebelum register).'
 ] as const;
 
 function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -566,6 +937,43 @@ export default function DocsPage() {
             </div>
             <div className='flex flex-col gap-2'>
               <p className='text-sm font-medium'>
+                Public test deployment v2 — shares (15 Nov 2026, Sourcify
+                exact_match: implementations + factories on both chains +
+                watcher)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Three ETH vaults (shares CSV) + one USDC vault (shares
+                CSUSDC, 20 USDC funded + 1 USDC from the fresh-wallet E2E =
+                21 USDC totalAssets) under a new public watcher on Lasna.
+                Trip has a 60-second cooldown per vault. Address note: the
+                v2 watcher (Lasna, chain 5318007) shares its address{' '}
+                <code className='font-mono text-xs'>
+                  0x4b44497bAD6c270462D0529FCe4E41A7e092669b
+                </code>{' '}
+                with the retired v1 vault B on Base Sepolia (chain 84532).
+                Addresses are per-chain, so there is no collision — always
+                read the address together with its chain.
+              </p>
+              <DocTable>
+                <tbody>
+                  {PUBLIC_V2_CONTRACTS.map((contract) => (
+                    <tr key={`${contract.chain}-${contract.address}`} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{contract.name}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{contract.chain}</td>
+                      <td className='py-2'>
+                        <ExternalLink href={contract.explorer}>
+                          <span className='font-mono text-xs break-all'>
+                            {contract.address}
+                          </span>
+                        </ExternalLink>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
+            <div className='flex flex-col gap-2'>
+              <p className='text-sm font-medium'>
                 Vaults v2 — ERC-20 shares (15 Nov 2026, Sourcify
                 exact_match: implementations + factories on both chains)
               </p>
@@ -680,6 +1088,216 @@ export default function DocsPage() {
                 ))}
               </ul>
             </div>
+            <div className='flex flex-col gap-3'>
+              <p className='text-sm font-medium'>
+                Vaults v2 loops — ETH + USDC (15 Nov 2026, watcher v2)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Three full loops on watcher v2 (Lasna{' '}
+                <code className='font-mono text-xs'>0xF5ad04cB…54C7D4B</code>),
+                covering all four v2 vaults (2 ETH + 2 USDC). The ETH loop
+                cost 0.0793974 lREACT and contained in ~1 s; USDC loop #1
+                (origin ETH) cost 0.105642 lREACT and contained in ~2–3 s;
+                USDC loop #2 (origin USDC — the watcher reacts to a USDC
+                vault exactly like to an ETH vault) cost 0.1210131 lREACT
+                and contained in ~8 s. All four vaults were reopened after
+                each loop; proxy debt stayed 0 throughout.
+              </p>
+              <DocTable>
+                <thead>
+                  <tr className='border-b text-left text-muted-foreground'>
+                    <th className='py-2 pr-4 font-medium'>Step</th>
+                    <th className='py-2 pr-4 font-medium'>Chain</th>
+                    <th className='py-2 pr-4 font-medium'>Transaction</th>
+                    <th className='py-2 font-medium'>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {V2_ETH_LOOP_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                  {V2_USDC_LOOP_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
+            <div className='flex flex-col gap-3'>
+              <p className='text-sm font-medium'>
+                Public v2 E2E — ETH + USDC (15 Nov 2026, new public watcher)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Two full loops on the new public watcher (Lasna{' '}
+                <code className='font-mono text-xs'>0x4b44497b…669b</code>).
+                The ETH loop cost 0.1020317 lREACT; the USDC loop (origin
+                USDC vault — the watcher reacts to a USDC vault exactly like
+                to an ETH vault) cost 0.1278079 lREACT. All four vaults were
+                reopened after each loop (permissionless reopen).
+              </p>
+              <DocTable>
+                <thead>
+                  <tr className='border-b text-left text-muted-foreground'>
+                    <th className='py-2 pr-4 font-medium'>Step</th>
+                    <th className='py-2 pr-4 font-medium'>Chain</th>
+                    <th className='py-2 pr-4 font-medium'>Transaction</th>
+                    <th className='py-2 font-medium'>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PUBLIC_V2_E2E_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                  {PUBLIC_USDC_E2E_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
+            <div className='flex flex-col gap-3'>
+              <p className='text-sm font-medium'>
+                Two-trip race (F1 verification, 15 Nov 2026) + coverDebt
+                with real proxy debt (F8, 15 Nov 2026)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Two origins tripped back-to-back (blocks 67886611 and
+                67886612) before the first containment — both incidents
+                CONTAINED in the same Lasna transaction. Separately, a vault
+                with real proxy debt (152.606.850.000 wei) blocked its
+                callback until coverDebt() paid the debt to zero and a retry
+                let the callback through. Both runs used scratch / public-v1
+                instances, not the main set.
+              </p>
+              <DocTable>
+                <thead>
+                  <tr className='border-b text-left text-muted-foreground'>
+                    <th className='py-2 pr-4 font-medium'>Step</th>
+                    <th className='py-2 pr-4 font-medium'>Chain</th>
+                    <th className='py-2 pr-4 font-medium'>Transaction</th>
+                    <th className='py-2 font-medium'>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TWO_TRIP_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                  {F8_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
+            <div className='flex flex-col gap-3'>
+              <p className='text-sm font-medium'>
+                Fresh-wallet E2E for Deploy your own (15 Nov 2026)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                A fresh wallet (not the deployer,{' '}
+                <code className='font-mono text-xs'>
+                  0x4c97434A42a74a42b9A3EFfa38247B0B7F124A17
+                </code>
+                ) created a vault from the main ETH factory on Unichain
+                Sepolia — the created address matched the Deploy page&apos;s
+                prediction exactly — then the deployer registered it in
+                watcher v2, the fresh wallet funded it (0.001 ETH deposit →
+                totalAssets 0.002 ETH, 1e21 shares) and tripped it. All five
+                vaults (fresh + four main v2) paused, incident CONTAINED
+                (Lasna block 8406620), then all five were unpaused. The same
+                wallet also deposited 1 USDC into the public USDC vault
+                (totalAssets 20 → 21 USDC, 1e18 shares).
+              </p>
+              <DocTable>
+                <thead>
+                  <tr className='border-b text-left text-muted-foreground'>
+                    <th className='py-2 pr-4 font-medium'>Step</th>
+                    <th className='py-2 pr-4 font-medium'>Chain</th>
+                    <th className='py-2 pr-4 font-medium'>Transaction</th>
+                    <th className='py-2 font-medium'>Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {FRESH_E2E_TXS.map((tx) => (
+                    <tr key={tx.hash} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{tx.step}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{tx.chain}</td>
+                      <td className='py-2 pr-4'>
+                        <ExternalLink href={tx.explorer}>
+                          <span className='font-mono text-xs'>{tx.shortHash}</span>
+                        </ExternalLink>
+                      </td>
+                      <td className='py-2 font-mono text-xs whitespace-nowrap tabular-nums'>
+                        {tx.detail}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
           </CardContent>
         </Card>
 
@@ -704,19 +1322,22 @@ export default function DocsPage() {
               </li>
               <li>
                 <span className='font-medium'>Trip.</span> On the Overview
-                page, in &ldquo;Try it live&rdquo;, pick a vault (U1 is the
-                origin used in the recorded runs) and press{' '}
+                page, in &ldquo;Try it live&rdquo;, pick a set (v1 shell or
+                v2 shares) and a vault (U1 is the origin used in the
+                recorded v1 runs; Uni #0 is the origin of the recorded v2
+                run) and press{' '}
                 <span className='font-medium'>Trip incident</span>. Confirm
                 the transaction in your wallet. Expect: the trip transaction
                 confirms within a few seconds, and the page shows
                 &ldquo;Trip confirmed — callbacks expected, not yet
-                confirmed&rdquo;.
+                confirmed&rdquo;. On v2, trip has a 60-second cooldown per
+                vault.
               </li>
               <li>
                 <span className='font-medium'>Wait ~2 seconds.</span> The
                 public watcher on Lasna reacts and requests a pause callback
-                to each of the other two vaults. Expect: all three vault cards
-                flip to PAUSED. Press{' '}
+                to each of the other vaults in the same set. Expect: all
+                vault cards in that set flip to PAUSED. Press{' '}
                 <span className='font-medium'>Refresh live state</span> if
                 the cards have not updated yet — the page re-reads paused(),
                 balance, and totalDeposited() from chain.
@@ -739,12 +1360,16 @@ export default function DocsPage() {
               <li>
                 <span className='font-medium'>Test deposit.</span> Press{' '}
                 <span className='font-medium'>Test deposit() — 0.001 ETH</span>{' '}
-                on a vault. Expect: the deposit confirms and totalDeposited()
-                rises by 0.001 ETH. While a vault is paused the button is
-                disabled — a deposit then would revert (EnforcedPause), which
-                is the freeze proof, not a bug. A test deposit stays in the
-                public vault: withdraw is owner-only, so send only testnet
-                dust you do not need back.
+                on an ETH vault. Expect: the deposit confirms and
+                totalDeposited() (v1) rises by 0.001 ETH, or shares are
+                minted to your wallet (v2). On the USDC vault, approve 1
+                USDC first, then press{' '}
+                <span className='font-medium'>Deposit 1 USDC</span>. While a
+                vault is paused the button is disabled — a deposit then
+                would revert (EnforcedPause), which is the freeze proof,
+                not a bug. A test deposit to a v1 vault stays in the public
+                vault: withdraw is owner-only, so send only testnet dust
+                you do not need back.
               </li>
             </ol>
             <JudgeQuickstart />
@@ -774,10 +1399,17 @@ export default function DocsPage() {
                   changes no live state.
                 </li>
                 <li>
-                  One full loop costs ~0.08–0.11 lREACT (measured). The
-                  public watcher is funded for about 20 loops from its
-                  handover balance; each vault holds ~0.001 ETH for callback
-                  fees.
+                  One full loop costs ~0.08–0.11 lREACT (measured, v1
+                  3-vault set) and ~0.10–0.13 lREACT (v2 4-vault set). Each
+                  public watcher&apos;s live balance and loops-left count
+                  are shown on the Overview page; each vault holds ~0.001
+                  ETH for callback fees.
+                </li>
+                <li>
+                  The v2 public watcher (Lasna) shares its address with the
+                  retired v1 vault B on Base Sepolia — same address,
+                  different chain. Always read that address together with
+                  its chain.
                 </li>
               </ul>
             </div>
@@ -820,6 +1452,26 @@ export default function DocsPage() {
                   ))}
                 </tbody>
               </DocTable>
+            </div>
+            <div className='flex flex-col gap-2'>
+              <p className='text-sm font-medium'>
+                Recorded public v2 runs — E2E v2 + E2E USDC (15 Nov 2026)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                E2E v2: trip Uni #0{' '}
+                <code className='font-mono text-xs'>
+                  0xd7c4c39d385b024bfc43dc6f6425a8e7dc358ea402876e84e668de396cc84a0a
+                </code>{' '}
+                → three ETH vaults paused, CONTAINED (0.1020317 lREACT).
+                E2E USDC: trip the USDC vault{' '}
+                <code className='font-mono text-xs'>
+                  0xd4f340b468992f6651810de8c6882486c6bd64388d39a96a2e7d54f950389b49
+                </code>{' '}
+                → all four vaults paused, CONTAINED (0.1278079 lREACT). Both
+                runs reopened every vault afterwards. Full step-by-step
+                hashes are in the &ldquo;How to verify&rdquo; section
+                above.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -869,6 +1521,11 @@ export default function DocsPage() {
           </CardHeader>
           <CardContent>
             <ul className='flex flex-col gap-2 text-sm'>
+              <li>
+                <Link href='/faq' className='text-primary underline-offset-4 hover:underline'>
+                  Frequently asked questions
+                </Link>
+              </li>
               <li>
                 <ExternalLink href='https://github.com/0xward/contagion-stop'>
                   GitHub repository

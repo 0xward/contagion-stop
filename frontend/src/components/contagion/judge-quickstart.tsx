@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Icons } from '@/components/icons';
 
 /**
@@ -96,6 +97,13 @@ export function JudgeQuickstart() {
         Faucet limits and requirements change — the faucet&apos;s own page is
         the final word. No faucet needs your seed phrase, only your public
         wallet address.
+      </p>
+      <p>
+        Questions about how it works, what it costs, or what can go wrong?{' '}
+        <Link href='/faq' className='text-primary underline underline-offset-2 hover:underline'>
+          Read the FAQ
+        </Link>
+        .
       </p>
     </div>
   );

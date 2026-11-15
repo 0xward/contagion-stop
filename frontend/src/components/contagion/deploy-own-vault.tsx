@@ -620,7 +620,7 @@ export function DeployOwnVault() {
             ) : null}
             {createTx.isError ? (
               <p className='text-xs text-foreground' role='alert'>
-                Transaction failed: {createTx.error?.message ?? 'unknown error'}
+                Error: Transaction failed: {createTx.error?.message ?? 'unknown error'}
               </p>
             ) : null}
             {createTx.data ? (
@@ -734,7 +734,7 @@ export function DeployOwnVault() {
                   )}
                   {registerTx.isError ? (
                     <p className='text-xs text-foreground' role='alert'>
-                      Registration failed: {registerTx.error?.message ?? 'unknown error'}
+                      Error: Registration failed: {registerTx.error?.message ?? 'unknown error'}
                     </p>
                   ) : null}
                   {registerTx.data ? (
