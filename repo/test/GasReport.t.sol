@@ -7,6 +7,9 @@ import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {ContagionTopics} from "../src/ContagionTopics.sol";
 import {ContagionWatcher} from "../src/ContagionWatcher.sol";
 import {SiblingVault} from "../src/SiblingVault.sol";
+import {ContagionVaultERC20} from "../src/ContagionVaultERC20.sol";
+import {VaultFactoryERC20} from "../src/VaultFactoryERC20.sol";
+import {UsdcFixture} from "./fixtures/UsdcFixture.sol";
 import {LocalSystemContract} from "./fixtures/LocalSystemContract.sol";
 import {LocalCallbackProxy} from "./fixtures/LocalCallbackProxy.sol";
 
@@ -178,5 +181,50 @@ contract GasReportTest is Test {
         vm.prank(owner);
         siblingBase.deposit{value: 0.1 ether}();
         console.log("deposit():", g - gasleft());
+    }
+
+    // -- ERC-20 (USDC) vault gas: same local stand-ins, 6-decimal asset ----
+
+    function _deployERC20() internal returns (ContagionVaultERC20 vault, UsdcFixture usdc) {
+        usdc = new UsdcFixture();
+        usdc.mint(owner, 1_000_000 * 1e6);
+        ContagionVaultERC20 impl = new ContagionVaultERC20(BASE_PROXY);
+        VaultFactoryERC20 factory = new VaultFactoryERC20(address(impl));
+        uint256 g = gasleft();
+        address v = factory.createVault(owner, makeAddr("watcher"), address(usdc), "USDC Vault Share", "USVS", 0);
+        console.log("createVault (ERC-20 clone + init):", g - gasleft());
+        vault = ContagionVaultERC20(payable(v));
+    }
+
+    function testERC20CreateVaultGas() public {
+        (ContagionVaultERC20 vault,) = _deployERC20();
+        assertTrue(address(vault) != address(0));
+        assertEq(vault.assetDecimals(), 6);
+        assertEq(vault.decimalsOffset(), 12);
+    }
+
+    function testERC20DepositWithdrawGas() public {
+        (ContagionVaultERC20 vault, UsdcFixture usdc) = _deployERC20();
+        vm.prank(owner);
+        usdc.approve(address(vault), 100 * 1e6);
+        uint256 g = gasleft();
+        vm.prank(owner);
+        vault.deposit(100 * 1e6, owner);
+        console.log("deposit (ERC-20, first):", g - gasleft());
+        vm.prank(owner);
+        usdc.approve(address(vault), 100 * 1e6);
+        g = gasleft();
+        vm.prank(owner);
+        vault.deposit(100 * 1e6, owner);
+        console.log("deposit (ERC-20, warm):", g - gasleft());
+        g = gasleft();
+        vm.prank(owner);
+        vault.withdraw(50 * 1e6, owner);
+        console.log("withdraw (ERC-20):", g - gasleft());
+        g = gasleft();
+        uint256 rest = vault.balanceOf(owner);
+        vm.prank(owner);
+        vault.redeem(rest, owner);
+        console.log("redeem (ERC-20):", g - gasleft());
     }
 }

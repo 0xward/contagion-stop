@@ -18,6 +18,13 @@ export const navGroups: NavGroup[] = [
         items: []
       },
       {
+        title: 'Deploy your own',
+        url: '/dashboard/deploy',
+        icon: 'add',
+        isActive: false,
+        items: []
+      },
+      {
         title: 'Docs',
         url: '/dashboard/docs',
         icon: 'page',

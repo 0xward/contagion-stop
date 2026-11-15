@@ -139,6 +139,129 @@ export const PUBLIC_E2E_CYCLE_1 = {
 } as const;
 
 /* ------------------------------------------------------------------ */
+/* Vaults v2 — ERC-20 shares (15 Nov 2026).                           */
+/* Deployed + Sourcify-verified exact_match (implementation + factory  */
+/* on both chains); see ../v2-deploy-log.md and                       */
+/* ../v2-erc20-deploy-log.md. The v2 watcher (Lasna) watches both    */
+/* the v2 ETH vaults and the v2 USDC vaults. The USDC vaults are      */
+/* UNFUNDED (totalAssets 0) — funding is a manual step, not done.     */
+/* ------------------------------------------------------------------ */
+
+export interface V2ContractEntry {
+  role: string;
+  chainId: number;
+  chainName: string;
+  address: Address;
+}
+
+/** Watcher v2 (Lasna) — one watcher for the whole v2 set. */
+export const WATCHER_V2: V2ContractEntry = {
+  role: 'ContagionWatcher v2 — Lasna, watches the v2 ETH vaults and the v2 USDC vaults',
+  chainId: 5318007,
+  chainName: 'Lasna',
+  address: '0xF5ad04cBbA9458b634a4cfc8668FCC2A254C7D4B'
+};
+
+/** USDC token per vault chain (canonical USDC, 6 decimals). */
+export const USDC_ADDRESSES: Record<number, Address> = {
+  1301: '0x31d0220469e10c4E71834a79b1f276d740d3768F',
+  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
+};
+
+/** v2 ETH vaults (ContagionVault, shares ERC-20, ETH-native). */
+export const V2_ETH_VAULTS: Record<'unichain' | 'base', V2ContractEntry> = {
+  unichain: {
+    role: 'ContagionVault v2 — origin (Unichain Sepolia), ETH shares',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0xEe9a24C80460069877e9b9F28143ee4D138Cf5d8'
+  },
+  base: {
+    role: 'ContagionVault v2 — sibling (Base Sepolia), ETH shares',
+    chainId: 84532,
+    chainName: 'Base Sepolia',
+    address: '0xB86060EE2332BD6b3DC9310E88371AE8cA1382b0'
+  }
+};
+
+/** v2 USDC vaults (ContagionVaultERC20, shares ERC-20, asset USDC). */
+export const V2_USDC_VAULTS: Record<'unichain' | 'base', V2ContractEntry> = {
+  unichain: {
+    role: 'ContagionVaultERC20 — USDC vault (Unichain Sepolia), share CSUSDC',
+    chainId: 1301,
+    chainName: 'Unichain Sepolia',
+    address: '0xb1404336db799285787bfb8a61f91e2d93e1bbdd'
+  },
+  base: {
+    role: 'ContagionVaultERC20 — USDC vault (Base Sepolia), share CSUSDC',
+    chainId: 84532,
+    chainName: 'Base Sepolia',
+    address: '0xd476AFBE349FB7b07110dda8E167095B2A3cee39'
+  }
+};
+
+/** Factories + implementations v2, per chain. */
+export const V2_FACTORIES: Record<'unichain' | 'base', {
+  factoryEth: V2ContractEntry;
+  factoryErc20: V2ContractEntry;
+  implementationEth: V2ContractEntry;
+  implementationErc20: V2ContractEntry;
+}> = {
+  unichain: {
+    factoryEth: {
+      role: 'VaultFactory — creates ContagionVault (ETH) clones',
+      chainId: 1301,
+      chainName: 'Unichain Sepolia',
+      address: '0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3'
+    },
+    factoryErc20: {
+      role: 'VaultFactoryERC20 — creates ContagionVaultERC20 (USDC) clones',
+      chainId: 1301,
+      chainName: 'Unichain Sepolia',
+      address: '0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032'
+    },
+    implementationEth: {
+      role: 'ContagionVault implementation (ETH)',
+      chainId: 1301,
+      chainName: 'Unichain Sepolia',
+      address: '0xE732a6e1D7F70Dc9502f9e4eDEb026451d911661'
+    },
+    implementationErc20: {
+      role: 'ContagionVaultERC20 implementation (USDC)',
+      chainId: 1301,
+      chainName: 'Unichain Sepolia',
+      address: '0xb50ABF8959097f7c8Da476671e97f6F30d781daA'
+    }
+  },
+  base: {
+    factoryEth: {
+      role: 'VaultFactory — creates ContagionVault (ETH) clones',
+      chainId: 84532,
+      chainName: 'Base Sepolia',
+      address: '0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6'
+    },
+    factoryErc20: {
+      role: 'VaultFactoryERC20 — creates ContagionVaultERC20 (USDC) clones',
+      chainId: 84532,
+      chainName: 'Base Sepolia',
+      address: '0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77'
+    },
+    implementationEth: {
+      role: 'ContagionVault implementation (ETH)',
+      chainId: 84532,
+      chainName: 'Base Sepolia',
+      address: '0x8809f72C2ce8Af6081D6540Ea7f1C3269F155968'
+    },
+    implementationErc20: {
+      role: 'ContagionVaultERC20 implementation (USDC)',
+      chainId: 84532,
+      chainName: 'Base Sepolia',
+      address: '0xB394E38c8aeb4d8ea1244faE0c229e05089A7edD'
+    }
+  }
+};
+
+/* ------------------------------------------------------------------ */
 /* Merged from staging config (2026-11-14) — new exports only.        */
 /* Existing exports above (CONTRACTS, LIVE, EXPLORERS,                 */
 /* CALLBACK_GAS_LIMIT, REACT_GAS_LIMIT, APP_NAME) are untouched.       */

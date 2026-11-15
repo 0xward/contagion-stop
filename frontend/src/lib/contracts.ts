@@ -1311,3 +1311,279 @@ export const PUBLIC_VAULT_ABI = [
 
 /** `true` = kontrak ter-deploy; baca/tulis dari chain via wagmi. */
 export const LIVE = true as const;
+
+/* ------------------------------------------------------------------ */
+/* Vaults v2 — ERC-20 shares (15 Nov 2026).                           */
+/* ContagionVaultERC20 extends SiblingVault, so paused()/owner()/      */
+/* watcher()/emergencyPause()/unpause()/coverDebt() come from          */
+/* SIBLING_VAULT_ABI above; the entries below are the ERC-20 vault    */
+/* additions (ERC-4626-style reads + ERC-20 share accounting).        */
+/* Signatures copied from repo/src/ContagionVaultERC20.sol.            */
+/* ------------------------------------------------------------------ */
+
+/** ContagionVaultERC20 ABI = SIBLING_VAULT_ABI + ERC-20 vault reads/writes. */
+export const ERC20_VAULT_ABI = [
+  ...SIBLING_VAULT_ABI,
+  {
+    type: 'function',
+    name: 'asset',
+    inputs: [],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'assetDecimals',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint8', internalType: 'uint8' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'decimalsOffset',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'minDeposit',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'totalAssets',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'totalSupply',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    inputs: [{ name: 'account', type: 'address', internalType: 'address' }],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'name',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'decimals',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint8', internalType: 'uint8' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'deposit',
+    inputs: [
+      { name: 'assets', type: 'uint256', internalType: 'uint256' },
+      { name: 'receiver', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: 'shares', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'mint',
+    inputs: [
+      { name: 'shares', type: 'uint256', internalType: 'uint256' },
+      { name: 'receiver', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: 'assets', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'withdraw',
+    inputs: [
+      { name: 'assets', type: 'uint256', internalType: 'uint256' },
+      { name: 'receiver', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: 'shares', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'redeem',
+    inputs: [
+      { name: 'shares', type: 'uint256', internalType: 'uint256' },
+      { name: 'receiver', type: 'address', internalType: 'address' }
+    ],
+    outputs: [{ name: 'assets', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'nonpayable'
+  }
+] as const;
+
+/** Minimal ERC-20 ABI — only the reads the UI needs (asset balances). */
+export const ERC20_ABI = [
+  {
+    type: 'function',
+    name: 'balanceOf',
+    inputs: [{ name: 'account', type: 'address', internalType: 'address' }],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'decimals',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint8', internalType: 'uint8' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'symbol',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'name',
+    inputs: [],
+    outputs: [{ name: '', type: 'string', internalType: 'string' }],
+    stateMutability: 'view'
+  }
+] as const;
+
+/**
+ * VaultFactory (ETH vaults) ABI — createVault is payable: msg.value is
+ * the seed deposit (at least MIN_SEED 0.001 ETH). Signatures copied from
+ * repo/src/VaultFactory.sol.
+ */
+export const VAULT_FACTORY_ABI = [
+  {
+    type: 'function',
+    name: 'createVault',
+    inputs: [
+      { name: 'owner_', type: 'address', internalType: 'address' },
+      { name: 'watcher_', type: 'address', internalType: 'address' },
+      { name: 'name_', type: 'string', internalType: 'string' },
+      { name: 'symbol_', type: 'string', internalType: 'string' },
+      { name: 'minDeposit_', type: 'uint256', internalType: 'uint256' }
+    ],
+    outputs: [{ name: 'vault', type: 'address', internalType: 'address' }],
+    stateMutability: 'payable'
+  },
+  {
+    type: 'function',
+    name: 'predictVault',
+    inputs: [
+      { name: 'creator_', type: 'address', internalType: 'address' },
+      { name: 'owner_', type: 'address', internalType: 'address' },
+      { name: 'nonce_', type: 'uint256', internalType: 'uint256' }
+    ],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'vaultCount',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'implementation',
+    inputs: [],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'event',
+    name: 'VaultCreated',
+    inputs: [
+      { name: 'owner', type: 'address', indexed: true, internalType: 'address' },
+      { name: 'vault', type: 'address', indexed: true, internalType: 'address' },
+      { name: 'watcher', type: 'address', indexed: true, internalType: 'address' },
+      { name: 'chainId', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'name', type: 'string', indexed: false, internalType: 'string' },
+      { name: 'symbol', type: 'string', indexed: false, internalType: 'string' }
+    ],
+    anonymous: false
+  }
+] as const;
+
+/**
+ * VaultFactoryERC20 (ERC-20 vaults) ABI — createVault is NON-payable:
+ * the ERC-20 vault has no seed. Signatures copied from
+ * repo/src/VaultFactoryERC20.sol.
+ */
+export const VAULT_FACTORY_ERC20_ABI = [
+  {
+    type: 'function',
+    name: 'createVault',
+    inputs: [
+      { name: 'owner_', type: 'address', internalType: 'address' },
+      { name: 'watcher_', type: 'address', internalType: 'address' },
+      { name: 'asset_', type: 'address', internalType: 'address' },
+      { name: 'name_', type: 'string', internalType: 'string' },
+      { name: 'symbol_', type: 'string', internalType: 'string' },
+      { name: 'minDeposit_', type: 'uint256', internalType: 'uint256' }
+    ],
+    outputs: [{ name: 'vault', type: 'address', internalType: 'address' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'predictVault',
+    inputs: [
+      { name: 'creator_', type: 'address', internalType: 'address' },
+      { name: 'owner_', type: 'address', internalType: 'address' },
+      { name: 'nonce_', type: 'uint256', internalType: 'uint256' }
+    ],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'vaultCount',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256', internalType: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'implementation',
+    inputs: [],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'event',
+    name: 'VaultCreated',
+    inputs: [
+      { name: 'owner', type: 'address', indexed: true, internalType: 'address' },
+      { name: 'vault', type: 'address', indexed: true, internalType: 'address' },
+      { name: 'watcher', type: 'address', indexed: true, internalType: 'address' },
+      { name: 'chainId', type: 'uint256', indexed: false, internalType: 'uint256' },
+      { name: 'asset', type: 'address', indexed: false, internalType: 'address' },
+      { name: 'name', type: 'string', indexed: false, internalType: 'string' },
+      { name: 'symbol', type: 'string', indexed: false, internalType: 'string' }
+    ],
+    anonymous: false
+  }
+] as const;

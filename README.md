@@ -240,6 +240,90 @@ in seconds. Three reasons:
 
 ---
 
+## Vaults v2 — ERC-20 shares (ETH + USDC)
+
+Shares are ERC-20 per vault. The v2 ETH vaults are ETH-native (ERC-4626
+semantics, no WETH); withdraw stays open while paused. The v2 USDC vaults
+hold canonical USDC (share `CSUSDC`, min deposit 1 USDC, 12 decimals
+offset). One watcher v2 on Lasna watches all four v2 vaults. All
+implementations and factories below are Sourcify-verified `exact_match`
+(creation + runtime); the clones are canonical EIP-1167 minimal proxies of
+the verified implementations. Full evidence: `v2-deploy-log.md` (ETH) and
+`v2-erc20-deploy-log.md` (USDC).
+
+| Contract | Chain | Address |
+|---|---|---|
+| `ContagionWatcher` v2 | Lasna (5318007) | `0xF5ad04cBbA9458b634a4cfc8668FCC2A254C7D4B` |
+| `ContagionVault` v2 — origin (ETH) | Unichain Sepolia (1301) | `0xEe9a24C80460069877e9b9F28143ee4D138Cf5d8` |
+| `ContagionVault` v2 — sibling (ETH) | Base Sepolia (84532) | `0xB86060EE2332BD6b3DC9310E88371AE8cA1382b0` |
+| `ContagionVaultERC20` — USDC vault | Unichain Sepolia (1301) | `0xb1404336db799285787bfb8a61f91e2d93e1bbdd` |
+| `ContagionVaultERC20` — USDC vault | Base Sepolia (84532) | `0xd476AFBE349FB7b07110dda8E167095B2A3cee39` |
+| `VaultFactory` (ETH) | Unichain Sepolia (1301) | `0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3` |
+| `VaultFactory` (ETH) | Base Sepolia (84532) | `0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6` |
+| `VaultFactoryERC20` (USDC) | Unichain Sepolia (1301) | `0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032` |
+| `VaultFactoryERC20` (USDC) | Base Sepolia (84532) | `0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77` |
+| `ContagionVault` implementation (ETH) | Unichain Sepolia (1301) | `0xE732a6e1D7F70Dc9502f9e4eDEb026451d911661` |
+| `ContagionVault` implementation (ETH) | Base Sepolia (84532) | `0x8809f72C2ce8Af6081D6540Ea7f1C3269F155968` |
+| `ContagionVaultERC20` implementation (USDC) | Unichain Sepolia (1301) | `0xb50ABF8959097f7c8Da476671e97f6F30d781daA` |
+| `ContagionVaultERC20` implementation (USDC) | Base Sepolia (84532) | `0xB394E38c8aeb4d8ea1244faE0c229e05089A7edD` |
+| USDC (asset) | Unichain Sepolia (1301) | `0x31d0220469e10c4E71834a79b1f276d740d3768F` |
+| USDC (asset) | Base Sepolia (84532) | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
+
+### Deploy transactions (15 Nov 2026)
+
+| Tx | Chain | Hash |
+|---|---|---|
+| Implementation (USDC) | Unichain Sepolia | `0x9ee0c94b9675f964b147429518b5a071af5af06d388d80b9285662c40d959f85` (block 67874783) |
+| Factory ERC-20 | Unichain Sepolia | `0x5befd17f2e27d895e418841a7db98045022402f4d9c8968d01a587f8dadfadae` (block 67874783) |
+| Implementation (USDC) | Base Sepolia | `0x3e8fe2d69f5c132ae58464a0f18aac96619500c87657953f03d0184e028a5f1f` (block 59026768) |
+| Factory ERC-20 | Base Sepolia | `0x68a1b8dfa32b4507aa944fca9d3b5dd37b3a5c262ac7e0edf51598738e668e51` (block 59026768) |
+| createVault (USDC) | Unichain Sepolia | `0xcf998b6a32f9073df965482cea587d4b2bea51d74354675b76c5bbfc8ef06523` (block 67874904) |
+| createVault (USDC) | Base Sepolia | `0x61cc48b75ac5eecf643d916aa0e88c90a50c4b09aa2e20683e297ae3481de704` (block 59027438) |
+| registerSibling (USDC vault) | Lasna | `0x5e0155f1dfdd8f913b3c8e7c75a29fab11f68fa0f91a0b96cc6c42a6d98575e0` (block 8390928) |
+| registerSibling (USDC vault) | Lasna | `0x672e9e145a4659b5a464efca94f6f6c088d2294c9174f72be1312910ea035e5e` (block 8390934) |
+| Implementation (ETH) | Unichain Sepolia | `0x355c55c63aae2d612278a752eb25c2a62b6b7fc9d4a7ccde6ae56118cbc9a4cd` |
+| Factory (ETH) | Unichain Sepolia | `0xdd2c4bdb4d292e2d4937262e000e3d56b8afd94afb0de2eb54e025387e79714e` |
+| Implementation (ETH) | Base Sepolia | `0xa27a0f3a50cc4e0853000d7fb7345453aed83f678021fce8ace1f74df52ea799` |
+| Factory (ETH) | Base Sepolia | `0xe3d2b6cd84417d568ecb234453517d322fc8223044fc4ec37ef7bfd1aa6c6b70` |
+| Watcher v2 | Lasna | `0xc0d62eb29588f285ca32fa3eb1afecc9543fac500a9fd10bab3ab358ac4e24ce` |
+| createVault (ETH) | Unichain Sepolia | `0xfe6dd7cf809079d7daafa3f88f08a4dad452d9242e55854a957d1838f8724883` |
+| createVault (ETH) | Base Sepolia | `0x143653b783d675a01eef57a277d9311b9ca332e6dcaf02ff0b4c73523ba17ca4` |
+
+The v2 ETH vaults ran a full loop end to end (trip → react → callback
+pause → containment, ~1 s trip-to-callback; withdraw while paused
+succeeds). See `v2-deploy-log.md` for the hashes.
+
+### Funding status — USDC vaults unfunded
+
+Both USDC vaults are empty: `totalAssets` 0, USDC 0, ETH 0 (verified by
+read after registration). Funding is a manual step, not done. The
+deployer already holds enough USDC for the planned 20 USDC per vault
+(80 USDC on Unichain Sepolia, 20 USDC on Base Sepolia, verified 15 Nov
+2026). Funding must go through `deposit()` (after `approve` on USDC):
+a plain USDC transfer to the vault does not update the `totalAssets`
+ledger. The dashboard shows the live zero with the label UNFUNDED —
+AWAITING FUNDING.
+
+Open item: the first pause callback to a USDC vault still runs (the
+proxy fronts the fee), but the debt it leaves can only be covered from
+ETH held by the vault (`coverDebt`), and the USDC vaults currently hold
+no ETH. Decide the ETH reserve before the first live loop on a USDC
+vault.
+
+### Deploy your own vault
+
+The app (Overview → Deploy your own) creates vaults from the deployed
+factories: pick a chain and an asset (ETH/USDC), fill in owner, watcher,
+share name/symbol, and min deposit, check the predicted vault address
+(`predictVault` with the factory's live `vaultCount`), then send
+`createVault` — a real transaction. An ETH vault needs a seed of at
+least 0.001 ETH sent with the call; a USDC vault is non-payable and
+starts empty. After creation the app shows the two remaining manual
+steps: register the vault in the watcher (`registerSibling`, watcher
+owner only) and fund it.
+
+---
+
 ## Try it live — public test deployment
 
 Anyone can trigger the full loop with an ordinary wallet — no owner role
@@ -262,6 +346,21 @@ at handover (15 Nov 2026), about 20 loops, and each vault holds ~0.001 ETH
 for callback fees.
 
 **Steps (also on the site, Overview → Try it live):**
+
+**Judge quickstart — what you need.** No wallet is needed to look: live
+balances, paused state, recorded runs, and transaction hashes are all
+readable as-is. To press the interactive buttons (Trip incident, Test
+deposit), connect a wallet holding testnet ETH on the vault's chain
+(Unichain Sepolia or Base Sepolia) for gas; trying a USDC vault also
+needs testnet USDC on that chain. Free faucets (limits change — each
+faucet's own page is the final word): [Superchain faucet](https://console.optimism.io/faucet)
+(test ETH for Unichain Sepolia and Base Sepolia, 0.01 test ETH every 24
+hours), [Circle faucet](https://faucet.circle.com) (test USDC, 20 USDC
+per claim), [Alchemy faucet, Base Sepolia](https://www.alchemy.com/faucets/base-sepolia)
+(0.1 test ETH every 24 hours; the wallet needs at least 0.001 ETH on
+Ethereum mainnet plus mainnet activity), [Coinbase Developer Platform faucet](https://portal.cdp.coinbase.com/products/faucet)
+(test ETH and USDC for Base Sepolia; free CDP account required). No
+faucet needs your seed phrase, only your public wallet address.
 
 1. Connect a wallet and switch to the vault's chain (Unichain Sepolia for
    U1/U2, Base Sepolia for B). You need a little testnet ETH for gas.

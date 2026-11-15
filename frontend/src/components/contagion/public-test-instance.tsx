@@ -26,6 +26,8 @@ import {
 } from '@/lib/config';
 import { CONTAGION_WATCHER_ABI, PUBLIC_VAULT_ABI } from '@/lib/contracts';
 import { useLiveVault } from '@/hooks/use-live-vault';
+import { AssetLogo } from '@/components/contagion/asset-logo';
+import { JudgeQuickstart } from '@/components/contagion/judge-quickstart';
 import { cn } from '@/lib/utils';
 
 /**
@@ -221,6 +223,7 @@ function PublicVaultCard({
     <Card>
       <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
+          <AssetLogo asset='ETH' />
           <CardTitle className='text-base'>{label}</CardTitle>
           {role === 'ORIGIN' ? <Badge variant='default'>ORIGIN</Badge> : null}
           <Badge
@@ -597,6 +600,9 @@ export function PublicTestInstance() {
               loop. Full evidence in the Docs.
             </p>
           </div>
+
+          {/* Judge quickstart — what is needed to press the buttons */}
+          <JudgeQuickstart />
 
           {/* Public watcher — live status */}
           <div className='flex flex-col gap-2 rounded-none border p-3'>

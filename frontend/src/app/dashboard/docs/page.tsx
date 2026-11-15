@@ -2,6 +2,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
+import { JudgeQuickstart } from '@/components/contagion/judge-quickstart';
 
 /**
  * Documentation page — product documentation for ContagionStop.
@@ -52,6 +53,75 @@ const CONTRACTS = [
     chain: 'Unichain Sepolia (1301)',
     address: '0x775c9B990ADe401060B78D0e98684eEf8d2466C1',
     explorer: 'https://sepolia.uniscan.xyz/address/0x775c9B990ADe401060B78D0e98684eEf8d2466C1'
+  }
+] as const;
+
+const V2_CONTRACTS = [
+  {
+    name: 'ContagionWatcher v2',
+    chain: 'Lasna (5318007)',
+    address: '0xF5ad04cBbA9458b634a4cfc8668FCC2A254C7D4B',
+    explorer: 'https://lasna.reactscan.net/address/0xF5ad04cBbA9458b634a4cfc8668FCC2A254C7D4B'
+  },
+  {
+    name: 'ContagionVault v2 — origin (ETH)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xEe9a24C80460069877e9b9F28143ee4D138Cf5d8',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xEe9a24C80460069877e9b9F28143ee4D138Cf5d8'
+  },
+  {
+    name: 'ContagionVault v2 — sibling (ETH)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xB86060EE2332BD6b3DC9310E88371AE8cA1382b0',
+    explorer: 'https://sepolia.basescan.org/address/0xB86060EE2332BD6b3DC9310E88371AE8cA1382b0'
+  },
+  {
+    name: 'ContagionVaultERC20 — USDC vault (UNFUNDED)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xb1404336db799285787bfb8a61f91e2d93e1bbdd',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xb1404336db799285787bfb8a61f91e2d93e1bbdd'
+  },
+  {
+    name: 'ContagionVaultERC20 — USDC vault (UNFUNDED)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xd476AFBE349FB7b07110dda8E167095B2A3cee39',
+    explorer: 'https://sepolia.basescan.org/address/0xd476AFBE349FB7b07110dda8E167095B2A3cee39'
+  },
+  {
+    name: 'VaultFactory (ETH)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3'
+  },
+  {
+    name: 'VaultFactory (ETH)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6',
+    explorer: 'https://sepolia.basescan.org/address/0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6'
+  },
+  {
+    name: 'VaultFactoryERC20 (USDC)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032',
+    explorer: 'https://sepolia.uniscan.xyz/address/0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032'
+  },
+  {
+    name: 'VaultFactoryERC20 (USDC)',
+    chain: 'Base Sepolia (84532)',
+    address: '0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77',
+    explorer: 'https://sepolia.basescan.org/address/0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77'
+  },
+  {
+    name: 'USDC (asset)',
+    chain: 'Unichain Sepolia (1301)',
+    address: '0x31d0220469e10c4E71834a79b1f276d740d3768F',
+    explorer: 'https://sepolia.uniscan.xyz/address/0x31d0220469e10c4E71834a79b1f276d740d3768F'
+  },
+  {
+    name: 'USDC (asset)',
+    chain: 'Base Sepolia (84532)',
+    address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+    explorer: 'https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e'
   }
 ] as const;
 
@@ -494,6 +564,39 @@ export default function DocsPage() {
                 </tbody>
               </DocTable>
             </div>
+            <div className='flex flex-col gap-2'>
+              <p className='text-sm font-medium'>
+                Vaults v2 — ERC-20 shares (15 Nov 2026, Sourcify
+                exact_match: implementations + factories on both chains)
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                Shares are ERC-20 per vault; the ETH vaults are ETH-native
+                (ERC-4626 semantics, no WETH) and the USDC vaults hold
+                canonical USDC (share CSUSDC, min deposit 1 USDC). One
+                watcher v2 on Lasna watches all four v2 vaults. The USDC
+                vaults are UNFUNDED — totalAssets 0, no deposits yet;
+                funding is a manual step. The app reads all of these live
+                on the Overview page and can create new vaults from the
+                factories on the Deploy your own page.
+              </p>
+              <DocTable>
+                <tbody>
+                  {V2_CONTRACTS.map((contract) => (
+                    <tr key={contract.address} className='border-b align-top last:border-b-0'>
+                      <td className='py-2 pr-4 font-medium'>{contract.name}</td>
+                      <td className='py-2 pr-4 whitespace-nowrap'>{contract.chain}</td>
+                      <td className='py-2'>
+                        <ExternalLink href={contract.explorer}>
+                          <span className='font-mono text-xs break-all'>
+                            {contract.address}
+                          </span>
+                        </ExternalLink>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DocTable>
+            </div>
           </CardContent>
         </Card>
 
@@ -644,6 +747,7 @@ export default function DocsPage() {
                 dust you do not need back.
               </li>
             </ol>
+            <JudgeQuickstart />
             <div className='flex flex-col gap-2'>
               <p className='text-sm font-medium'>
                 What you can and cannot do

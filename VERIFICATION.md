@@ -151,3 +151,79 @@ each sibling via its proxy).
   Sepolia) — the fan-out, not a single chain, sets the total.
 - The retry path needs operator preconditions (debt covered, sibling
   funded, paused-but-unconfirmed sibling unpaused first) — see Scenario 2.
+
+## Vaults v2 — ERC-20 shares (ETH + USDC), 15 Nov 2026
+
+Full working logs: `v2-deploy-log.md` (ETH) and `v2-erc20-deploy-log.md`
+(USDC). The v2 ETH vaults ran a full loop end to end (trip → react →
+callback pause → containment, ~1 s trip-to-callback; withdraw while
+paused succeeds) — see `v2-deploy-log.md` for the hashes.
+
+### Contracts (Sourcify `exact_match`, creation + runtime)
+
+| Contract | Chain | Address |
+|---|---|---|
+| `ContagionWatcher` v2 | Lasna (5318007) | `0xF5ad04cBbA9458b634a4cfc8668FCC2A254C7D4B` |
+| `ContagionVault` v2 — origin (ETH) | Unichain Sepolia (1301) | `0xEe9a24C80460069877e9b9F28143ee4D138Cf5d8` |
+| `ContagionVault` v2 — sibling (ETH) | Base Sepolia (84532) | `0xB86060EE2332BD6b3DC9310E88371AE8cA1382b0` |
+| `ContagionVaultERC20` — USDC vault | Unichain Sepolia (1301) | `0xb1404336db799285787bfb8a61f91e2d93e1bbdd` |
+| `ContagionVaultERC20` — USDC vault | Base Sepolia (84532) | `0xd476AFBE349FB7b07110dda8E167095B2A3cee39` |
+| `VaultFactory` (ETH) | Unichain Sepolia (1301) | `0x8c48B129a6Fd000e43448830Df6834b0a5BAe7A3` |
+| `VaultFactory` (ETH) | Base Sepolia (84532) | `0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6` |
+| `VaultFactoryERC20` (USDC) | Unichain Sepolia (1301) | `0xe7c4A7Cc927a2afd332B07A7f73A50EFd036F032` |
+| `VaultFactoryERC20` (USDC) | Base Sepolia (84532) | `0xE16b002789590e1a8aFD3a4cE119d16b49ABDe77` |
+| `ContagionVault` implementation (ETH) | Unichain Sepolia (1301) | `0xE732a6e1D7F70Dc9502f9e4eDEb026451d911661` |
+| `ContagionVault` implementation (ETH) | Base Sepolia (84532) | `0x8809f72C2ce8Af6081D6540Ea7f1C3269F155968` |
+| `ContagionVaultERC20` implementation (USDC) | Unichain Sepolia (1301) | `0xb50ABF8959097f7c8Da476671e97f6F30d781daA` |
+| `ContagionVaultERC20` implementation (USDC) | Base Sepolia (84532) | `0xB394E38c8aeb4d8ea1244faE0c229e05089A7edD` |
+
+Deployer (testnet-only): `0x0FD65c51D9bD790Bf67FDA9BE45A7eB21ed3d99B`.
+Watcher v2 owner is the deployer. Implementation owners are `0x0`
+(renounced). The clones are canonical EIP-1167 minimal proxies of the
+verified implementations.
+
+### Deploy transactions (USDC)
+
+| Tx | Gas | Status |
+|---|---|---|
+| Implementation Unichain `0x9ee0c94b9675f964b147429518b5a071af5af06d388d80b9285662c40d959f85` (block 67874783) | 2,304,699 | success |
+| Factory Unichain `0x5befd17f2e27d895e418841a7db98045022402f4d9c8968d01a587f8dadfadae` (block 67874783) | 533,039 | success |
+| Implementation Base `0x3e8fe2d69f5c132ae58464a0f18aac96619500c87657953f03d0184e028a5f1f` (block 59026768) | 2,304,699 | success |
+| Factory Base `0x68a1b8dfa32b4507aa944fca9d3b5dd37b3a5c262ac7e0edf51598738e668e51` (block 59026768) | 533,039 | success |
+| createVault Unichain `0xcf998b6a32f9073df965482cea587d4b2bea51d74354675b76c5bbfc8ef06523` (block 67874904) | 299,140 | success |
+| createVault Base `0x61cc48b75ac5eecf643d916aa0e88c90a50c4b09aa2e20683e297ae3481de704` (block 59027438) | 299,140 | success |
+| registerSibling Unichain vault `0x5e0155f1dfdd8f913b3c8e7c75a29fab11f68fa0f91a0b96cc6c42a6d98575e0` (Lasna block 8390928) | 99,688 | success |
+| registerSibling Base vault `0x672e9e145a4659b5a464efca94f6f6c088d2294c9174f72be1312910ea035e5e` (Lasna block 8390934) | 99,700 | success |
+
+Predicted CREATE2 addresses matched the created clones exactly on both
+chains (`created == predicted`, checked in the deploy script and by an
+on-chain `predictVault(creator, owner, 0)` re-read for Unichain).
+
+### Read verification (both USDC vaults, after registration)
+
+- `watcher()` is watcher v2 `0xF5ad04cB…`; `asset()` is the chain's USDC
+  (Unichain `0x31d02204…`, Base `0x036CbD53…`); `paused()` is false.
+- `totalAssets()` is 0; USDC balance is 0; ETH balance is 0.
+- `owner()` is the deployer; `name()` is "ContagionStop USDC Vault
+  Share", `symbol()` is "CSUSDC"; `minDeposit()` is 1,000,000 (1 USDC);
+  `decimalsOffset()` is 12.
+- Watcher v2: `registeredSibling(1301, vaultUnichain)` and
+  `registeredSibling(84532, vaultBase)` are both true;
+  `siblings(1301)` lists the ETH v2 vault then the USDC vault, and
+  `siblings(84532)` the same on Base.
+
+### Funding status — USDC vaults unfunded
+
+Both USDC vaults are empty (`totalAssets` 0). Funding is a manual step,
+not done. The deployer already holds enough USDC for the planned
+20 USDC per vault (80 USDC on Unichain Sepolia, 20 USDC on Base
+Sepolia, verified 15 Nov 2026). Funding must go through `deposit()`
+after `approve` on USDC — a plain transfer does not update the
+`totalAssets` ledger.
+
+Open item: the first pause callback to a USDC vault still runs (the
+proxy fronts the fee), but the debt it leaves can only be covered from
+ETH held by the vault (`coverDebt`), and the USDC vaults currently hold
+no ETH. Decide the ETH reserve before the first live loop on a USDC
+vault. No live trip was run against the USDC vaults in this deployment
+(a trip would pause the ETH v2 vaults registered in the same watcher).

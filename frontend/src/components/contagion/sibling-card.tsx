@@ -12,6 +12,7 @@ import { SIBLING_VAULT_ABI } from '@/lib/contracts';
 import type { Sibling } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useLiveVault } from '@/hooks/use-live-vault';
+import { AssetLogo } from '@/components/contagion/asset-logo';
 import {
   DepositTestButton,
   EmergencyPauseDialog,
@@ -113,6 +114,7 @@ export function SiblingCard({
     >
       <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center gap-2'>
+          <AssetLogo asset='ETH' />
           <CardTitle className='text-base'>{sibling.label}</CardTitle>
           {isOrigin ? <Badge variant='default'>ORIGIN</Badge> : null}
           <Badge

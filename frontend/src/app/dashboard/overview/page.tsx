@@ -12,6 +12,7 @@ import { Win98BootLog } from '@/components/win98/boot-log';
 import { LiveLog } from '@/components/terminal/live-log';
 import { HeroStatus } from '@/components/contagion/hero-status';
 import { SiblingGrid } from '@/components/contagion/sibling-grid';
+import { UsdcVaultGrid } from '@/components/contagion/usdc-vault-grid';
 import { PublicTestInstance } from '@/components/contagion/public-test-instance';
 import { EmergencyPauseDialog } from '@/components/contagion/action-dialogs';
 import { LoopTimeline } from '@/components/contagion/loop-timeline';
@@ -216,6 +217,27 @@ export default function OverviewPage() {
             connectedAddress={connectedAddress}
             onEmergencyPauseSuccess={handleLiveEmergencyPause}
           />
+        </section>
+
+        {/* ---- USDC vaults v2: live reads, next to the main deployment ---- */}
+        <section id='vaults-usdc' aria-label='USDC vaults — live on-chain state' className='scroll-mt-20'>
+          <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
+            Vaults v2 — USDC (ERC-20 shares) — live on-chain state
+          </p>
+          <UsdcVaultGrid />
+          <p className='mt-2 text-xs text-muted-foreground'>
+            Both USDC vaults are watched by watcher v2 on Lasna. They are
+            unfunded (totalAssets 0) until funded manually — the cards show
+            the real zero, not a placeholder. To create a vault of your own,
+            use{' '}
+            <a
+              href='/dashboard/deploy'
+              className='text-primary underline underline-offset-2 hover:underline'
+            >
+              Deploy your own
+            </a>
+            .
+          </p>
         </section>
 
         {/* ---- Try it live: public test deployment ---- */}
