@@ -22,18 +22,6 @@
   }
 }
 
-@keyframes live-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.55;
-    transform: scale(1.4);
-  }
-}
-
 @keyframes marquee-scroll {
   from {
     transform: translateX(0);
@@ -80,18 +68,6 @@
   display: inline-block;
   color: var(--primary);
   animation: term-blink 1s step-end infinite;
-}
-
-/* ---- LIVE pulse dot (research rank 5) ---- */
-.live-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  background: var(--success);
-  box-shadow: 0 0 6px var(--success);
-  animation: live-pulse 2s ease-in-out infinite;
 }
 
 /* ---- Marquee strip (research rank 8) ---- */
@@ -164,7 +140,6 @@
 /* ---- Kill switches (research §5.1) ---- */
 @media (prefers-reduced-motion: reduce) {
   .term-cursor,
-  .live-dot,
   .animate-marquee,
   .term-glitch,
   .containment-shimmer::after {
@@ -176,7 +151,6 @@
 }
 
 html[data-motion='off'] .term-cursor,
-html[data-motion='off'] .live-dot,
 html[data-motion='off'] .animate-marquee,
 html[data-motion='off'] .term-glitch,
 html[data-motion='off'] .containment-shimmer::after {

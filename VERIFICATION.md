@@ -93,7 +93,7 @@ block 67817257) emitted `EmergencyPaused` + `Paused` and paused D — and
 the watcher did nothing: `incident(D) = (0, 0x0, false)`, `incident(A)`
 unchanged (CONTAINED), **zero** new watcher events in the 130+ Lasna blocks
 after the trip. (The second layer, the `registeredSibling` check inside
-`react()`, is covered by unit tests with a mocked system contract.)
+`react()`, is covered by unit tests with a local stand-in system contract.)
 
 ## Scenario 4 — Idempotency (PASS)
 

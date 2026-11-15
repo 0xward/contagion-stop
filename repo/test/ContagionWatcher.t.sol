@@ -7,10 +7,10 @@ import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {ContagionTopics} from "../src/ContagionTopics.sol";
 import {ContagionWatcher} from "../src/ContagionWatcher.sol";
 import {SiblingVault} from "../src/SiblingVault.sol";
-import {MockSystemContract} from "./mocks/MockSystemContract.sol";
+import {LocalSystemContract} from "./fixtures/LocalSystemContract.sol";
 
 /// @notice Unit tests for ContagionWatcher. The Reactive system contract is
-/// mocked by etching MockSystemContract at the real system address
+/// simulated by etching LocalSystemContract at the real system address
 /// (0x8888...8888), so constructor subscriptions and `requestCallbackV_1_0`
 /// calls are recorded and assertable. `react()` is invoked via
 /// `vm.prank(SYSTEM)` to satisfy `onlySystem` exactly like the real system
@@ -31,12 +31,12 @@ contract ContagionWatcherTest is Test {
     bytes32 public constant REASON_B = bytes32("INCIDENT-B");
 
     ContagionWatcher public watcher;
-    MockSystemContract public system;
+    LocalSystemContract public system;
 
     function setUp() public {
         vm.warp(START);
-        vm.etch(SYSTEM, address(new MockSystemContract()).code);
-        system = MockSystemContract(payable(SYSTEM));
+        vm.etch(SYSTEM, address(new LocalSystemContract()).code);
+        system = LocalSystemContract(payable(SYSTEM));
         uint256[] memory chainIds = new uint256[](3);
         chainIds[0] = UNI;
         chainIds[1] = BASE;

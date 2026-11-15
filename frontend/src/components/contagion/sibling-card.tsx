@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Icons } from '@/components/icons';
 import { SIBLING_VAULT_ABI } from '@/lib/contracts';
-import type { Sibling, SiblingId } from '@/lib/types';
+import type { Sibling } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useLiveVault } from '@/hooks/use-live-vault';
 import {
   DepositTestButton,
   EmergencyPauseDialog,
@@ -20,14 +21,10 @@ import { formatTimestamp } from '@/components/contagion/hero-status';
 
 export interface SiblingCardProps {
   sibling: Sibling;
-  /** `false` = mock simulation, `true` = real contract calls. */
-  live: boolean;
   /** Connected wallet address (undefined when disconnected). */
   connectedAddress?: Address;
-  /** Mock mode: parent applies the TRIPPED state for this reason. */
-  onMockEmergencyPause: (reasonHex: `0x${string}`) => void;
-  /** Mock mode: parent marks this vault ACTIVE. */
-  onMockUnpause: (siblingId: SiblingId) => void;
+  /** Called with the reason bytes32 + tx hash when a real emergencyPause confirms. */
+  onEmergencyPauseSuccess?: (reasonHex: `0x${string}`, hash: `0x${string}`) => void;
 }
 
 function truncateAddress(address: string): string {
@@ -73,31 +70,34 @@ function CopyAddressButton({ address }: { address: string }) {
  * Status is always icon + text label, never color alone. Origin vault A is
  * distinguished with an ORIGIN label + blue border. Debt is read from the
  * Lasna system contract / callback proxy (never `debt()` on the vault —
- * it does not exist in the ABI); in mock mode the numbers come from
- * mock-data.ts. Balance is `eth_getBalance` in live mode.
+ * it does not exist in the ABI). Balance, totalDeposited, and paused()
+ * are read LIVE via wagmi; when a read has not resolved (or the RPC
+ * refuses it) the card falls back to the recorded 14 Nov 2026 snapshot
+ * and says so — a stale value is never shown as live.
  */
 export function SiblingCard({
   sibling,
-  live,
   connectedAddress,
-  onMockEmergencyPause,
-  onMockUnpause
+  onEmergencyPauseSuccess
 }: SiblingCardProps) {
-  // Live mode only: compare the on-chain owner with the connected wallet.
-  // Mock mode: any connected wallet acts as the demo owner.
+  // Live: compare the on-chain owner with the connected wallet.
   const { data: owner } = useReadContract({
     address: sibling.address as Address,
     abi: SIBLING_VAULT_ABI,
-    functionName: 'owner',
-    query: { enabled: live }
+    functionName: 'owner'
   });
-  const isOwner = live
-    ? owner !== undefined &&
-      connectedAddress !== undefined &&
-      owner.toLowerCase() === connectedAddress.toLowerCase()
-    : connectedAddress !== undefined;
+  const isOwner =
+    owner !== undefined &&
+    connectedAddress !== undefined &&
+    owner.toLowerCase() === connectedAddress.toLowerCase();
 
-  const isPaused = sibling.status === 'PAUSED';
+  // Live: paused() + eth_getBalance + totalDeposited().
+  const live = useLiveVault(sibling.address as Address, sibling.chainId);
+  const isPaused = live.isLive ? live.paused === true : sibling.status === 'PAUSED';
+  const balanceEth = live.balanceEth ?? sibling.balanceEth;
+  const totalDepositedEth = live.totalDepositedEth ?? sibling.totalDepositedEth;
+  const valuesAreLive = live.isLive;
+
   const isOrigin = sibling.role === 'ORIGIN';
   const reserves = Number.parseFloat(sibling.reservesEth) || 0;
   const debt = Number.parseFloat(sibling.debtEth) || 0;
@@ -136,6 +136,9 @@ export function SiblingCard({
               </>
             )}
           </Badge>
+          <Badge variant='outline' className='border-primary/40 text-primary'>
+            {valuesAreLive ? 'LIVE' : 'RECORDED'}
+          </Badge>
         </div>
         <div className='text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs'>
           <span className='inline-block size-2 rounded-full bg-primary' aria-hidden />
@@ -162,35 +165,34 @@ export function SiblingCard({
             Explorer
             <Icons.externalLink className='size-3' />
           </a>
-          {sibling.isMock ? (
-            <Badge variant='outline' className='border-primary/40 text-primary ml-auto'>
-              RECORDED
-            </Badge>
-          ) : null}
         </div>
 
-        {/* Paused time */}
+        {/* Paused time (recorded run #1 — the live read has no timestamp). */}
         <div className='flex justify-between gap-2 text-xs'>
-          <span className='text-muted-foreground'>Paused at</span>
+          <span className='text-muted-foreground'>Paused at (recorded run #1)</span>
           <span className='font-mono tabular-nums'>
             {sibling.pausedAt != null ? formatTimestamp(sibling.pausedAt) : '—'}
           </span>
         </div>
 
-        {/* Balance / deposits */}
+        {/* Balance / deposits — live when the reads resolved, else recorded. */}
         <div className='flex justify-between gap-2 text-xs'>
-          <span className='text-muted-foreground'>Balance</span>
-          <span className='font-mono tabular-nums'>{sibling.balanceEth} ETH</span>
+          <span className='text-muted-foreground'>
+            Balance {valuesAreLive ? '(live)' : '(recorded 14 Nov 2026)'}
+          </span>
+          <span className='font-mono tabular-nums'>{balanceEth} ETH</span>
         </div>
         <div className='flex justify-between gap-2 text-xs'>
-          <span className='text-muted-foreground'>Total deposited</span>
-          <span className='font-mono tabular-nums'>{sibling.totalDepositedEth} ETH</span>
+          <span className='text-muted-foreground'>
+            Total deposited {valuesAreLive ? '(live)' : '(recorded 14 Nov 2026)'}
+          </span>
+          <span className='font-mono tabular-nums'>{totalDepositedEth} ETH</span>
         </div>
 
-        {/* Reserves vs debt */}
+        {/* Reserves vs debt — recorded snapshot (see Funding health). */}
         <div className='flex flex-col gap-1.5'>
           <div className='flex justify-between gap-2 text-xs'>
-            <span className='text-muted-foreground'>Reserves vs debt</span>
+            <span className='text-muted-foreground'>Reserves vs debt (recorded)</span>
             <span className='font-mono tabular-nums'>
               {sibling.reservesEth} / {sibling.debtEth} ETH
             </span>
@@ -206,7 +208,7 @@ export function SiblingCard({
             <Icons.warning className='mt-0.5 size-3.5 shrink-0' />
             <span>
               Reserves low / debt &gt; 0 — execution may stall. Run coverDebt()
-              before the demo.
+              before the next trip.
             </span>
           </div>
         ) : null}
@@ -217,17 +219,11 @@ export function SiblingCard({
             <EmergencyPauseDialog
               sibling={sibling}
               isOwner={isOwner}
-              live={live}
-              onMockConfirm={onMockEmergencyPause}
+              onConfirmed={(hash, reasonHex) => onEmergencyPauseSuccess?.(reasonHex, hash)}
             />
           ) : null}
-          <UnpauseDialog
-            sibling={sibling}
-            isOwner={isOwner}
-            live={live}
-            onMockConfirm={onMockUnpause}
-          />
-          <DepositTestButton sibling={sibling} live={live} />
+          <UnpauseDialog sibling={sibling} isOwner={isOwner} />
+          <DepositTestButton sibling={sibling} />
         </div>
       </CardContent>
     </Card>

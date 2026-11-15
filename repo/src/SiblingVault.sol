@@ -78,14 +78,21 @@ contract SiblingVault is AbstractCallback, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @notice Deposit ETH while the vault is active.
-    function deposit() external payable whenNotPaused {
+    /// @dev Marked `virtual` so ContagionVault (v2) can override the
+    /// accounting with share minting. Adding `virtual` does NOT change
+    /// the compiled runtime code (verified by bytecode hash, 15 Nov
+    /// 2026) — the deployed main set is unaffected.
+    function deposit() external payable virtual whenNotPaused {
         totalDeposited += msg.value;
         emit Deposited(msg.sender, msg.value);
     }
 
     /// @notice Owner withdraws ETH (deposits first; fee funding is swept
     /// along only if the withdrawal exceeds recorded deposits).
-    function withdraw(uint256 amount) external onlyOwner nonReentrant {
+    /// @dev Marked `virtual` so ContagionVault (v2) can replace this
+    /// owner-sweep with per-user withdraw/redeem. Same bytecode note as
+    /// `deposit()` above.
+    function withdraw(uint256 amount) external virtual onlyOwner nonReentrant {
         if (amount > address(this).balance) revert InsufficientBalance(amount, address(this).balance);
         totalDeposited = amount >= totalDeposited ? 0 : totalDeposited - amount;
         emit Withdrawn(msg.sender, amount);
@@ -127,7 +134,10 @@ contract SiblingVault is AbstractCallback, Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Pay outstanding callback debt to the proxy from this vault's
     /// balance. Public so anyone can rescue a silently stalled vault.
-    function coverDebt() external {
+    /// @dev Marked `virtual` so ContagionVault (v2) can guard the payment
+    /// to never draw below the user-funds ledger. Same bytecode note as
+    /// `deposit()` above.
+    function coverDebt() external virtual {
         _coverDebt();
     }
 

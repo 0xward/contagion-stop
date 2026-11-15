@@ -5,8 +5,8 @@
 (pengukuran `gasleft()` per aksi, solc 0.8.29, `evm_version = "cancun"`,
 optimizer 200 runs, `FOUNDRY_VIA_IR=false`).
 **Batasan pengukuran — baca dulu:** angka di bawah diukur LOKAL dengan
-mock system contract + mock callback proxy (di-etch di alamat asli).
-Mock `requestCallbackV_1_0` hanyalah `array.push`, LEBIH MURAH daripada
+stand-in system contract + stand-in callback proxy (di-etch di alamat asli).
+Stand-in `requestCallbackV_1_0` hanyalah `array.push`, LEBIH MURAH daripada
 system contract Lasna asli (yang juga mengecek langganan, utang, dsb).
 Karena itu **`react()` di sini adalah LOWER BOUND** — angka on-chain di
 Lasna akan LEBIH TINGGI dan wajib diukur ulang saat deploy testnet
@@ -104,7 +104,7 @@ masih aman dipakai sebagai anggaran.
 
 ## 6. Yang masih harus diukur di testnet (M5/M6)
 
-- Gas `react()` ASLI di Lasna (system contract sungguhan, bukan mock).
+- Gas `react()` ASLI di Lasna (system contract sungguhan, bukan stand-in).
 - Gas callback `pause()` ASLI di Base Sepolia + Unichain Sepolia
-  (proxy sungguhan, bukan mock).
+  (proxy sungguhan, bukan stand-in).
 - Latensi loop penuh M1–M4 (design §6) — tidak bisa diukur lokal.

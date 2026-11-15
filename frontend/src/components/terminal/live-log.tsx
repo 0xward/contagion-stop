@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-import { LiveDot } from '@/components/terminal/live-dot';
 import { useMotionAllowed } from '@/components/terminal/use-motion-allowed';
 import { getChainName } from '@/lib/wagmi';
 import type { FreezeProof, Incident, TimelineStep } from '@/lib/types';
@@ -43,7 +42,7 @@ function truncateHash(hash: string): string {
 }
 
 /**
- * LIVE LOG (research rank 1) — a terminal log stream built ONLY from real
+ * EVENT LOG — a terminal log stream built ONLY from real
  * data, with the source of every row labeled:
  * - `[LIVE]` rows come from the current wallet connection (wagmi state).
  * - `[RECORDED]` rows replay the measured testnet run #1–#3 (14 Nov 2026):
@@ -191,10 +190,7 @@ export function LiveLog({ steps, incidents, freezeProof }: LiveLogProps) {
     <Card>
       <CardHeader className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4'>
         <div className='min-w-0'>
-          <CardTitle className='flex items-center gap-2'>
-            <LiveDot />
-            Live log
-          </CardTitle>
+          <CardTitle className='flex items-center gap-2'>Event log</CardTitle>
           <CardDescription>
             Wallet state as it is now (LIVE) + the measured testnet run
             (RECORDED). No generated lines.
@@ -212,7 +208,7 @@ export function LiveLog({ steps, incidents, freezeProof }: LiveLogProps) {
             className='font-mono text-[11px] tracking-[0.14em] uppercase'
           >
             <Icons.play className='size-3.5' />
-            Replay run
+            Replay recorded run
           </Button>
           <Button
             variant='outline'
@@ -233,7 +229,7 @@ export function LiveLog({ steps, incidents, freezeProof }: LiveLogProps) {
           onScroll={handleScroll}
           role='log'
           aria-live='off'
-          aria-label='Live log — wallet state and recorded run events'
+          aria-label='Event log — wallet state and recorded run events'
           className='h-64 overflow-y-auto border bg-white p-3 font-mono text-xs leading-relaxed text-black tabular-nums'
         >
           {rows.length === 0 ? (

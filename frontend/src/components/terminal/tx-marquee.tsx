@@ -8,7 +8,7 @@ import {
   ACTIVE_INCIDENT_SCENARIO,
   RECORDED_INCIDENT_HISTORY,
   RECORDED_TIMELINE
-} from '@/lib/mock-data';
+} from '@/lib/recorded-run-data';
 
 interface StripItem {
   hash: string;
@@ -75,6 +75,9 @@ export function TxMarquee() {
       data-paused={paused ? 'true' : 'false'}
       aria-label='Latest recorded transactions'
     >
+      <span className='relative z-10 flex shrink-0 items-center border-r bg-card px-2 font-mono text-[11px] tracking-[0.14em] text-primary uppercase'>
+        Recorded transactions
+      </span>
       <Marquee
         className='marquee-track min-w-0 flex-1'
         style={{ '--gap': '0rem' } as React.CSSProperties}

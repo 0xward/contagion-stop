@@ -96,6 +96,7 @@ import {
   IconVideo,
   IconCrown,
   IconPower,
+  IconRefresh,
   IconX
 } from '@tabler/icons-react';
 
@@ -239,5 +240,6 @@ export const Icons = {
   activity: IconActivity,
   history: IconHistory,
   shieldCheck: IconShieldCheck,
+  refresh: IconRefresh,
   menu: IconMenu2
 };

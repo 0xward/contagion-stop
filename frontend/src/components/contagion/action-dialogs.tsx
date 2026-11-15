@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { parseEther, stringToHex, type Address } from 'viem';
 import { useWriteContract } from 'wagmi';
-import { Badge } from '@/components/ui/badge';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,7 +20,7 @@ import { LoadingButton } from '@/components/ui/loading-button';
 import { Icons } from '@/components/icons';
 import { EXPLORERS } from '@/lib/config';
 import { SIBLING_VAULT_ABI } from '@/lib/contracts';
-import type { Sibling, SiblingId } from '@/lib/types';
+import type { Sibling } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 /**
@@ -31,11 +31,10 @@ import { cn } from '@/lib/utils';
  * `pause(address)` — it is only callable via the watcher callback proxy
  * and a direct UI call would revert `NotAuthorized`.
  *
- * Guard: while `live` is false the buttons run a MOCK simulation
- * (local state change in the parent + "MOCK" label) and NEVER call the
- * contract. `useWriteContract` has no `enabled` option, so the guard is
- * an explicit branch at the call site. When `live` is true the same
- * buttons call the real contract via wagmi.
+ * Every button sends a REAL transaction via wagmi. After a transaction
+ * confirms, all wagmi queries are invalidated so the live reads on the
+ * page re-fetch from chain — the UI follows the chain, it never assumes
+ * the new state locally.
  */
 
 type TxPhase = 'idle' | 'pending' | 'success' | 'error';
@@ -44,14 +43,12 @@ function TxStatus({
   chainId,
   hash,
   phase,
-  errorMessage,
-  mock = false
+  errorMessage
 }: {
   chainId: number;
   hash?: `0x${string}`;
   phase: TxPhase;
   errorMessage?: string;
-  mock?: boolean;
 }) {
   if (phase === 'idle') return null;
   return (
@@ -73,16 +70,14 @@ function TxStatus({
       {phase === 'success' ? (
         <span className='inline-flex items-center gap-2 text-foreground'>
           <Icons.circleCheck className='size-3.5' />
-          Transaction confirmed
-          {mock ? ' (MOCK — no on-chain transaction sent)' : ''}
+          Transaction confirmed — live state below refreshes from chain.
         </span>
       ) : null}
       {phase === 'error' ? (
         <span className='inline-flex items-start gap-2 text-foreground'>
           <Icons.alertCircle className='mt-0.5 size-3.5 shrink-0' />
           <span className='break-words'>
-            Transaction reverted / failed{mock ? ' (MOCK)' : ''}:{' '}
-            {errorMessage ?? 'unknown error'}
+            Transaction reverted / failed: {errorMessage ?? 'unknown error'}
           </span>
         </span>
       ) : null}
@@ -101,14 +96,11 @@ function TxStatus({
   );
 }
 
-function OwnerNote({ isOwner, live }: { isOwner: boolean; live: boolean }) {
+function OwnerNote({ isOwner }: { isOwner: boolean }) {
   if (isOwner) return null;
   return (
     <p className='text-muted-foreground text-xs'>
-      Owner only —{' '}
-      {live
-        ? 'connect the vault owner wallet to enable this action.'
-        : 'connect a wallet to act as the demo owner (mock mode).'}
+      Owner only — connect the vault owner wallet to enable this action.
     </p>
   );
 }
@@ -117,8 +109,23 @@ export interface VaultActionProps {
   sibling: Sibling;
   /** Whether the connected wallet owns this vault (live: on-chain owner). */
   isOwner: boolean;
-  /** `false` = mock simulation, `true` = real contract call. */
-  live: boolean;
+  /** Called once with the confirmed tx hash (parent refetches / shows the expected state). */
+  onTxSuccess?: (hash: `0x${string}`) => void;
+}
+
+/**
+ * After a write confirms, invalidate every wagmi query once so live reads
+ * re-fetch, then report the hash to the parent exactly once.
+ */
+function useTxSuccess(hash: `0x${string}` | undefined, isSuccess: boolean, onTxSuccess?: (hash: `0x${string}`) => void) {
+  const queryClient = useQueryClient();
+  const reportedRef = useRef<`0x${string}` | null>(null);
+  useEffect(() => {
+    if (!isSuccess || !hash || reportedRef.current === hash) return;
+    reportedRef.current = hash;
+    void queryClient.invalidateQueries();
+    onTxSuccess?.(hash);
+  }, [isSuccess, hash, onTxSuccess, queryClient]);
 }
 
 /* ------------------------------------------------------------------ */
@@ -128,11 +135,10 @@ export interface VaultActionProps {
 export function EmergencyPauseDialog({
   sibling,
   isOwner,
-  live,
-  onMockConfirm
+  onConfirmed
 }: VaultActionProps & {
-  /** Mock mode: parent applies the state change for this reason. */
-  onMockConfirm: (reasonHex: `0x${string}`) => void;
+  /** Called once with the confirmed tx hash + reason (parent shows the expected tripped state). */
+  onConfirmed?: (hash: `0x${string}`, reasonHex: `0x${string}`) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('EXPLOIT');
@@ -148,9 +154,12 @@ export function EmergencyPauseDialog({
     reasonError = 'Reason must be ASCII (bytes32, max 32 bytes).';
   } else {
     try {
-      // ASCII-padded bytes32 — the SAME encoding as mock-data.ts
-      // (stringToHex("EXPLOIT", { size: 32 }) = 0x4558504c4f4954…00).
-      // NOT keccak256("EXPLOIT").
+      // ASCII-padded bytes32: stringToHex("EXPLOIT", { size: 32 }) =
+      // 0x4558504c4f4954…00. NOT keccak256("EXPLOIT"). Note the recorded
+      // run #1 used a DIFFERENT encoding — keccak256("EXPLOIT-001") —
+      // for its reason; both fill the same bytes32 field, with different
+      // values. The public test runs used this same ASCII-padded
+      // encoding (TEST-001 / TEST-002).
       reasonHex = stringToHex(reason.trim(), { size: 32 });
     } catch {
       reasonError = 'Reason is longer than 32 bytes.';
@@ -165,13 +174,16 @@ export function EmergencyPauseDialog({
         ? 'error'
         : 'idle';
 
+  useTxSuccess(hash, isSuccess);
+  const confirmedRef = useRef<`0x${string}` | null>(null);
+  useEffect(() => {
+    if (!isSuccess || !hash || !reasonHex || confirmedRef.current === hash) return;
+    confirmedRef.current = hash;
+    onConfirmed?.(hash, reasonHex);
+  }, [isSuccess, hash, reasonHex, onConfirmed]);
+
   function handleConfirm() {
     if (!reasonHex) return;
-    if (!live) {
-      onMockConfirm(reasonHex);
-      setOpen(false);
-      return;
-    }
     writeContract({
       address: sibling.address as Address,
       abi: SIBLING_VAULT_ABI,
@@ -224,11 +236,6 @@ export function EmergencyPauseDialog({
                 {reasonHex}
               </p>
             )}
-            {!live ? (
-              <Badge variant='outline' className='w-fit border-foreground/40 text-foreground'>
-                MOCK — no on-chain transaction will be sent
-              </Badge>
-            ) : null}
             <TxStatus
               chainId={sibling.chainId}
               hash={hash}
@@ -245,12 +252,12 @@ export function EmergencyPauseDialog({
               disabled={!reasonHex || !isOwner}
               onClick={handleConfirm}
             >
-              {live ? 'Confirm emergency pause' : 'Confirm (mock)'}
+              Confirm emergency pause
             </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <OwnerNote isOwner={isOwner} live={live} />
+      <OwnerNote isOwner={isOwner} />
     </div>
   );
 }
@@ -262,12 +269,8 @@ export function EmergencyPauseDialog({
 export function UnpauseDialog({
   sibling,
   isOwner,
-  live,
-  onMockConfirm
-}: VaultActionProps & {
-  /** Mock mode: parent marks this vault ACTIVE. */
-  onMockConfirm: (siblingId: SiblingId) => void;
-}) {
+  onTxSuccess
+}: VaultActionProps) {
   const [open, setOpen] = useState(false);
   const { data: hash, writeContract, isPending, isSuccess, isError, error } =
     useWriteContract();
@@ -280,12 +283,9 @@ export function UnpauseDialog({
         ? 'error'
         : 'idle';
 
+  useTxSuccess(hash, isSuccess, onTxSuccess);
+
   function handleConfirm() {
-    if (!live) {
-      onMockConfirm(sibling.id);
-      setOpen(false);
-      return;
-    }
     writeContract({
       address: sibling.address as Address,
       abi: SIBLING_VAULT_ABI,
@@ -322,11 +322,6 @@ export function UnpauseDialog({
             </DialogDescription>
           </DialogHeader>
           <div className='flex flex-col gap-2'>
-            {!live ? (
-              <Badge variant='outline' className='w-fit border-foreground/40 text-foreground'>
-                MOCK — no on-chain transaction will be sent
-              </Badge>
-            ) : null}
             <TxStatus
               chainId={sibling.chainId}
               hash={hash}
@@ -344,12 +339,12 @@ export function UnpauseDialog({
               variant='destructive'
               onClick={handleConfirm}
             >
-              {live ? 'Confirm unpause' : 'Confirm (mock)'}
+              Confirm unpause
             </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <OwnerNote isOwner={isOwner} live={live} />
+      <OwnerNote isOwner={isOwner} />
     </div>
   );
 }
@@ -360,36 +355,25 @@ export function UnpauseDialog({
 
 export function DepositTestButton({
   sibling,
-  live
+  onTxSuccess
 }: {
   sibling: Sibling;
-  live: boolean;
+  onTxSuccess?: (hash: `0x${string}`) => void;
 }) {
   const { data: hash, writeContract, isPending, isSuccess, isError, error } =
     useWriteContract();
-  const [mockResult, setMockResult] = useState<'reverted' | 'success' | null>(null);
 
-  const phase: TxPhase = live
-    ? isPending
-      ? 'pending'
-      : isSuccess
-        ? 'success'
-        : isError
-          ? 'error'
-          : 'idle'
-    : mockResult === 'reverted'
-      ? 'error'
-      : mockResult === 'success'
-        ? 'success'
+  const phase: TxPhase = isPending
+    ? 'pending'
+    : isSuccess
+      ? 'success'
+      : isError
+        ? 'error'
         : 'idle';
 
+  useTxSuccess(hash, isSuccess, onTxSuccess);
+
   function handleClick() {
-    if (!live) {
-      // Mock simulation: a paused vault rejects deposits (EnforcedPause).
-      // This inline revert is the freeze proof for the demo.
-      setMockResult(sibling.status === 'PAUSED' ? 'reverted' : 'success');
-      return;
-    }
     writeContract({
       address: sibling.address as Address,
       abi: SIBLING_VAULT_ABI,
@@ -408,44 +392,18 @@ export function DepositTestButton({
         )}
         Test deposit() — 0.001 ETH
       </Button>
-      {!live && mockResult === 'reverted' ? (
-        <div
-          className='flex flex-col gap-1 rounded-none border border-foreground bg-muted p-2 text-xs'
-          role='status'
-        >
-          <span className='inline-flex items-center gap-2 font-medium text-foreground'>
-            <Icons.alertCircle className='size-3.5' />
-            Reverted — EnforcedPause (MOCK)
-          </span>
-          <span className='text-muted-foreground'>
-            deposit() blocked while vault {sibling.id} is paused — proof the
-            deployment is frozen. No on-chain transaction was sent.
-          </span>
-        </div>
+      {isSuccess ? (
+        <p className='text-muted-foreground text-xs'>
+          0.001 ETH now sits in this vault — withdraw is owner-only, so a
+          test deposit stays here.
+        </p>
       ) : null}
-      {!live && mockResult === 'success' ? (
-        <div
-          className='flex flex-col gap-1 rounded-none border border-foreground/30 bg-muted p-2 text-xs'
-          role='status'
-        >
-          <span className='inline-flex items-center gap-2 font-medium text-foreground'>
-            <Icons.circleCheck className='size-3.5' />
-            Mock deposit accepted (MOCK)
-          </span>
-          <span className='text-muted-foreground'>
-            Vault {sibling.id} is ACTIVE, so 0.001 ETH would be accepted. No
-            on-chain transaction was sent.
-          </span>
-        </div>
-      ) : null}
-      {live ? (
-        <TxStatus
-          chainId={sibling.chainId}
-          hash={hash}
-          phase={phase}
-          errorMessage={error?.message}
-        />
-      ) : null}
+      <TxStatus
+        chainId={sibling.chainId}
+        hash={hash}
+        phase={phase}
+        errorMessage={error?.message}
+      />
     </div>
   );
 }

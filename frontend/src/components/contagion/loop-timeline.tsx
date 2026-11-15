@@ -43,7 +43,7 @@ export interface LoopTimelineProps {
 }
 
 export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps) {
-  const isMock = steps.some((step) => step.isMock) || latency?.isMock === true;
+  const isRecorded = steps.some((step) => step.isRecorded) || latency?.isRecorded === true;
 
   return (
     <Card>
@@ -56,7 +56,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
           </CardDescription>
         </div>
         <div className='flex flex-col items-start gap-2 sm:items-end'>
-          {isMock ? (
+          {isRecorded ? (
             <Badge variant='outline' className='border-primary/40 text-primary'>
               RECORDED RUN — TESTNET
             </Badge>
@@ -79,6 +79,14 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
             No loop has run yet — the timeline fills step by step once an incident trips.
           </p>
         ) : (
+          <>
+            {steps.some((step) => step.status === 'pending') ? (
+              <p className='text-sm text-foreground' role='status'>
+                Steps marked PENDING have not happened on-chain yet. This is the
+                expected state right after a trip, before the watcher callbacks
+                land — not a confirmation.
+              </p>
+            ) : null}
           <ol className='relative flex flex-col gap-6 border-l border-border pl-6'>
             {steps.map((step, index) => {
               const done = step.status === 'done';
@@ -173,6 +181,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
               );
             })}
           </ol>
+          </>
         )}
 
         {latency ? (
@@ -209,7 +218,7 @@ export function LoopTimeline({ steps, latency, freezeProof }: LoopTimelineProps)
               {truncateHash(freezeProof.txHash)}
               <Icons.externalLink className='size-3' />
             </a>
-            {freezeProof.isMock ? (
+            {freezeProof.isRecorded ? (
               <Badge variant='outline' className='border-primary/40 text-primary'>
                 RECORDED
               </Badge>

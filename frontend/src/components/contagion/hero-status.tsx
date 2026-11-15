@@ -4,8 +4,6 @@ import { CountdownCircleTimer } from 'react-countdown-circle-timer';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-import { NumberTicker } from '@/components/magicui/number-ticker';
-import { useMotionAllowed } from '@/components/terminal/use-motion-allowed';
 import type { Incident, LatencyMetrics } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +12,11 @@ export interface HeroStatusProps {
   incident: Incident | null;
   /** `null` before any loop has been measured (calm state). */
   latency: LatencyMetrics | null;
+  /**
+   * Set when a REAL emergencyPause just confirmed on-chain: the incident
+   * is TRIPPED and the callbacks are expected, not yet confirmed.
+   */
+  liveTrip?: { txHash: `0x${string}`; reasonLabel: string } | null;
 }
 
 /** UTC timestamp, e.g. "Fri, 14 Nov 2026 05:00:00 GMT". */
@@ -33,22 +36,15 @@ function LatencyMetric({
   label,
   value,
   sub,
-  large = false,
-  numericValue,
-  decimalPlaces = 1,
-  suffix = ''
+  large = false
 }: {
   label: string;
   value: string;
   sub?: string;
   large?: boolean;
-  /** When set, the value counts via NumberTicker (only on meaningful change). */
-  numericValue?: number;
-  decimalPlaces?: number;
-  suffix?: string;
 }) {
-  const motionAllowed = useMotionAllowed();
-
+  // Recorded values are rendered as plain text: they are static measurements,
+  // not live counters, so they must not animate as if being measured now.
   return (
     <div className='flex flex-col gap-0.5'>
       <span className='text-muted-foreground text-[11px] font-medium tracking-wide uppercase'>
@@ -60,22 +56,7 @@ function LatencyMetric({
           large ? 'text-3xl font-semibold' : 'text-lg font-medium'
         )}
       >
-        {numericValue !== undefined ? (
-          motionAllowed ? (
-            <>
-              <NumberTicker
-                value={numericValue}
-                decimalPlaces={decimalPlaces}
-                className='text-primary'
-              />
-              {suffix}
-            </>
-          ) : (
-            `${numericValue.toFixed(decimalPlaces)}${suffix}`
-          )
-        ) : (
-          value
-        )}
+        {value}
       </span>
       {sub ? <span className='text-muted-foreground text-xs'>{sub}</span> : null}
     </div>
@@ -91,14 +72,14 @@ function LatencyMetric({
  * confirmations. The timer never ticks (`isPlaying={false}`) — it is a
  * progress gauge, not a countdown.
  */
-export function HeroStatus({ incident, latency }: HeroStatusProps) {
+export function HeroStatus({ incident, latency, liveTrip }: HeroStatusProps) {
   const confirmed = incident?.confirmedCount ?? 0;
   const total = incident?.confirmedTotal ?? 2;
   const ringTotal = Math.max(total, 1);
   const ringColor =
     confirmed === 0 ? '#525252' : confirmed < total ? '#000080' : '#008000';
 
-  const isMock = incident?.isMock ?? latency?.isMock ?? false;
+  const isRecorded = incident?.isRecorded ?? latency?.isRecorded ?? false;
   const isContained = incident?.status === 'CONTAINED';
   const isTripped = incident?.status === 'ACTIVE';
 
@@ -154,11 +135,33 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
                 trippedAt {formatTimestamp(incident.trippedAt)}
               </p>
             ) : null}
+            {liveTrip ? (
+              <p className='mt-1 text-xs text-foreground'>
+                Trip transaction confirmed on-chain; the watcher callbacks are
+                expected, not yet confirmed. The vault cards below show the
+                live state — refresh them to see the siblings flip to PAUSED
+                (usually within ~2 s), or verify the trip on the explorer:{' '}
+                <a
+                  href={`https://sepolia.uniscan.xyz/tx/${liveTrip.txHash}`}
+                  target='_blank'
+                  rel='noreferrer'
+                  className='font-mono break-all text-primary underline underline-offset-2 hover:underline'
+                >
+                  {liveTrip.txHash.slice(0, 10)}…{liveTrip.txHash.slice(-4)}
+                </a>
+              </p>
+            ) : null}
           </div>
-          {isMock ? (
+          {isRecorded && !liveTrip ? (
             <Badge variant='outline' className='border-primary/40 text-primary shrink-0'>
               <Icons.circleCheck className='mr-1 size-3.5' />
               RECORDED
+            </Badge>
+          ) : null}
+          {liveTrip ? (
+            <Badge variant='outline' className='border-primary/40 text-primary shrink-0'>
+              <Icons.warning className='mr-1 size-3.5' />
+              LIVE TRIP — AWAITING CALLBACKS
             </Badge>
           ) : null}
         </div>
@@ -252,25 +255,16 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
               value={latency ? formatSeconds(latency.fullLoopSeconds) : '—'}
               sub={latency ? 'max(T2a, T2b) − T0' : 'Not measured yet'}
               large
-              numericValue={latency?.fullLoopSeconds}
-              decimalPlaces={1}
-              suffix=' s'
             />
             <LatencyMetric
               label='Event → react (T1 − T0)'
               value={latency ? formatSeconds(latency.eventToReactSeconds) : '—'}
               sub={latency ? 'Unichain → Lasna' : 'Not measured yet'}
-              numericValue={latency?.eventToReactSeconds}
-              decimalPlaces={1}
-              suffix=' s'
             />
             <LatencyMetric
               label='React → callback · Base'
               value={latency ? formatSeconds(latency.reactToCallbackBaseSeconds) : '—'}
               sub={latency ? `Leg B: ${formatSeconds(latency.legBaseSeconds)}` : 'Not measured yet'}
-              numericValue={latency?.reactToCallbackBaseSeconds}
-              decimalPlaces={1}
-              suffix=' s'
             />
             <LatencyMetric
               label='React → callback · Unichain'
@@ -280,9 +274,6 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
                   ? `Leg C: ${formatSeconds(latency.legUnichainSeconds)}`
                   : 'Not measured yet'
               }
-              numericValue={latency?.reactToCallbackUnichainSeconds}
-              decimalPlaces={1}
-              suffix=' s'
             />
             <LatencyMetric
               label='Gas react()'
@@ -309,7 +300,7 @@ export function HeroStatus({ incident, latency }: HeroStatusProps) {
           </div>
         </div>
 
-        {latency?.isMock ? (
+        {latency?.isRecorded ? (
           <div className='border-t pt-4'>
             <p className='text-xs text-foreground'>
               Measured on-chain 14 Nov 2026 (scenario 1) — static snapshot, not live-polled.

@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useWriteContract } from 'wagmi';
+import { formatEther } from 'viem';
+import { useBalance, useReadContract, useWriteContract } from 'wagmi';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Address } from 'viem';
 
@@ -14,9 +15,11 @@ import {
   ADDRESSES,
   CONTAGION_WATCHER_ABI,
   EXPLORERS,
-  LIVE,
-  SIBLING_VAULT_ABI
+  SIBLING_VAULT_ABI,
+  SYSTEM_CONTRACT_ABI,
+  SYSTEM_CONTRACT_ADDRESS
 } from '@/lib/contracts';
+import { LOOP_COST_LREACT } from '@/lib/config';
 import type { FundingHealth, SiblingId } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +27,7 @@ import { cn } from '@/lib/utils';
 /* Constants                                                           */
 /* ------------------------------------------------------------------ */
 
-/** One full loop costs ~0.10–0.11 lREACT (measured on-chain); below this the watcher cannot fund a loop. */
+/** One full loop costs ~0.08–0.11 lREACT (measured on-chain); below this the watcher cannot fund a loop. */
 const WATCHER_LOW_RESERVES_LREACT = 0.15;
 
 const VAULT_ADDRESSES: Record<SiblingId, Address> = {
@@ -37,8 +40,8 @@ const VAULT_ADDRESSES: Record<SiblingId, Address> = {
 /* coverDebt button — one per indebted entity                          */
 /*                                                                     */
 /* `coverDebt()` exists on both contracts (contracts.ts). It is only   */
-/* rendered when that entity's debt > 0. While LIVE is false the      */
-/* button runs a mock simulation and never sends a transaction.        */
+/* rendered when that entity's debt > 0.      */
+/* button sends a real transaction.        */
 /* ------------------------------------------------------------------ */
 
 interface CoverDebtButtonProps {
@@ -49,15 +52,9 @@ interface CoverDebtButtonProps {
 }
 
 function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps) {
-  const [mockSimulated, setMockSimulated] = React.useState(false);
   const { writeContract, data: txHash, isPending, isSuccess, error } = useWriteContract();
 
   const handleClick = () => {
-    if (!LIVE) {
-      // Mock mode: simulate only — no transaction is ever sent.
-      setMockSimulated(true);
-      return;
-    }
     writeContract({
       address,
       abi,
@@ -68,21 +65,11 @@ function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps)
 
   return (
     <div className='flex flex-col items-start gap-1.5'>
-      <Button size='sm' variant='outline' onClick={handleClick} disabled={isPending || mockSimulated}>
+      <Button size='sm' variant='outline' onClick={handleClick} disabled={isPending}>
         {isPending ? <Icons.spinner className='size-3.5 animate-spin' /> : <Icons.check className='size-3.5' />}
         coverDebt() — {label}
       </Button>
-      {!LIVE ? (
-        <span className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-          <Badge variant='outline' className='border-border bg-muted text-muted-foreground'>
-            MOCK
-          </Badge>
-          {mockSimulated
-            ? 'Simulated — no transaction sent (contracts not deployed yet).'
-            : 'Mock simulation only while LIVE is false.'}
-        </span>
-      ) : null}
-      {LIVE && isSuccess && txHash ? (
+      {isSuccess && txHash ? (
         <a
           href={`${EXPLORERS[chainId as keyof typeof EXPLORERS] ?? ''}/tx/${txHash}`}
           target='_blank'
@@ -93,7 +80,7 @@ function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps)
           <Icons.externalLink className='size-3' />
         </a>
       ) : null}
-      {LIVE && error ? (
+      {error ? (
         <span className='text-xs text-foreground'>coverDebt() failed: {error.message}</span>
       ) : null}
     </div>
@@ -109,8 +96,28 @@ export interface FundingHealthProps {
 }
 
 export function FundingHealth({ health }: FundingHealthProps) {
-  const watcherDebt = Number.parseFloat(health.watcher.debtLreact);
-  const watcherReserves = Number.parseFloat(health.watcher.reservesLreact);
+  // Live: watcher balance (lREACT) + debt from the Lasna system contract.
+  // Sibling reserves/debt below are the recorded 14 Nov 2026 snapshot.
+  const { data: watcherBalance } = useBalance({
+    address: ADDRESSES.contagionWatcher as Address,
+    chainId: 5318007,
+    query: { refetchInterval: 30_000, retry: 1, retryDelay: 1000 }
+  });
+  const { data: watcherDebtLive } = useReadContract({
+    address: SYSTEM_CONTRACT_ADDRESS as Address,
+    abi: SYSTEM_CONTRACT_ABI,
+    functionName: 'debt',
+    args: [ADDRESSES.contagionWatcher as Address],
+    chainId: 5318007,
+    query: { refetchInterval: 30_000, retry: 1, retryDelay: 1000 }
+  });
+  const watcherReservesLive =
+    watcherBalance !== undefined ? Number.parseFloat(formatEther(watcherBalance.value)) : null;
+  const watcherDebtLiveNum =
+    watcherDebtLive !== undefined ? Number.parseFloat(formatEther(watcherDebtLive)) : null;
+  const watcherDebt = watcherDebtLiveNum ?? Number.parseFloat(health.watcher.debtLreact);
+  const watcherReserves = watcherReservesLive ?? Number.parseFloat(health.watcher.reservesLreact);
+  const watcherValuesLive = watcherReservesLive !== null;
   const siblingDebts = health.siblings.map((s) => ({
     siblingId: s.siblingId,
     debt: Number.parseFloat(s.debtEth),
@@ -122,9 +129,9 @@ export function FundingHealth({ health }: FundingHealthProps) {
   const warning =
     health.warning ??
     (anyDebt
-      ? 'Debt is outstanding — execution can stall silently. Call coverDebt() before the demo.'
+      ? 'Debt is outstanding — execution can stall silently. Call coverDebt() before the next trip.'
       : lowReserves
-        ? `Watcher reserves (${health.watcher.reservesLreact} lREACT) are below one full loop (~0.10–0.11 lREACT) — execution can stall silently. Top up before the demo.`
+        ? `Watcher reserves (${watcherReserves.toFixed(4)} lREACT) are below one full loop (${LOOP_COST_LREACT}) — execution can stall silently. Top up before the next trip.`
         : null);
 
   // Bars: watcher in lREACT, siblings in ETH — different units, flagged below the chart.
@@ -146,12 +153,16 @@ export function FundingHealth({ health }: FundingHealthProps) {
           <CardDescription>
             Callback fees are paid from each contract&apos;s own balance (its &ldquo;reserves&rdquo;).
             Debt is read from the Lasna system contract — there is no <code>debt()</code> or{' '}
-            <code>reserves()</code> on the vault or watcher contracts. Watcher figure is its
-            lREACT balance — SYSTEM <code>reserves()</code> reads 0 (no <code>depositTo</code> in
-            reactive-lib v0.1.0); <code>react()</code> bills against balance.
+            <code>reserves()</code> on the vault or watcher contracts. Watcher balance and debt
+            below are read live when the chain is reachable; when the read fails, the recorded
+            snapshot of 14 Nov 2026 is shown and labelled per number. Sibling reserves/debt are
+            the recorded snapshot of 14 Nov 2026.
+            Watcher figure is its lREACT balance — SYSTEM <code>reserves()</code> reads 0 (no{' '}
+            <code>depositTo</code> in reactive-lib v0.1.0); <code>react()</code> bills against
+            balance.
           </CardDescription>
         </div>
-        {health.isMock ? (
+        {health.isRecorded ? (
           <Badge variant='outline' className='border-border bg-muted text-muted-foreground'>
             RECORDED RUN — TESTNET
           </Badge>
@@ -170,7 +181,12 @@ export function FundingHealth({ health }: FundingHealthProps) {
           {/* Watcher */}
           <div className='flex flex-col gap-2 rounded-none border p-3'>
             <div className='flex items-center justify-between'>
-              <span className='text-sm font-semibold'>Watcher — Lasna</span>
+              <span className='text-sm font-semibold'>
+                Watcher — Lasna{' '}
+                <Badge variant='outline' className='border-primary/40 text-primary'>
+                  {watcherValuesLive ? 'LIVE' : 'RECORDED'}
+                </Badge>
+              </span>
               <Badge
                 variant='outline'
                 className={cn(
@@ -194,13 +210,17 @@ export function FundingHealth({ health }: FundingHealthProps) {
             </div>
             <dl className='flex gap-6 font-mono text-sm tabular-nums'>
               <div>
-                <dt className='text-xs text-muted-foreground'>Reserves</dt>
-                <dd>{health.watcher.reservesLreact} lREACT</dd>
+                <dt className='text-xs text-muted-foreground'>
+                  {watcherValuesLive ? 'Reserves (live)' : 'Reserves (recorded 14 Nov 2026)'}
+                </dt>
+                <dd>{watcherReserves.toFixed(4)} lREACT</dd>
               </div>
               <div>
-                <dt className='text-xs text-muted-foreground'>Debt</dt>
+                <dt className='text-xs text-muted-foreground'>
+                  {watcherValuesLive ? 'Debt (live)' : 'Debt (recorded 14 Nov 2026)'}
+                </dt>
                 <dd className={watcherDebt > 0 ? 'text-foreground' : undefined}>
-                  {health.watcher.debtLreact} lREACT
+                  {watcherDebt.toFixed(4)} lREACT
                 </dd>
               </div>
             </dl>
@@ -301,7 +321,9 @@ export function FundingHealth({ health }: FundingHealthProps) {
             {health.costReference.callbackBaseEth} ETH
           </p>
           <p className='mt-1 text-xs leading-relaxed text-muted-foreground'>
-            Watcher balance 1.2437 lREACT (≈11 full loops at ~0.10–0.11 lREACT each).
+            Watcher balance {watcherReserves.toFixed(4)} lREACT (≈
+            {Math.floor(watcherReserves / 0.09)} full loops at ~0.09 lREACT each; one full loop{' '}
+            {LOOP_COST_LREACT}).
           </p>
         </div>
       </CardContent>

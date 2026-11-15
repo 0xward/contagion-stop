@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 export const TERMINAL_NAV_LINKS = [
   { href: '/dashboard/overview', label: 'Overview', icon: Icons.dashboard },
   { href: '/dashboard/overview#vaults', label: 'Vaults', icon: Icons.shieldCheck },
+  { href: '/dashboard/overview#try-it-live', label: 'Try it live', icon: Icons.play },
   { href: '/dashboard/overview#history', label: 'History', icon: Icons.history },
   { href: '/dashboard/docs', label: 'Docs', icon: Icons.page }
 ] as const;

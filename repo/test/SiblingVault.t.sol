@@ -7,10 +7,10 @@ import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {SiblingVault} from "../src/SiblingVault.sol";
-import {MockCallbackProxy} from "./mocks/MockCallbackProxy.sol";
+import {LocalCallbackProxy} from "./fixtures/LocalCallbackProxy.sol";
 
 /// @notice Unit tests for SiblingVault. The Base Sepolia callback proxy is
-/// mocked by etching MockCallbackProxy at the real proxy address, so
+/// simulated by etching LocalCallbackProxy at the real proxy address, so
 /// `pause()` goes through the real `onlyServiceProvider` guard.
 contract SiblingVaultTest is Test {
     IPayable public constant PROXY = IPayable(payable(0x476F44b11F5C942c58f4c8E3d0300E5710743585));
@@ -23,7 +23,7 @@ contract SiblingVaultTest is Test {
     SiblingVault public vault;
 
     function setUp() public {
-        vm.etch(address(PROXY), address(new MockCallbackProxy()).code);
+        vm.etch(address(PROXY), address(new LocalCallbackProxy()).code);
         vault = new SiblingVault(PROXY, owner, watcher);
         vm.deal(owner, 10 ether);
         vm.deal(stranger, 10 ether);
@@ -36,7 +36,7 @@ contract SiblingVaultTest is Test {
     // -- helpers -------------------------------------------------------------
 
     function _pauseViaProxy(address watcher_) internal {
-        MockCallbackProxy(payable(address(PROXY)))
+        LocalCallbackProxy(payable(address(PROXY)))
             .executeCallback(address(vault), abi.encodeWithSignature("pause(address)", address(0)), watcher_);
     }
 
@@ -138,7 +138,7 @@ contract SiblingVaultTest is Test {
     }
 
     function testPauseViaProxyWithWrongWatcherReverts() public {
-        vm.expectRevert("mock proxy: callback call failed");
+        vm.expectRevert("local proxy: callback call failed");
         _pauseViaProxy(stranger);
         assertFalse(vault.paused());
     }
@@ -146,8 +146,8 @@ contract SiblingVaultTest is Test {
     function testPauseViaProxyWhenWatcherUnsetReverts() public {
         SiblingVault unset = new SiblingVault(PROXY, owner, address(0));
         // Swap the vault under test to the unset one via a fresh proxy call.
-        vm.expectRevert("mock proxy: callback call failed");
-        MockCallbackProxy(payable(address(PROXY)))
+        vm.expectRevert("local proxy: callback call failed");
+        LocalCallbackProxy(payable(address(PROXY)))
             .executeCallback(address(unset), abi.encodeWithSignature("pause(address)", address(0)), watcher);
     }
 
@@ -193,7 +193,7 @@ contract SiblingVaultTest is Test {
         assertEq(vault.watcher(), newWatcher);
 
         // Old watcher can no longer pause; new one can.
-        vm.expectRevert("mock proxy: callback call failed");
+        vm.expectRevert("local proxy: callback call failed");
         _pauseViaProxy(watcher);
         _pauseViaProxy(newWatcher);
         assertTrue(vault.paused());
@@ -206,7 +206,7 @@ contract SiblingVaultTest is Test {
     }
 
     function testCoverDebtIsPublic() public {
-        MockCallbackProxy(payable(address(PROXY))).setDebt(address(vault), 0.01 ether);
+        LocalCallbackProxy(payable(address(PROXY))).setDebt(address(vault), 0.01 ether);
         uint256 vaultBalBefore = address(vault).balance;
         uint256 proxyBalBefore = address(PROXY).balance;
         vm.prank(stranger);

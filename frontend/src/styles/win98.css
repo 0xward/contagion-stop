@@ -55,7 +55,7 @@
   --color-accent-foreground: #000000;
   --color-destructive: #c00000;
   --color-destructive-foreground: #ffffff;
-  --color-border: #808080;
+  --color-border: #5f5f5f;
   --color-input: #ffffff;
   --color-ring: #000080;
   --color-chart-1: #000080;
@@ -150,14 +150,84 @@
 }
 
 /* shadcn Card inside a 98.css window: keep the silver card but give it
-   a real bevel instead of the flat 1px border. */
+   a real bevel instead of the flat 1px border. Bevel is deliberately
+   THICK (2px/3px steps) so cards read as separate raised panels against
+   the teal desktop and against each other — colour-only change, no
+   layout change (box-shadow, never border-width). */
 .win98-scope [data-slot='card'] {
   box-shadow:
-    inset -1px -1px #0a0a0a,
-    inset 1px 1px #fff,
-    inset -2px -2px grey,
-    inset 2px 2px #dfdfdf;
+    inset -2px -2px #0a0a0a,
+    inset 2px 2px #fff,
+    inset -3px -3px grey,
+    inset 3px 3px #dfdfdf;
   border: none;
+}
+
+/* ---- Button hierarchy (colour-only, Win98 bevel language) ----
+   98.css flattens every button to the same silver raised bevel, so the
+   primary action, the secondary action and a disabled button all looked
+   identical. These unlayered overrides restore the hierarchy without
+   touching src/components/ui/button.tsx:
+   - primary (shadcn `default` = .bg-primary): solid navy, white text,
+     thick dark bevel — unmistakably the main action;
+   - destructive (.text-destructive): solid red, white text;
+   - outline / secondary / ghost: silver raised bevel (thicker than
+     98.css default), black text;
+   - disabled: FLAT sunken grey, grey text, full opacity (shadcn's
+     opacity-50 is overridden) — a disabled button never looks raised. */
+.win98-scope [data-slot='button'] {
+  box-shadow:
+    inset -2px -2px #0a0a0a,
+    inset 2px 2px #fff,
+    inset -3px -3px grey,
+    inset 3px 3px #dfdfdf;
+}
+.win98-scope [data-slot='button'].bg-primary {
+  background: #000080;
+  color: #fff;
+  text-shadow: none;
+  font-weight: 700;
+  box-shadow:
+    inset -2px -2px #000040,
+    inset 2px 2px #8080c0,
+    inset -3px -3px #000040,
+    inset 3px 3px #4040a0;
+}
+.win98-scope [data-slot='button'].bg-primary:hover {
+  background: #0000a0;
+}
+.win98-scope [data-slot='button'].bg-primary svg {
+  color: #fff;
+}
+.win98-scope [data-slot='button'].text-destructive {
+  background: #c00000;
+  color: #fff;
+  text-shadow: none;
+  font-weight: 700;
+  box-shadow:
+    inset -2px -2px #600000,
+    inset 2px 2px #ff8080,
+    inset -3px -3px #600000,
+    inset 3px 3px #e04040;
+}
+.win98-scope [data-slot='button'].text-destructive:hover {
+  background: #d00000;
+}
+.win98-scope [data-slot='button'].text-destructive svg {
+  color: #fff;
+}
+.win98-scope [data-slot='button']:disabled {
+  background: #c0c0c0;
+  color: grey;
+  text-shadow: 1px 1px 0 #fff;
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow:
+    inset -1px -1px #dfdfdf,
+    inset 1px 1px grey;
+}
+.win98-scope [data-slot='button']:disabled svg {
+  color: grey;
 }
 
 /* ---- Desktop shell ---- */
@@ -210,9 +280,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  width: 84px;
-  padding: 4px 2px;
+  gap: 6px;
+  width: 112px;
+  padding: 8px 6px;
   background: none;
   border: 1px dotted transparent;
   color: #fff;
@@ -232,8 +302,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 52px;
+  height: 52px;
   background: #c0c0c0;
   box-shadow:
     inset -1px -1px #0a0a0a,
@@ -243,7 +313,7 @@
   color: #000080;
 }
 .win98-desktop-icon-label {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.25;
   text-shadow: 1px 1px 0 #000;
 }

@@ -7,11 +7,11 @@ import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {ContagionTopics} from "../src/ContagionTopics.sol";
 import {ContagionWatcher} from "../src/ContagionWatcher.sol";
 import {SiblingVault} from "../src/SiblingVault.sol";
-import {MockSystemContract} from "./mocks/MockSystemContract.sol";
-import {MockCallbackProxy} from "./mocks/MockCallbackProxy.sol";
+import {LocalSystemContract} from "./fixtures/LocalSystemContract.sol";
+import {LocalCallbackProxy} from "./fixtures/LocalCallbackProxy.sol";
 
 /// @notice Gas measurements for the gas report (gas-report.md). Numbers
-/// are measured locally with etched mock system/proxy contracts — the mock
+/// are measured locally with etched stand-in system/proxy contracts — the stand-in
 /// system contract's `requestCallbackV_1_0` is a plain array push, cheaper
 /// than the real Lasna system contract, so `react()` gas here is a LOWER
 /// bound. The network caps that matter are absolute: react() < 900_000 gas
@@ -32,12 +32,12 @@ contract GasReportTest is Test {
     SiblingVault public siblingBase;
     SiblingVault public siblingUni2;
     ContagionWatcher public watcher;
-    MockSystemContract public system;
+    LocalSystemContract public system;
 
     function setUp() public {
-        vm.etch(SYSTEM, address(new MockSystemContract()).code);
-        system = MockSystemContract(payable(SYSTEM));
-        address proxyCode = address(new MockCallbackProxy());
+        vm.etch(SYSTEM, address(new LocalSystemContract()).code);
+        system = LocalSystemContract(payable(SYSTEM));
+        address proxyCode = address(new LocalCallbackProxy());
         vm.etch(address(BASE_PROXY), proxyCode.code);
         vm.etch(address(UNI_PROXY), proxyCode.code);
         vm.deal(owner, 10 ether);

@@ -214,7 +214,7 @@ export function IncidentTable({ incidents }: IncidentTableProps) {
     { id: 'trippedAt', desc: true }
   ]);
   const [globalFilter, setGlobalFilter] = React.useState('');
-  const isMock = incidents.some((incident) => incident.isMock);
+  const isRecorded = incidents.some((incident) => incident.isRecorded);
 
   const table = useTable({
     features: incidentFeatures,
@@ -246,7 +246,7 @@ export function IncidentTable({ incidents }: IncidentTableProps) {
             (14 Nov 2026), not live-polled.
           </CardDescription>
         </div>
-        {isMock ? (
+        {isRecorded ? (
           <Badge variant='outline' className='border-border bg-muted text-muted-foreground'>
             RECORDED RUN — TESTNET
           </Badge>
@@ -325,6 +325,9 @@ export function IncidentTable({ incidents }: IncidentTableProps) {
           {table.getFilteredRowModel().rows.length} incident
           {table.getFilteredRowModel().rows.length === 1 ? '' : 's'} shown. Unpause is a manual,
           per-deployment human action — the watcher does not track it, so it never appears here.
+        </p>
+        <p className='text-xs text-muted-foreground'>
+          #3: 605 s includes an engineered stall + manual retry — not loop latency.
         </p>
       </CardContent>
     </Card>

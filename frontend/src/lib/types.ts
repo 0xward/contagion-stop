@@ -1,7 +1,7 @@
 /**
- * ContagionStop — TypeScript types for the dashboard (LIVE).
+ * ContagionStop — TypeScript types for the dashboard.
  *
- * These types are the shared contract between `mock-data.ts` (data) and the
+ * These types are the shared contract between `recorded-run-data.ts` (data) and the
  * dashboard components. When the data shape changes, update the types here
  * first, then adjust the data to match.
  *
@@ -32,7 +32,7 @@ export interface Sibling {
   status: SiblingStatus;
   /** Block timestamp saat `Paused` ter-emit; `null` bila ACTIVE. */
   pausedAt: number | null;
-  /** Saldo ETH vault (mock: string desimal, mis. "0.02"). */
+  /** Saldo ETH vault (snapshot terekam: string desimal, mis. "0.02"). */
   balanceEth: string;
   /** `totalDeposited()` — ETH deposit tercatat (bukan fee funding). */
   totalDepositedEth: string;
@@ -41,7 +41,7 @@ export interface Sibling {
   /** Utang callback — dibaca dari system contract/proxy, BUKAN dari vault. */
   debtEth: string;
   /** `true` = static snapshot (data terekam, bukan live-polling). */
-  isMock: boolean;
+  isRecorded: boolean;
 }
 
 export type IncidentStatus = "ACTIVE" | "CONTAINED";
@@ -60,14 +60,14 @@ export interface Incident {
   status: IncidentStatus;
   /** Sibling tujuan yang sudah confirmed paused (tidak termasuk origin). */
   confirmedCount: number;
-  /** Jumlah sibling tujuan yang harus confirmed (demo: 2). */
+  /** Jumlah sibling tujuan yang harus confirmed (2 in this deployment). */
   confirmedTotal: number;
   confirmedSiblings: SiblingId[];
   pendingSiblings: SiblingId[];
   emergencyPauseTxHash: string;
   /** Durasi trip -> CONTAINED (detik); `null` bila masih ACTIVE. */
   containedInSeconds: number | null;
-  isMock: boolean;
+  isRecorded: boolean;
 }
 
 export type TimelineStepStatus = "done" | "pending";
@@ -88,7 +88,7 @@ export interface TimelineStep {
   status: TimelineStepStatus;
   gasUsed: number | null;
   gasLimit: number | null;
-  isMock: boolean;
+  isRecorded: boolean;
 }
 
 export interface LatencyMetrics {
@@ -117,7 +117,7 @@ export interface LatencyMetrics {
   gasCallbackBase: number;
   gasCallbackUnichain: number;
   gasCallbackLimit: number;
-  isMock: boolean;
+  isRecorded: boolean;
 }
 
 export interface WatcherFunding {
@@ -136,7 +136,7 @@ export interface SiblingFunding {
 export interface FundingHealth {
   watcher: WatcherFunding;
   siblings: SiblingFunding[];
-  /** Angka biaya referensi (terukur, design.md §7c) — bukan angka mock loop ini. */
+  /** Angka biaya referensi (terukur) — bukan angka dari loop ini. */
   costReference: {
     reactFallthroughLreact: string;
     reactWithCallbackLreact: string;
@@ -146,7 +146,7 @@ export interface FundingHealth {
   };
   /** Peringatan amber bila reserves menipis / debt > 0; `null` bila sehat. */
   warning: string | null;
-  isMock: boolean;
+  isRecorded: boolean;
 }
 
 /** Bukti pembekuan: percobaan `deposit()` pasca-pause yang revert. */
@@ -158,11 +158,11 @@ export interface FreezeProof {
   explorerUrl: string;
   /** `true` = tx revert (bukti deployment membeku). */
   reverted: boolean;
-  isMock: boolean;
+  isRecorded: boolean;
 }
 
 /** Satu skenario dashboard lengkap (incident aktif ATAU keadaan tenang). */
-export interface DashboardMockState {
+export interface DashboardRecordedState {
   /** "active-incident" | "calm" — dipakai komponen untuk memilih hero. */
   scenario: "active-incident" | "calm";
   siblings: Sibling[];
@@ -173,5 +173,5 @@ export interface DashboardMockState {
   funding: FundingHealth;
   incidentHistory: Incident[];
   freezeProof: FreezeProof | null;
-  isMock: boolean;
+  isRecorded: boolean;
 }

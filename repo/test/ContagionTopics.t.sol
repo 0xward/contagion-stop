@@ -6,7 +6,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {ContagionTopics} from "../src/ContagionTopics.sol";
 import {SiblingVault} from "../src/SiblingVault.sol";
-import {MockCallbackProxy} from "./mocks/MockCallbackProxy.sol";
+import {LocalCallbackProxy} from "./fixtures/LocalCallbackProxy.sol";
 
 /// @notice Topic/constant tests. The point is NOT to re-derive the same
 /// keccak expression twice: the topic constants are checked against the
@@ -22,7 +22,7 @@ contract ContagionTopicsTest is Test {
     SiblingVault public vault;
 
     function setUp() public {
-        vm.etch(address(BASE_PROXY), address(new MockCallbackProxy()).code);
+        vm.etch(address(BASE_PROXY), address(new LocalCallbackProxy()).code);
         vault = new SiblingVault(BASE_PROXY, owner, watcher);
     }
 

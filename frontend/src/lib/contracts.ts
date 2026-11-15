@@ -1261,8 +1261,9 @@ export const SYSTEM_CONTRACT_ADDRESS =
  * Alamat deployment ContagionStop — LIVE (testnet, 14 Nov 2026).
  *
  * Alamat di bawah ini adalah alamat deploy NYATA (lihat README.md /
- * VERIFICATION.md — terverifikasi on-chain). `LIVE` = true: owner/balance
- * dibaca live via wagmi dan tombol aksi mengirim transaksi nyata.
+ * VERIFICATION.md — terverifikasi on-chain). `LIVE` = true: owner,
+ * paused(), balance, dan totalDeposited() dibaca live via wagmi dan tombol
+ * aksi mengirim transaksi nyata.
  */
 export const ADDRESSES = {
   siblingVaultA: '0xb18A213bfa8c1888af39AF100d7dd54Aa376F7b5',
@@ -1270,6 +1271,43 @@ export const ADDRESSES = {
   siblingVaultC: '0xb07a380104ac093485566cfc964540b04518b354',
   contagionWatcher: '0xb18a213bfa8c1888af39af100d7dd54aa376f7b5'
 } as const;
+
+/**
+ * Public test deployment (15 Nov 2026) — PublicVault + public watcher.
+ * Sama seperti ADDRESSES, ditambah trip()/reopen() permissionless
+ * (lihat PUBLIC_VAULT_ABI di bawah).
+ */
+export const PUBLIC_ADDRESSES = {
+  publicVaultU1: '0x2bd64b3ee79eb1f38191e0b185786cb176d8696c',
+  publicVaultU2: '0xf3475038bc53aa50408272F233F5dF73F6CF8F8c',
+  publicVaultB: '0x4b44497bAD6c270462D0529FCe4E41A7e092669b',
+  publicWatcher: '0x73f6e9989057f060801d1ab7d57f6047ff6c5557'
+} as const;
+
+/**
+ * PublicVault ABI = SIBLING_VAULT_ABI + trip(bytes32) + reopen().
+ * Keduanya permissionless: trip() mem-pause vault dan meng-emit
+ * EmergencyPaused yang sama seperti emergencyPause() (minus cek owner);
+ * reopen() memanggil _unpause() langsung dan revert (ExpectedPause) bila
+ * vault sudah aktif. deposit()/coverDebt() diwarisi apa adanya.
+ */
+export const PUBLIC_VAULT_ABI = [
+  ...SIBLING_VAULT_ABI,
+  {
+    type: 'function',
+    name: 'trip',
+    inputs: [{ name: 'reason', type: 'bytes32', internalType: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'reopen',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  }
+] as const;
 
 /** `true` = kontrak ter-deploy; baca/tulis dari chain via wagmi. */
 export const LIVE = true as const;

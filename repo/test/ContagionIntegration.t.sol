@@ -8,14 +8,14 @@ import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ContagionTopics} from "../src/ContagionTopics.sol";
 import {ContagionWatcher} from "../src/ContagionWatcher.sol";
 import {SiblingVault} from "../src/SiblingVault.sol";
-import {MockSystemContract} from "./mocks/MockSystemContract.sol";
-import {MockCallbackProxy} from "./mocks/MockCallbackProxy.sol";
+import {LocalSystemContract} from "./fixtures/LocalSystemContract.sol";
+import {LocalCallbackProxy} from "./fixtures/LocalCallbackProxy.sol";
 
-/// @notice Full local loop with mocks: EmergencyPaused on the Unichain
+/// @notice Full local loop with local stand-ins: EmergencyPaused on the Unichain
 /// origin -> watcher (Lasna) -> pause() callbacks to the Base sibling and
 /// the second Unichain sibling -> both paused + confirmed -> deposits
 /// revert. No real chain is touched; the system contract and both callback
-/// proxies are etched mocks.
+/// proxies are etched stand-ins.
 contract ContagionIntegrationTest is Test {
     address public constant SYSTEM = 0x8888888888888888888888888888888888888888;
     IPayable public constant BASE_PROXY = IPayable(payable(0x476F44b11F5C942c58f4c8E3d0300E5710743585));
@@ -31,12 +31,12 @@ contract ContagionIntegrationTest is Test {
     SiblingVault public siblingBase;
     SiblingVault public siblingUni2;
     ContagionWatcher public watcher;
-    MockSystemContract public system;
+    LocalSystemContract public system;
 
     function setUp() public {
-        vm.etch(SYSTEM, address(new MockSystemContract()).code);
-        system = MockSystemContract(payable(SYSTEM));
-        address proxyCode = address(new MockCallbackProxy());
+        vm.etch(SYSTEM, address(new LocalSystemContract()).code);
+        system = LocalSystemContract(payable(SYSTEM));
+        address proxyCode = address(new LocalCallbackProxy());
         vm.etch(address(BASE_PROXY), proxyCode.code);
         vm.etch(address(UNI_PROXY), proxyCode.code);
 
@@ -96,12 +96,12 @@ contract ContagionIntegrationTest is Test {
         watcher.react(log_);
     }
 
-    /// @notice Execute callback request `i` through the mock proxy of its
+    /// @notice Execute callback request `i` through the local proxy of its
     /// destination chain, exactly as the real Reactive Signer would.
     function _executeCallback(uint256 i) internal {
         (uint256 chainId, address recipient,, bytes memory payload) = system.callbackRequests(i);
         address proxy = chainId == BASE ? address(BASE_PROXY) : address(UNI_PROXY);
-        MockCallbackProxy(payable(proxy)).executeCallback(recipient, payload, address(watcher));
+        LocalCallbackProxy(payable(proxy)).executeCallback(recipient, payload, address(watcher));
     }
 
     function _tripOrigin() internal {

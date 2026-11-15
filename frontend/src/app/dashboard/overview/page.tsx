@@ -12,36 +12,44 @@ import { Win98BootLog } from '@/components/win98/boot-log';
 import { LiveLog } from '@/components/terminal/live-log';
 import { HeroStatus } from '@/components/contagion/hero-status';
 import { SiblingGrid } from '@/components/contagion/sibling-grid';
+import { PublicTestInstance } from '@/components/contagion/public-test-instance';
 import { EmergencyPauseDialog } from '@/components/contagion/action-dialogs';
 import { LoopTimeline } from '@/components/contagion/loop-timeline';
 import { IncidentTable } from '@/components/contagion/incident-table';
 import { FundingHealth } from '@/components/contagion/funding-health';
-import { CONTRACTS, LIVE } from '@/lib/config';
+import { CONTRACTS } from '@/lib/config';
 import { SIBLING_VAULT_ABI } from '@/lib/contracts';
 import {
   ACTIVE_INCIDENT_SCENARIO,
   CALM_STATE,
   REASON_EXPLOIT,
   RECORDED_WATCHER_ADDRESS
-} from '@/lib/mock-data';
-import type { DashboardMockState, SiblingId } from '@/lib/types';
+} from '@/lib/recorded-run-data';
+import type { DashboardRecordedState } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 /**
  * ContagionStop overview (ux-ui-notes §2).
  *
- * Order: demo control → hero → sibling grid → loop timeline →
- * incident table → funding health → actions.
+ * Order: recorded-run control → hero → main vaults (live) → try it live
+ * (public test deployment) → loop timeline (recorded) → event log →
+ * incident history (recorded) → funding health → actions.
  *
- * Contracts are DEPLOYED on testnet (`LIVE === true`): owner/balance are
- * read live via wagmi and the action buttons send REAL transactions.
- * The incident/timeline/history/funding shown below is a RECORDED RUN —
- * the real measured testnet run #1–#3 (14 Nov 2026, real tx hashes),
- * a static snapshot, not live-polled data.
+ * Two kinds of data, labeled where they appear:
+ * - LIVE: vault paused()/balance/totalDeposited(), watcher balance/debt,
+ *   and the public test instance — read via wagmi, re-fetched after
+ *   every confirmed transaction.
+ * - RECORDED: the incident, timeline, history, and funding snapshot —
+ *   the real measured testnet run #1–#3 (14 Nov 2026, real tx hashes),
+ *   a static snapshot, not live-polled data.
  */
 
-/** Intermediate state after a mock emergencyPause: TRIPPED, 0/2 confirmed. */
-function buildTrippedState(reasonHex: `0x${string}`): DashboardMockState {
+/**
+ * Expected state right after a REAL emergencyPause confirms: TRIPPED,
+ * 0/2 confirmed, steps 2–4 pending. The callbacks are expected, not yet
+ * confirmed on-chain — the hero and timeline say so explicitly.
+ */
+function buildExpectedTrippedState(reasonHex: `0x${string}`): DashboardRecordedState {
   const base = ACTIVE_INCIDENT_SCENARIO;
   return {
     ...base,
@@ -81,20 +89,20 @@ function buildTrippedState(reasonHex: `0x${string}`): DashboardMockState {
 export default function OverviewPage() {
   const { address: connectedAddress } = useAccount();
   const [scenario, setScenario] = useState<'calm' | 'incident'>('incident');
-  const [state, setState] = useState<DashboardMockState>(ACTIVE_INCIDENT_SCENARIO);
+  const [state, setState] = useState<DashboardRecordedState>(ACTIVE_INCIDENT_SCENARIO);
+  /** A real trip that just confirmed: {txHash, reason} — cleared on scenario switch. */
+  const [liveTrip, setLiveTrip] = useState<{ txHash: `0x${string}`; reasonHex: `0x${string}` } | null>(null);
 
-  // Live mode only: owner of vault A (origin) for the prominent action below.
+  // Live: owner of vault A (origin) for the action below.
   const { data: ownerA } = useReadContract({
     address: CONTRACTS.vaultA.address as Address,
     abi: SIBLING_VAULT_ABI,
-    functionName: 'owner',
-    query: { enabled: LIVE }
+    functionName: 'owner'
   });
-  const isOwnerA = LIVE
-    ? ownerA !== undefined &&
-      connectedAddress !== undefined &&
-      ownerA.toLowerCase() === connectedAddress.toLowerCase()
-    : connectedAddress !== undefined;
+  const isOwnerA =
+    ownerA !== undefined &&
+    connectedAddress !== undefined &&
+    ownerA.toLowerCase() === connectedAddress.toLowerCase();
 
   const originA = state.siblings.find((s) => s.id === 'A') ?? state.siblings[0];
 
@@ -108,8 +116,8 @@ export default function OverviewPage() {
       : '> STATUS: ALL ACTIVE — NO INCIDENT IN PROGRESS';
     return [
       '> INITIALIZING CONTAINMENT GRID... OK',
-      `> WATCHER ${watcher} CONNECTED — LASNA 5318007`,
-      '> 3 VAULTS LINKED — UNICHAIN 1301 / BASE 84532',
+      `> WATCHER ${watcher} — LASNA 5318007`,
+      '> 3 VAULTS — UNICHAIN 1301 / BASE 84532',
       '> RECORDED RUN #1 — 14 NOV 2026 — FULL LOOP 3.0 S',
       status
     ];
@@ -117,23 +125,15 @@ export default function OverviewPage() {
 
   function selectScenario(next: 'calm' | 'incident') {
     setScenario(next);
+    setLiveTrip(null);
     setState(next === 'calm' ? CALM_STATE : ACTIVE_INCIDENT_SCENARIO);
   }
 
-  /** Mock emergencyPause: A pauses, incident becomes TRIPPED (0/2). */
-  function handleMockEmergencyPause(reasonHex: `0x${string}`) {
+  /** A real emergencyPause confirmed: show the expected tripped state. */
+  function handleLiveEmergencyPause(reasonHex: `0x${string}`, hash: `0x${string}`) {
     setScenario('incident');
-    setState(buildTrippedState(reasonHex));
-  }
-
-  /** Mock unpause: this vault returns to ACTIVE. */
-  function handleMockUnpause(siblingId: SiblingId) {
-    setState((prev) => ({
-      ...prev,
-      siblings: prev.siblings.map((s) =>
-        s.id === siblingId ? { ...s, status: 'ACTIVE' as const, pausedAt: null } : s
-      )
-    }));
+    setLiveTrip({ txHash: hash, reasonHex });
+    setState(buildExpectedTrippedState(reasonHex));
   }
 
   return (
@@ -141,37 +141,32 @@ export default function OverviewPage() {
       pageTitle='Overview'
       pageDescription='Cross-chain circuit breaker — one emergencyPause freezes every sibling vault.'
       pageHeaderAction={
-        LIVE ? (
-          <Badge variant='outline' className='border-primary/40 text-primary'>
-            <Icons.circleCheck className='mr-1 size-3.5' />
-            RECORDED RUN — TESTNET
-          </Badge>
-        ) : (
-          <Badge variant='outline' className='border-primary/40 text-primary'>
-            <Icons.warning className='mr-1 size-3.5' />
-            DEMO DATA — contracts not deployed yet
-          </Badge>
-        )
+        <Badge variant='outline' className='border-primary/40 text-primary'>
+          <Icons.circleCheck className='mr-1 size-3.5' />
+          RECORDED RUN — TESTNET
+        </Badge>
       }
     >
       <div className='flex flex-1 flex-col gap-4'>
         {/* ---- Boot log (Win98 window, once per tab session) ---- */}
         <Win98BootLog lines={bootLines} />
 
-        {/* ---- Demo control (recorded run) ---- */}
+        {/* ---- Recorded run control ---- */}
         <Card>
           <CardHeader className='pb-3'>
             <div className='flex flex-wrap items-center gap-2'>
-              <CardTitle className='text-sm'>DEMO CONTROL — recorded run</CardTitle>
+              <CardTitle className='text-sm'>RECORDED RUN — control</CardTitle>
               <Badge variant='outline' className='border-primary/40 text-primary'>
                 RECORDED
               </Badge>
             </div>
             <CardDescription>
               Switches between the recorded incident #1 (real testnet run, 14
-              Nov 2026 — real tx hashes, measured 3 s loop) and the calm state
-              (current on-chain state, all ACTIVE). Actions below send REAL
-              transactions when connected as the vault owner.
+              Nov 2026 — real tx hashes, measured 3 s loop) and the recorded
+              calm snapshot (14 Nov 2026, all ACTIVE). This switch only changes
+              which recorded snapshot is shown — it sends no transaction and
+              does not change any live state. The vault cards below are live;
+              to trigger a real loop yourself, use Try it live.
             </CardDescription>
           </CardHeader>
           <CardContent className='flex flex-wrap gap-2'>
@@ -182,7 +177,7 @@ export default function OverviewPage() {
               aria-pressed={scenario === 'calm'}
             >
               <Icons.circleCheck className='size-4' />
-              Calm (all ACTIVE)
+              Calm — recorded snapshot
             </Button>
             <Button
               variant={scenario === 'incident' ? 'default' : 'outline'}
@@ -191,40 +186,56 @@ export default function OverviewPage() {
               aria-pressed={scenario === 'incident'}
             >
               <Icons.warning className='size-4' />
-              Incident (TRIPPED → CONTAINED)
+              Incident #1 — recorded (CONTAINED)
             </Button>
           </CardContent>
         </Card>
 
         {/* ---- Hero: incident banner + confirmation ring + latency ---- */}
-        <HeroStatus incident={state.activeIncident} latency={state.latency} />
+        <HeroStatus
+          incident={state.activeIncident}
+          latency={state.latency}
+          liveTrip={
+            liveTrip
+              ? {
+                  txHash: liveTrip.txHash,
+                  reasonLabel:
+                    liveTrip.reasonHex === REASON_EXPLOIT ? 'EXPLOIT' : 'CUSTOM'
+                }
+              : null
+          }
+        />
 
-        {/* ---- Sibling grid: A (Origin), B, C ---- */}
-        <section id='vaults' aria-label='Vaults' className='scroll-mt-20'>
+        {/* ---- Sibling grid: A (Origin), B, C — live reads ---- */}
+        <section id='vaults' aria-label='Vaults — live on-chain state' className='scroll-mt-20'>
+          <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
+            Main deployment — live on-chain state (owner-only actions)
+          </p>
           <SiblingGrid
             siblings={state.siblings}
-            live={LIVE}
             connectedAddress={connectedAddress}
-            onMockEmergencyPause={handleMockEmergencyPause}
-            onMockUnpause={handleMockUnpause}
+            onEmergencyPauseSuccess={handleLiveEmergencyPause}
           />
         </section>
 
-        {/* ---- Loop timeline: event → react → callbacks ---- */}
+        {/* ---- Try it live: public test deployment ---- */}
+        <PublicTestInstance />
+
+        {/* ---- Loop timeline: event → react → callbacks (recorded) ---- */}
         <LoopTimeline
           steps={state.timeline}
           latency={state.latency}
           freezeProof={state.freezeProof}
         />
 
-        {/* ---- Live log: wallet state (LIVE) + recorded run (RECORDED) ---- */}
+        {/* ---- Event log: wallet state (LIVE) + recorded run (RECORDED) ---- */}
         <LiveLog
           steps={state.timeline}
           incidents={state.incidentHistory}
           freezeProof={state.freezeProof}
         />
 
-        {/* ---- Incident history ---- */}
+        {/* ---- Incident history (recorded) ---- */}
         <section id='history' aria-label='Incident history' className='scroll-mt-20'>
           <IncidentTable incidents={state.incidentHistory} />
         </section>
@@ -232,14 +243,15 @@ export default function OverviewPage() {
         {/* ---- Funding health ---- */}
         <FundingHealth health={state.funding} />
 
-        {/* ---- Actions ---- */}
+        {/* ---- Actions (main deployment, owner only) ---- */}
         <Card>
           <CardHeader>
-            <CardTitle className='text-base'>Actions</CardTitle>
+            <CardTitle className='text-base'>Actions — main deployment</CardTitle>
             <CardDescription>
               One emergencyPause on vault A (Origin) triggers the whole
               containment loop. Unpause and the test deposit live on each
-              sibling card above.
+              sibling card above. These actions are owner-only; any wallet can
+              trigger the same loop on the public test deployment above.
             </CardDescription>
           </CardHeader>
           <CardContent className='flex flex-col gap-3'>
@@ -247,16 +259,10 @@ export default function OverviewPage() {
               <EmergencyPauseDialog
                 sibling={originA}
                 isOwner={isOwnerA}
-                live={LIVE}
-                onMockConfirm={handleMockEmergencyPause}
+                onConfirmed={(hash, reasonHex) =>
+                  handleLiveEmergencyPause(reasonHex, hash)
+                }
               />
-              {!LIVE ? (
-                <span className='text-muted-foreground text-xs'>
-                  Mock mode — this runs a local simulation (TRIPPED, 0/2) and
-                  sends no transaction. Use DEMO CONTROL above to jump
-                  straight to the CONTAINED state.
-                </span>
-              ) : null}
             </div>
             <p className={cn('text-muted-foreground text-xs')}>
               There is deliberately no pause() button: pause(address) is only

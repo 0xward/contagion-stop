@@ -136,8 +136,8 @@ sequenceDiagram
 The hard part is not `pause()` — it is **coordinating N chains that are not
 atomic, not synchronous, and can fail partially**:
 
-- **Fan-out from one `react()`.** No official Reactive demo uses 1 event →
-  N callbacks as its core pattern (official demos are generally 1 event →
+- **Fan-out from one `react()`.** No published Reactive example uses 1 event →
+  N callbacks as its core pattern (published examples are generally 1 event →
   1 callback). `react()` gas is capped at 900,000; each
   `requestCallbackV_1_0` adds cost; the number of supported siblings is
   bounded by that budget — a limit to measure, not assume.
@@ -207,9 +207,14 @@ in seconds. Three reasons:
 - A watcher that only alerts. ContagionStop has no alert-only mode: every
   trip ends in an executed `pause()` callback on each sibling, confirmed
   on-chain (`confirmedPaused`), or it stays visibly unconfirmed.
-- A simulated loop. Nothing in the loop is mocked in production: the event,
-  the `react()` execution, the callbacks, and the confirmations are all real
-  testnet transactions (see "Full loop — transaction hashes" below).
+- A staged loop. Nothing in the loop is staged: the event, the `react()`
+  execution, the callbacks, and the confirmations are all real testnet
+  transactions (see "Full loop — transaction hashes" below). The dashboard
+  shows two kinds of data, labeled in the UI: live reads (vault paused
+  state, balances, watcher balance) and the recorded run #1 (incident,
+  timeline, history) — a static snapshot of measured values, not
+  live-polled data. The recorded-run switch only changes which recorded
+  snapshot is shown; it sends no transaction.
 
 ---
 
@@ -232,6 +237,63 @@ in seconds. Three reasons:
 
 **Do NOT use** the old proxy `0x9299472A6399Fd1027ebF067571Eb3e3D7837FC4`
 (pre-Omni material, May 2026).
+
+---
+
+## Try it live — public test deployment
+
+Anyone can trigger the full loop with an ordinary wallet — no owner role
+needed. Three `PublicVault`s (the same `SiblingVault` code plus
+permissionless `trip(bytes32)` + `reopen()`) and a separate public
+`ContagionWatcher` on Lasna. The main deployment above is owner-only;
+that is the product behavior. The public instance exists so the loop can
+be tested by anybody.
+
+| Contract | Chain | Address |
+|---|---|---|
+| `PublicVault` U1 (origin) | Unichain Sepolia (1301) | `0x2bd64b3ee79eb1f38191e0b185786cb176d8696c` |
+| `PublicVault` U2 | Unichain Sepolia (1301) | `0xf3475038bc53aa50408272F233F5dF73F6CF8F8c` |
+| `PublicVault` B | Base Sepolia (84532) | `0x4b44497bAD6c270462D0529FCe4E41A7e092669b` |
+| `ContagionWatcher` (public) | Lasna (5318007) | `0x73f6e9989057f060801d1ab7d57f6047ff6c5557` |
+
+All four are Sourcify-verified `exact_match`. One full loop costs
+~0.08–0.11 lREACT (measured); the public watcher holds 1.9141524 lREACT
+at handover (15 Nov 2026), about 20 loops, and each vault holds ~0.001 ETH
+for callback fees.
+
+**Steps (also on the site, Overview → Try it live):**
+
+1. Connect a wallet and switch to the vault's chain (Unichain Sepolia for
+   U1/U2, Base Sepolia for B). You need a little testnet ETH for gas.
+2. Press **Trip incident** on a vault (U1 is the origin used in the
+   recorded runs) and confirm. The reason is ASCII-padded bytes32 — the
+   same encoding as the recorded public runs (TEST-001 / TEST-002).
+3. Wait ~2 seconds. The watcher reacts and requests a pause callback to
+   each of the other two vaults; all three vault cards flip to PAUSED.
+   Press **Refresh live state** if the cards have not updated yet.
+4. Verify on the explorers: open your trip hash, then the watcher on
+   Reactscan. Recorded reference — cycle 1 (15 Nov 2026, wallet not owned
+   by the deployer): trip
+   [`0x9cb807fa07c2e29acebc113852f0532bbce3dcf76d7180179d458dbe62827a02`](https://sepolia.uniscan.xyz/tx/0x9cb807fa07c2e29acebc113852f0532bbce3dcf76d7180179d458dbe62827a02)
+   → react
+   [`0x5fbbc913603634354b3ba40f10ac170f96b8cebef2fe01072dbc264816bdc7dc`](https://lasna.reactscan.net/tx/0x5fbbc913603634354b3ba40f10ac170f96b8cebef2fe01072dbc264816bdc7dc)
+   → callback U2
+   [`0x7acc95dbfeb696d8195e2878e8902b05be15cee53ff5524b8a265093ab1b13e3`](https://sepolia.uniscan.xyz/tx/0x7acc95dbfeb696d8195e2878e8902b05be15cee53ff5524b8a265093ab1b13e3)
+   → callback B
+   [`0x7197499c90d1fdd47b07a5c04acef4bf2c1feb042017a2a0da908b88b4f2bdff`](https://sepolia.basescan.org/tx/0x7197499c90d1fdd47b07a5c04acef4bf2c1feb042017a2a0da908b88b4f2bdff)
+   → contained in ~2 s. Cycle 2 (trip
+   [`0xb4f59a603a8032495c22646c518a8bdfc709e1124acd04bb40eb18a13418a541`](https://sepolia.uniscan.xyz/tx/0xb4f59a603a8032495c22646c518a8bdfc709e1124acd04bb40eb18a13418a541))
+   repeated the same loop.
+5. Press **Reopen** on each vault to reset (any wallet can do this here).
+6. Press **Test deposit() — 0.001 ETH** to confirm deposits work again.
+   While a vault is paused the button is disabled: a deposit then would
+   revert (`EnforcedPause`) — that revert is the freeze proof. A deposit
+   to a paused vault is on record as a reverted transaction:
+   [`0x78129ef96b1a9bb4de664ab81bfa25d14ef78acd8805f3c5ffa39ef0d3b3be0a`](https://sepolia.uniscan.xyz/tx/0x78129ef96b1a9bb4de664ab81bfa25d14ef78acd8805f3c5ffa39ef0d3b3be0a)
+   (status 0x0). A test deposit stays in the public vault — withdraw is
+   owner-only, so send only testnet dust you do not need back.
+
+Full evidence: `public-deploy-log.md`.
 
 ---
 
@@ -286,7 +348,7 @@ while unregistered and correctly ignored (no incident, no `react()`).
 | M4 | `react()` → callback (Unichain, sibling C) | `0x98dd6dad…` (react) | `0x60e53404…` (pause C, block 67816033) | **3 seconds** |
 | M5 | Gas `react()` (fan-out 2) | — | `0x98dd6dad…` (react) | **349,263 gas** (< 900,000) |
 | M6 | Gas callback `pause()` | — | `0xe84c258d…` / `0x60e53404…` | **78,314 / 78,304 gas** (< 200,000) |
-| M7 | Full-loop cost | — | — | **~0.07–0.08 lREACT** per loop (trip + containment reacts; first 5 reacts measured 0.197 lREACT from watcher balance) + **~0.00000061 ETH** callback fee per destination (charged to the sibling's balance) |
+| M7 | Full-loop cost | — | — | **~0.08–0.11 lREACT** per loop (measured; public test cycles: 0.1020317 and 0.0838159 lREACT) + **~0.00000061 ETH** callback fee per destination (charged to the sibling's balance) |
 | M8 | Time until CONTAINED | `trippedAt` = 1794668458 | last confirmation = 1794668460 | **2 seconds** |
 | M9 | Confirmation | — | — | **2 / 2 siblings confirmed** |
 
@@ -314,7 +376,7 @@ transaction hashes + contract state.
   cannot re-fire callbacks at a sibling whose `Paused` event was merely late).
 - **Max callbacks per `react()` unverified.** The docs say "a single reactive
   transaction can request several callbacks" but publish no maximum number.
-  Fan-out of 2 is proven by the docs and by this demo; expanding to 5+
+  Fan-out of 2 is proven by the docs and by the recorded run; expanding to 5+
   chains must be tested first.
 - **Fail-closed on reorg.** The Reactive sequencer treats an event observed
   on the origin chain as canonical even if that chain later reorgs — a
@@ -331,7 +393,7 @@ transaction hashes + contract state.
   per incident — a new trip resets the round. Impact is limited: there is no
   automatic retry loop, so nothing is wrongly executed and nothing keeps
   costing money — only the status can sit at "partially confirmed" until the
-  next trip. Post-demo fix: `confirmedPaused` per incident, or subscribe
+  next trip. Future fix: `confirmedPaused` per incident, or subscribe
   `Unpaused`.
 - **The watcher does not track unpause.** It does not subscribe `Unpaused` —
   unpause is a per-deployment human matter and the watcher has no action to
@@ -370,9 +432,9 @@ forge test --gas-report    # measure actual gas of pause() vs the 200,000 limit
 ```
 
 **Requirements:** Foundry ≥ 1.9.0, solc 0.8.29 (via Foundry), no network access
-needed for unit tests — the system contract and callback proxy are mocked
-(`test/mocks/`). No private key, no faucet, no deploy is needed to run the
-tests.
+needed for unit tests — the system contract and callback proxy are
+stand-ins in test doubles (`test/fixtures/`). No private key, no faucet, no
+deploy is needed to run the tests.
 
 **Deploy to testnet:** deploy scripts live in `script/` (Foundry). Funding:
 ±0.18 ETH Base Sepolia + ±0.05 ETH Unichain Sepolia + 10 lREACT; SepETH 0.
@@ -396,7 +458,7 @@ reactive-contagion-stop/
 │   ├── SiblingVault.t.sol
 │   ├── ContagionWatcher.t.sol
 │   ├── ContagionStop.t.sol           # local integration: trip → fan-out → CONTAINED
-│   └── mocks/                        # MockSystemContract, MockCallbackProxy
+│   └── fixtures/                     # LocalSystemContract, LocalCallbackProxy
 ├── script/
 │   ├── DeploySibling.s.sol
 │   ├── DeployLasna.s.sol

@@ -237,8 +237,9 @@ export function Win98Taskbar({ mainOpen, onRestoreMain }: Win98TaskbarProps) {
                 It is now safe to turn off your computer.
               </p>
               <p className='mt-2 text-[12px] text-[#404040]'>
-                The containment grid stays armed — the watcher keeps
-                watching on Lasna.
+                Closing this window changes nothing on-chain. The watcher
+                contract stays as deployed on Lasna and reacts only to
+                on-chain events.
               </p>
               <div className='mt-4 flex justify-center'>
                 <button type='button' onClick={() => setShutdownOpen(false)}>
