@@ -30,6 +30,7 @@ import {
 } from '@/lib/contracts';
 import { AssetLogo } from '@/components/contagion/asset-logo';
 import ChainSwitchError from '@/components/web3/chain-switch-error';
+import WriteErrorNotice from '@/components/web3/write-error-notice';
 import {
   failureOrNull,
   useChainSwitcher,
@@ -638,9 +639,12 @@ export function DeployOwnVault() {
               <p className='text-muted-foreground text-xs'>{createDisabledReason}</p>
             ) : null}
             {createTx.isError ? (
-              <p className='text-xs text-foreground' role='alert'>
-                Error: Transaction failed: {createTx.error?.message ?? 'unknown error'}
-              </p>
+              <WriteErrorNotice
+                error={createTx.error}
+                chainId={chainId}
+                txHash={createTx.data}
+                crossChainWrite={!onRightChain}
+              />
             ) : null}
             {createTx.data ? (
               <p className='text-xs'>
@@ -764,9 +768,12 @@ export function DeployOwnVault() {
                     </div>
                   )}
                   {registerTx.isError ? (
-                    <p className='text-xs text-foreground' role='alert'>
-                      Error: Registration failed: {registerTx.error?.message ?? 'unknown error'}
-                    </p>
+                    <WriteErrorNotice
+                      error={registerTx.error}
+                      chainId={WATCHER_V2.chainId}
+                      txHash={registerTx.data}
+                      crossChainWrite={!onLasna}
+                    />
                   ) : null}
                   {registerTx.data ? (
                     <p className='text-xs'>

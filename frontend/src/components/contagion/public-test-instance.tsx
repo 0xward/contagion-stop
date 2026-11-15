@@ -14,7 +14,6 @@ import {
   useBalance,
   useChainId,
   useReadContract,
-  useSwitchChain,
   useWriteContract
 } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,6 +46,13 @@ import {
 import { useLiveVault } from '@/hooks/use-live-vault';
 import { AssetLogo } from '@/components/contagion/asset-logo';
 import { JudgeQuickstart } from '@/components/contagion/judge-quickstart';
+import ChainSwitchError from '@/components/web3/chain-switch-error';
+import WriteErrorNotice from '@/components/web3/write-error-notice';
+import {
+  failureOrNull,
+  useChainSwitcher,
+  type SwitchChainFailure
+} from '@/lib/switch-chain';
 import { cn } from '@/lib/utils';
 
 /**
@@ -82,12 +88,16 @@ function TxLine({
   chainId,
   hash,
   phase,
-  errorMessage
+  error,
+  crossChainWrite
 }: {
   chainId: number;
   hash?: `0x${string}`;
   phase: TxPhase;
-  errorMessage?: string;
+  /** Raw write error — mapped to one short human line, never dumped raw. */
+  error?: unknown;
+  /** True when the write targets a different chain than the connected one. */
+  crossChainWrite?: boolean;
 }) {
   if (phase === 'idle') return null;
   return (
@@ -113,12 +123,12 @@ function TxLine({
         </span>
       ) : null}
       {phase === 'error' ? (
-        <span className='inline-flex items-start gap-2 text-foreground'>
-          <Icons.alertCircle className='mt-0.5 size-3.5 shrink-0' />
-          <span className='break-words'>
-            Transaction reverted / failed: {errorMessage ?? 'unknown error'}
-          </span>
-        </span>
+        <WriteErrorNotice
+          error={error}
+          chainId={chainId}
+          txHash={hash}
+          crossChainWrite={crossChainWrite}
+        />
       ) : null}
       {hash && phase !== 'error' ? (
         <a
@@ -177,7 +187,8 @@ function PublicVaultCard({
 }: PublicVaultCardProps) {
   const { isConnected } = useAccount();
   const connectedChainId = useChainId();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchToChain, isSwitching } = useChainSwitcher();
+  const [switchError, setSwitchError] = useState<SwitchChainFailure | null>(null);
   const queryClient = useQueryClient();
   const [reason, setReason] = useState('TRY-001');
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -185,6 +196,11 @@ function PublicVaultCard({
   const live = useLiveVault(address, chainId);
   const isPaused = live.isLive ? live.paused === true : undefined;
   const onWrongChain = isConnected && connectedChainId !== chainId;
+
+  async function handleSwitch() {
+    const result = await switchToChain(chainId);
+    setSwitchError(failureOrNull(result));
+  }
 
   const trip = useWriteContract();
   const reopen = useWriteContract();
@@ -337,10 +353,17 @@ function PublicVaultCard({
               variant='outline'
               size='sm'
               disabled={isSwitching}
-              onClick={() => switchChain({ chainId })}
+              onClick={() => void handleSwitch()}
             >
               Switch to {chainName}
             </Button>
+            {switchError ? (
+              <ChainSwitchError
+                failure={switchError}
+                purpose='deposit'
+                onDismiss={() => setSwitchError(null)}
+              />
+            ) : null}
           </div>
         ) : null}
 
@@ -362,11 +385,13 @@ function PublicVaultCard({
           )}
           <Button
             variant='default'
-            disabled={!isConnected || !reasonHex || trip.isPending}
+            disabled={!isConnected || onWrongChain || !reasonHex || trip.isPending}
             title={
               !isConnected
                 ? 'Connect a wallet to trip — any wallet works, no owner needed'
-                : 'Trigger the containment loop from this vault'
+                : onWrongChain
+                  ? `Switch to ${chainName} first — your wallet is on a different chain`
+                  : 'Trigger the containment loop from this vault'
             }
             onClick={handleTrip}
           >
@@ -381,18 +406,21 @@ function PublicVaultCard({
             chainId={chainId}
             hash={trip.data}
             phase={phaseOf(trip)}
-            errorMessage={trip.error?.message}
+            error={trip.error}
+            crossChainWrite={onWrongChain}
           />
 
           <Button
             variant='outline'
-            disabled={!isConnected || reopen.isPending || isPaused === false}
+            disabled={!isConnected || onWrongChain || reopen.isPending || isPaused === false}
             title={
               !isConnected
                 ? 'Connect a wallet to reopen — any wallet works, no owner needed'
-                : isPaused === false
-                  ? 'Already active — reopen would revert (ExpectedPause)'
-                  : 'Reopen this vault'
+                : onWrongChain
+                  ? `Switch to ${chainName} first — your wallet is on a different chain`
+                  : isPaused === false
+                    ? 'Already active — reopen would revert (ExpectedPause)'
+                    : 'Reopen this vault'
             }
             onClick={() =>
               reopen.writeContract({
@@ -415,20 +443,23 @@ function PublicVaultCard({
             chainId={chainId}
             hash={reopen.data}
             phase={phaseOf(reopen)}
-            errorMessage={reopen.error?.message}
+            error={reopen.error}
+            crossChainWrite={onWrongChain}
           />
 
           <Button
             variant='outline'
-            disabled={!isConnected || deposit.isPending || isPaused === true}
+            disabled={!isConnected || onWrongChain || deposit.isPending || isPaused === true}
             title={
               !isConnected
                 ? 'Connect a wallet to deposit'
-                : isPaused === true
-                  ? 'Deposit reverts while paused — that is the freeze proof; reopen first'
-                  : kind === 'v2eth'
-                    ? 'Deposit 0.001 ETH into this public vault — mints shares to your wallet'
-                    : 'Deposit 0.001 ETH into this public vault'
+                : onWrongChain
+                  ? `Switch to ${chainName} first — your wallet is on a different chain`
+                  : isPaused === true
+                    ? 'Deposit reverts while paused — that is the freeze proof; reopen first'
+                    : kind === 'v2eth'
+                      ? 'Deposit 0.001 ETH into this public vault — mints shares to your wallet'
+                      : 'Deposit 0.001 ETH into this public vault'
             }
             onClick={() =>
               deposit.writeContract({
@@ -452,7 +483,8 @@ function PublicVaultCard({
             chainId={chainId}
             hash={deposit.data}
             phase={phaseOf(deposit)}
-            errorMessage={deposit.error?.message}
+            error={deposit.error}
+            crossChainWrite={onWrongChain}
           />
           {isPaused === true ? (
             <p className='text-muted-foreground text-xs'>
@@ -528,7 +560,8 @@ function PublicUsdcVaultCard({
 }) {
   const { address: wallet, isConnected } = useAccount();
   const connectedChainId = useChainId();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchToChain, isSwitching } = useChainSwitcher();
+  const [switchError, setSwitchError] = useState<SwitchChainFailure | null>(null);
   const queryClient = useQueryClient();
   const [reason, setReason] = useState('TRY-USDC-001');
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -598,6 +631,11 @@ function PublicUsdcVaultCard({
     allowanceQ.data === undefined || allowanceQ.data < amountRaw;
   const insufficient =
     walletUsdcQ.data !== undefined && walletUsdcQ.data < amountRaw;
+
+  async function handleSwitch() {
+    const result = await switchToChain(chainId);
+    setSwitchError(failureOrNull(result));
+  }
 
   const trip = useWriteContract();
   const reopen = useWriteContract();
@@ -733,10 +771,17 @@ function PublicUsdcVaultCard({
               variant='outline'
               size='sm'
               disabled={isSwitching}
-              onClick={() => switchChain({ chainId })}
+              onClick={() => void handleSwitch()}
             >
               Switch to {chainName}
             </Button>
+            {switchError ? (
+              <ChainSwitchError
+                failure={switchError}
+                purpose='deposit'
+                onDismiss={() => setSwitchError(null)}
+              />
+            ) : null}
           </div>
         ) : null}
         <div className='flex flex-col gap-2 border-t pt-3'>
@@ -757,7 +802,7 @@ function PublicUsdcVaultCard({
           )}
           <Button
             variant='default'
-            disabled={!isConnected || !reasonHex || trip.isPending}
+            disabled={!isConnected || onWrongChain || !reasonHex || trip.isPending}
             onClick={() => {
               if (!reasonHex) return;
               trip.writeContract({
@@ -780,11 +825,12 @@ function PublicUsdcVaultCard({
             chainId={chainId}
             hash={trip.data}
             phase={phaseOf(trip)}
-            errorMessage={trip.error?.message}
+            error={trip.error}
+            crossChainWrite={onWrongChain}
           />
           <Button
             variant='outline'
-            disabled={!isConnected || reopen.isPending || isPaused === false}
+            disabled={!isConnected || onWrongChain || reopen.isPending || isPaused === false}
             onClick={() =>
               reopen.writeContract({
                 address,
@@ -806,7 +852,8 @@ function PublicUsdcVaultCard({
             chainId={chainId}
             hash={reopen.data}
             phase={phaseOf(reopen)}
-            errorMessage={reopen.error?.message}
+            error={reopen.error}
+            crossChainWrite={onWrongChain}
           />
           <p className='text-muted-foreground text-xs'>
             Deposit 1 USDC — approve first, then deposit. Both steps send a
@@ -814,11 +861,13 @@ function PublicUsdcVaultCard({
           </p>
           <Button
             variant='outline'
-            disabled={!isConnected || !needsApprove || approve.isPending || isPaused === true}
+            disabled={!isConnected || onWrongChain || !needsApprove || approve.isPending || isPaused === true}
             title={
-              !needsApprove
-                ? 'Already approved for 1 USDC — press Deposit below'
-                : 'Approve this vault to pull 1 USDC from your wallet'
+              onWrongChain
+                ? `Switch to ${chainName} first — your wallet is on a different chain`
+                : !needsApprove
+                  ? 'Already approved for 1 USDC — press Deposit below'
+                  : 'Approve this vault to pull 1 USDC from your wallet'
             }
             onClick={() =>
               approve.writeContract({
@@ -841,12 +890,14 @@ function PublicUsdcVaultCard({
             chainId={chainId}
             hash={approve.data}
             phase={phaseOf(approve)}
-            errorMessage={approve.error?.message}
+            error={approve.error}
+            crossChainWrite={onWrongChain}
           />
           <Button
             variant='outline'
             disabled={
               !isConnected ||
+              onWrongChain ||
               !wallet ||
               needsApprove ||
               insufficient ||
@@ -854,11 +905,13 @@ function PublicUsdcVaultCard({
               isPaused === true
             }
             title={
-              insufficient
-                ? 'Not enough USDC in your wallet (need 1 USDC)'
-                : needsApprove
-                  ? 'Approve 1 USDC first'
-                  : 'Deposit 1 USDC — mints shares to your wallet'
+              onWrongChain
+                ? `Switch to ${chainName} first — your wallet is on a different chain`
+                : insufficient
+                  ? 'Not enough USDC in your wallet (need 1 USDC)'
+                  : needsApprove
+                    ? 'Approve 1 USDC first'
+                    : 'Deposit 1 USDC — mints shares to your wallet'
             }
             onClick={() => {
               if (!wallet) return;
@@ -882,7 +935,8 @@ function PublicUsdcVaultCard({
             chainId={chainId}
             hash={deposit.data}
             phase={phaseOf(deposit)}
-            errorMessage={deposit.error?.message}
+            error={deposit.error}
+            crossChainWrite={onWrongChain}
           />
           {isPaused === true ? (
             <p className='text-muted-foreground text-xs'>

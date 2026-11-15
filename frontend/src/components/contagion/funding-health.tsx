@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { formatEther } from 'viem';
-import { useBalance, useReadContract, useWriteContract } from 'wagmi';
+import { useAccount, useBalance, useChainId, useReadContract, useWriteContract } from 'wagmi';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Address } from 'viem';
 
@@ -20,6 +20,7 @@ import {
   SYSTEM_CONTRACT_ADDRESS
 } from '@/lib/contracts';
 import { LOOP_COST_LREACT, WATCHER_V2 } from '@/lib/config';
+import WriteErrorNotice from '@/components/web3/write-error-notice';
 import type { FundingHealth, SiblingId } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +54,11 @@ interface CoverDebtButtonProps {
 
 function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps) {
   const { writeContract, data: txHash, isPending, isSuccess, error } = useWriteContract();
+  const { isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  // A write to a different chain than the connected one is the case
+  // where a wallet session may not cover the target chain at all.
+  const crossChainWrite = isConnected && connectedChainId !== chainId;
 
   const handleClick = () => {
     writeContract({
@@ -81,7 +87,12 @@ function CoverDebtButton({ label, address, abi, chainId }: CoverDebtButtonProps)
         </a>
       ) : null}
       {error ? (
-        <span className='text-xs text-foreground'>coverDebt() failed: {error.message}</span>
+        <WriteErrorNotice
+          error={error}
+          chainId={chainId}
+          txHash={txHash}
+          crossChainWrite={crossChainWrite}
+        />
       ) : null}
     </div>
   );

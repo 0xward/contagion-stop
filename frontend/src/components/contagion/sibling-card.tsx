@@ -250,6 +250,7 @@ export function SiblingCard({
             {switchError ? (
               <ChainSwitchError
                 failure={switchError}
+                purpose='deposit'
                 onDismiss={() => setSwitchError(null)}
               />
             ) : null}
@@ -290,7 +291,7 @@ export function SiblingCard({
             />
           ) : null}
           <UnpauseDialog sibling={sibling} isOwner={isOwner} />
-          <DepositTestButton sibling={sibling} />
+          <DepositTestButton sibling={sibling} disabled={onWrongChain} />
         </div>
       </CardContent>
     </Card>

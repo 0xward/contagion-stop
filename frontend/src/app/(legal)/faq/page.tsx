@@ -70,6 +70,12 @@ const FAQ_ITEMS: { question: string; answer: string }[] = [
     question: 'What are the known limitations and risks?',
     answer:
       'The contracts are not audited and the deployment is a testnet demonstration. A chain reorganization can leave a sibling paused from an event that later disappears on the origin chain; this fails closed by design. On the v1 main set and the main v2 vaults, tripping a second origin before the first incident reaches CONTAINED can leave the incident stuck until manual intervention (unpause, then trip again) - do not trip a second origin until the first incident is CONTAINED. The fix is already in the repository code and live in the new public instance. The watcher does not subscribe to unpause events - unpausing is a per-deployment human decision. A full loop needs the watcher to hold lREACT; the live watcher balances are shown on the Overview page.'
+  },
+  {
+    question:
+      'My wallet asks me to disconnect before switching networks or depositing. What do I do?',
+    answer:
+      'Some WalletConnect wallets (notably OKX Wallet) tie the session to the network that was active when you connected, and may refuse to switch networks - or to send a transaction on another network - until you disconnect the dApp. Disconnect this site in your wallet, then connect again from this site and approve all chains offered. If the target network is not in your wallet at all, add it manually as a custom network first: Base Sepolia - chain ID 84532, RPC https://sepolia.base.org, currency ETH, explorer https://sepolia.basescan.org; Unichain Sepolia - chain ID 1301, RPC https://sepolia.unichain.org, currency ETH, explorer https://sepolia.uniscan.xyz; Lasna - chain ID 5318007, RPC https://lasna-rpc.rnk.dev/, currency lREACT, explorer https://lasna.reactscan.net. Then reconnect from this site.'
   }
 ];
 
@@ -259,6 +265,46 @@ export default function FaqPage() {
                   the Overview page, so a loop that cannot be paid for is visible before you try it.
                 </li>
               </ul>
+            </LegalSection>
+
+            <LegalSection
+              number='12'
+              title='My wallet asks me to disconnect before switching networks or depositing. What do I do?'
+            >
+              <p>
+                Some WalletConnect wallets (notably OKX Wallet) tie the session to the network that was
+                active when you connected, and may refuse to switch networks — or to send a transaction
+                on another network — until you disconnect the dApp. Disconnect this site in your wallet,
+                then connect again from this site and approve all chains offered.
+              </p>
+              <p>
+                If the target network is not in your wallet at all, add it manually as a custom network
+                first:
+              </p>
+              <ul className='flex list-disc flex-col gap-2 pl-5'>
+                <li>
+                  <strong>Base Sepolia</strong> — chain ID{' '}
+                  <code className='font-mono text-xs'>84532</code>, RPC{' '}
+                  <code className='font-mono text-xs'>https://sepolia.base.org</code>, currency ETH,
+                  explorer{' '}
+                  <code className='font-mono text-xs'>https://sepolia.basescan.org</code>
+                </li>
+                <li>
+                  <strong>Unichain Sepolia</strong> — chain ID{' '}
+                  <code className='font-mono text-xs'>1301</code>, RPC{' '}
+                  <code className='font-mono text-xs'>https://sepolia.unichain.org</code>, currency ETH,
+                  explorer{' '}
+                  <code className='font-mono text-xs'>https://sepolia.uniscan.xyz</code>
+                </li>
+                <li>
+                  <strong>Lasna</strong> — chain ID{' '}
+                  <code className='font-mono text-xs'>5318007</code>, RPC{' '}
+                  <code className='font-mono text-xs'>https://lasna-rpc.rnk.dev/</code>, currency
+                  lREACT, explorer{' '}
+                  <code className='font-mono text-xs'>https://lasna.reactscan.net</code>
+                </li>
+              </ul>
+              <p>Then reconnect from this site.</p>
             </LegalSection>
           </CardContent>
         </Card>

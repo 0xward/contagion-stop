@@ -1,9 +1,6 @@
 'use client';
 
-import { useAppKit } from '@reown/appkit/react';
-import { useDisconnect } from 'wagmi';
-import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icons';
+import ReconnectGuidance from '@/components/web3/reconnect-guidance';
 import { getChainName } from '@/lib/wagmi';
 import type { SwitchChainFailure } from '@/lib/switch-chain';
 
@@ -18,59 +15,36 @@ import type { SwitchChainFailure } from '@/lib/switch-chain';
  * one chain — the failed switch that prompted this was between two
  * standard chains (Unichain Sepolia → Base Sepolia).
  *
- * "Disconnect & reconnect" ends the current wallet session and reopens
- * the AppKit modal, so the user can connect again and approve every
- * chain offered in the fresh session.
+ * `purpose="deposit"` is passed by the vault cards, where the switch was
+ * attempted so the user can deposit on the target chain.
  */
 export default function ChainSwitchError({
   failure,
+  purpose,
   onDismiss
 }: {
   failure: SwitchChainFailure;
+  purpose?: 'deposit';
   onDismiss: () => void;
 }) {
-  const { disconnectAsync } = useDisconnect();
-  const { open } = useAppKit();
   const chainName = getChainName(failure.chainId);
   const notApproved = failure.kind === 'chain-not-approved';
-
-  async function handleReconnect() {
-    try {
-      await disconnectAsync();
-    } catch {
-      // A failing disconnect must not block the reconnect — the modal
-      // still lets the user connect again from the site.
-    }
-    onDismiss();
-    open();
-  }
+  const fixLine =
+    purpose === 'deposit'
+      ? 'To deposit on this chain: disconnect this site in your wallet, then connect again from this site and approve all chains offered.'
+      : 'To fix it: disconnect this site in your wallet, then connect again from this site and approve all chains offered.';
 
   return (
-    <div
-      className='flex flex-col gap-2 rounded-none border border-foreground/40 bg-muted p-2 text-xs'
-      role='alert'
+    <ReconnectGuidance
+      title={`Could not switch to ${chainName}.`}
+      onDismiss={onDismiss}
     >
-      <p className='flex items-start gap-1.5 font-medium'>
-        <Icons.warning className='mt-0.5 size-3.5 shrink-0' aria-hidden='true' />
-        <span>Could not switch to {chainName}.</span>
-      </p>
       <p>
         {notApproved
           ? 'Your wallet has not approved this chain in the current session, so it cannot switch to it now.'
           : 'The chain switch failed.'}
       </p>
-      <p>
-        To fix it: disconnect this site in your wallet, then connect again
-        from this site and approve all chains offered.
-      </p>
-      <div className='flex flex-wrap gap-2'>
-        <Button variant='default' size='sm' onClick={() => void handleReconnect()}>
-          Disconnect &amp; reconnect
-        </Button>
-        <Button variant='outline' size='sm' onClick={onDismiss}>
-          Dismiss
-        </Button>
-      </div>
-    </div>
+      <p>{fixLine}</p>
+    </ReconnectGuidance>
   );
 }

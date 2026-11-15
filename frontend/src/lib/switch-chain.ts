@@ -37,35 +37,60 @@ export type SwitchChainFailure =
   | Extract<SwitchChainResult, { kind: 'failed' }>;
 
 function errorCode(error: unknown): number | undefined {
-  let current: unknown = error;
-  for (let depth = 0; depth < 5 && current !== null && typeof current === 'object'; depth++) {
-    const code = (current as { code?: unknown }).code;
-    if (typeof code === 'number') return code;
-    current = (current as { cause?: unknown }).cause;
-  }
-  return undefined;
+  return summarizeError(error).code;
 }
 
 function errorMessage(error: unknown): string {
-  const parts: string[] = [];
-  let current: unknown = error;
-  for (let depth = 0; depth < 5 && current !== null && typeof current === 'object'; depth++) {
-    const message = (current as { message?: unknown }).message;
-    if (typeof message === 'string' && message.length > 0) parts.push(message);
-    const shortMessage = (current as { shortMessage?: unknown }).shortMessage;
-    if (typeof shortMessage === 'string' && shortMessage.length > 0) parts.push(shortMessage);
-    current = (current as { cause?: unknown }).cause;
-  }
-  if (typeof error === 'string') parts.push(error);
-  return parts.join(' ');
+  return summarizeError(error).text;
 }
 
 function errorName(error: unknown): string {
-  if (error !== null && typeof error === 'object') {
-    const name = (error as { name?: unknown }).name;
-    if (typeof name === 'string') return name;
+  return summarizeError(error).name;
+}
+
+/**
+ * One summary of any thrown error: the numeric code (4001, 4902, …),
+ * the error class name, and all message/shortMessage text found while
+ * walking the `cause` chain. Shared by the chain-switch classifier and
+ * the write-error mapper (lib/format-write-error.ts) so both read the
+ * same evidence — viem wraps the wallet's own message (e.g. an OKX
+ * "disconnect the dApp first" sentence) deep inside `cause`.
+ */
+export interface ErrorSummary {
+  code?: number;
+  name: string;
+  text: string;
+}
+
+export function summarizeError(error: unknown): ErrorSummary {
+  let code: number | undefined;
+  let name = '';
+  const parts: string[] = [];
+  let current: unknown = error;
+  for (
+    let depth = 0;
+    depth < 5 && current !== null && typeof current === 'object';
+    depth++
+  ) {
+    const record = current as {
+      code?: unknown;
+      name?: unknown;
+      message?: unknown;
+      shortMessage?: unknown;
+      cause?: unknown;
+    };
+    if (code === undefined && typeof record.code === 'number') code = record.code;
+    if (!name && typeof record.name === 'string') name = record.name;
+    if (typeof record.message === 'string' && record.message.length > 0) {
+      parts.push(record.message);
+    }
+    if (typeof record.shortMessage === 'string' && record.shortMessage.length > 0) {
+      parts.push(record.shortMessage);
+    }
+    current = record.cause;
   }
-  return '';
+  if (typeof error === 'string') parts.push(error);
+  return { code, name, text: parts.join(' ') };
 }
 
 const USER_REJECTED_PATTERN = /user rejected|rejected the request|user denied|user cancelled/i;

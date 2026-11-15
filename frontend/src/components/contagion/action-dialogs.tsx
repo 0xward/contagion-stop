@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { parseEther, stringToHex, type Address } from 'viem';
-import { useWriteContract } from 'wagmi';
+import { useWriteContract, useAccount, useChainId } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
+import WriteErrorNotice from '@/components/web3/write-error-notice';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -43,12 +44,16 @@ function TxStatus({
   chainId,
   hash,
   phase,
-  errorMessage
+  error,
+  crossChainWrite
 }: {
   chainId: number;
   hash?: `0x${string}`;
   phase: TxPhase;
-  errorMessage?: string;
+  /** Raw write error — mapped to one short human line, never dumped raw. */
+  error?: unknown;
+  /** True when the write targets a different chain than the connected one. */
+  crossChainWrite?: boolean;
 }) {
   if (phase === 'idle') return null;
   return (
@@ -74,12 +79,12 @@ function TxStatus({
         </span>
       ) : null}
       {phase === 'error' ? (
-        <span className='inline-flex items-start gap-2 text-foreground'>
-          <Icons.alertCircle className='mt-0.5 size-3.5 shrink-0' />
-          <span className='break-words'>
-            Error: Transaction reverted / failed: {errorMessage ?? 'unknown error'}
-          </span>
-        </span>
+        <WriteErrorNotice
+          error={error}
+          chainId={chainId}
+          txHash={hash}
+          crossChainWrite={crossChainWrite}
+        />
       ) : null}
       {hash && phase !== 'error' ? (
         <a
@@ -144,6 +149,11 @@ export function EmergencyPauseDialog({
   const [reason, setReason] = useState('EXPLOIT');
   const { data: hash, writeContract, isPending, isSuccess, isError, error } =
     useWriteContract();
+  const { isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  // A write to a different chain than the connected one is the case
+  // where a wallet session may not cover the target chain at all.
+  const crossChainWrite = isConnected && connectedChainId !== sibling.chainId;
 
   const isAscii = /^[\x20-\x7E]*$/.test(reason);
   let reasonHex: `0x${string}` | null = null;
@@ -241,7 +251,8 @@ export function EmergencyPauseDialog({
               chainId={sibling.chainId}
               hash={hash}
               phase={phase}
-              errorMessage={error?.message}
+              error={error}
+              crossChainWrite={crossChainWrite}
             />
           </div>
           <DialogFooter>
@@ -275,6 +286,11 @@ export function UnpauseDialog({
   const [open, setOpen] = useState(false);
   const { data: hash, writeContract, isPending, isSuccess, isError, error } =
     useWriteContract();
+  const { isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  // A write to a different chain than the connected one is the case
+  // where a wallet session may not cover the target chain at all.
+  const crossChainWrite = isConnected && connectedChainId !== sibling.chainId;
 
   const phase: TxPhase = isPending
     ? 'pending'
@@ -328,7 +344,8 @@ export function UnpauseDialog({
               chainId={sibling.chainId}
               hash={hash}
               phase={phase}
-              errorMessage={error?.message}
+              error={error}
+              crossChainWrite={crossChainWrite}
             />
           </div>
           <DialogFooter>
@@ -357,13 +374,21 @@ export function UnpauseDialog({
 
 export function DepositTestButton({
   sibling,
-  onTxSuccess
+  onTxSuccess,
+  disabled
 }: {
   sibling: Sibling;
   onTxSuccess?: (hash: `0x${string}`) => void;
+  /** Set by the parent when the wallet is on the wrong chain. */
+  disabled?: boolean;
 }) {
   const { data: hash, writeContract, isPending, isSuccess, isError, error } =
     useWriteContract();
+  const { isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  // A write to a different chain than the connected one is the case
+  // where a wallet session may not cover the target chain at all.
+  const crossChainWrite = isConnected && connectedChainId !== sibling.chainId;
 
   const phase: TxPhase = isPending
     ? 'pending'
@@ -387,7 +412,12 @@ export function DepositTestButton({
 
   return (
     <div className='flex flex-col gap-1.5'>
-      <Button variant='outline' onClick={handleClick} disabled={isPending}>
+      <Button
+        variant='outline'
+        onClick={handleClick}
+        disabled={isPending || disabled}
+        title={disabled ? 'Switch to this vault’s chain first' : undefined}
+      >
         {isPending ? (
           <Icons.spinner className='size-4 animate-spin' />
         ) : (
@@ -405,7 +435,8 @@ export function DepositTestButton({
         chainId={sibling.chainId}
         hash={hash}
         phase={phase}
-        errorMessage={error?.message}
+        error={error}
+        crossChainWrite={crossChainWrite}
       />
     </div>
   );

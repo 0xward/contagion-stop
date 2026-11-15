@@ -15,6 +15,7 @@ import { SIBLING_VAULT_ABI } from '@/lib/contracts';
 import { useLiveVaultEth } from '@/hooks/use-live-vault-eth';
 import { AssetLogo } from '@/components/contagion/asset-logo';
 import ChainSwitchError from '@/components/web3/chain-switch-error';
+import WriteErrorNotice from '@/components/web3/write-error-notice';
 import {
   failureOrNull,
   useChainSwitcher,
@@ -327,6 +328,7 @@ export function EthVaultCard({
               {switchError ? (
                 <ChainSwitchError
                   failure={switchError}
+                  purpose='deposit'
                   onDismiss={() => setSwitchError(null)}
                 />
               ) : null}
@@ -364,9 +366,12 @@ export function EthVaultCard({
             </Button>
           </div>
           {deposit.isError ? (
-            <p className='text-xs text-foreground' role='alert'>
-              Error: deposit failed — {deposit.error?.message ?? 'unknown error'}
-            </p>
+            <WriteErrorNotice
+              error={deposit.error}
+              chainId={chainId}
+              txHash={deposit.data}
+              crossChainWrite={onWrongChain}
+            />
           ) : null}
           {deposit.isSuccess && deposit.data ? (
             <p className='text-xs'>
