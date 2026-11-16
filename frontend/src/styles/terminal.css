@@ -160,3 +160,123 @@ html[data-motion='off'] .containment-shimmer::after {
 html[data-motion='off'] .containment-fill {
   transition: none;
 }
+
+/* ---- Containment Grid breaker panel (cg-*) ---- */
+/* Layered-conduit cable flow: only transform/opacity/dashoffset animated. */
+@keyframes cg-dash-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+@keyframes cg-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+@keyframes cg-led-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+@keyframes cg-ring-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.cg-dash {
+  animation: cg-dash-flow 1.2s linear infinite;
+}
+.cg-breathe {
+  animation: cg-breathe 2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.cg-led {
+  animation: cg-led-blink 2s ease-in-out infinite;
+}
+.cg-ring {
+  animation: cg-ring-pulse 2s ease-in-out infinite;
+}
+/* User pause: freeze every cg-* animation (SMIL pulses freeze via
+   svg.pauseAnimations() in the component). */
+.cg-paused .cg-dash,
+.cg-paused .cg-breathe,
+.cg-paused .cg-led,
+.cg-paused .cg-ring {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cg-dash,
+  .cg-breathe,
+  .cg-led,
+  .cg-ring {
+    animation: none !important;
+  }
+}
+html[data-motion='off'] .cg-dash,
+html[data-motion='off'] .cg-breathe,
+html[data-motion='off'] .cg-led,
+html[data-motion='off'] .cg-ring {
+  animation: none !important;
+}
+/* Sunken black screen with a faint dot grid (SCIFICN discipline). */
+.cg-screen {
+  background-color: #000;
+  background-image: radial-gradient(rgba(0, 237, 63, 0.08) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+/* Bevel switch tile inside a breaker module (div, not a button — state only). */
+.cg-switch {
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset 1px 1px #fff,
+    inset -2px -2px grey,
+    inset 2px 2px #dfdfdf;
+  background: #dfdfdf;
+}
+.cg-switch-paused {
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+  background: #c0c0c0;
+}
+/* Big red TRIP button (overrides 98.css silver button inside .win98-scope). */
+.win98-scope button.cg-trip {
+  background: #c00000;
+  color: #fff;
+  font-family: var(--font-sans, Arial, sans-serif);
+  font-weight: 700;
+  min-width: 120px;
+  min-height: 48px;
+  text-shadow: none;
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset 1px 1px #fff,
+    inset -2px -2px #800000,
+    inset 2px 2px #ff8080;
+}
+.win98-scope button.cg-trip:not(:disabled):active {
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px #800000;
+  text-shadow: 1px 1px #400000;
+}
+.win98-scope button.cg-trip:disabled {
+  opacity: 0.55;
+}

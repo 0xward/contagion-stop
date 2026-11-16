@@ -11,6 +11,7 @@ import { Icons } from '@/components/icons';
 import { Win98BootLog } from '@/components/win98/boot-log';
 import { LiveLog } from '@/components/terminal/live-log';
 import { HeroStatus } from '@/components/contagion/hero-status';
+import { BreakerPanel } from '@/components/contagion/breaker-panel';
 import { SiblingGrid } from '@/components/contagion/sibling-grid';
 import { EthVaultGrid } from '@/components/contagion/eth-vault-grid';
 import { UsdcVaultGrid } from '@/components/contagion/usdc-vault-grid';
@@ -208,6 +209,9 @@ export default function OverviewPage() {
               : null
           }
         />
+
+        {/* ---- Containment Grid: breaker panel (v3 set) ---- */}
+        <BreakerPanel />
 
         {/* ---- Sibling grid: A (Origin), B, C — live reads ---- */}
         <section id='vaults' aria-label='Vaults — live on-chain state' className='scroll-mt-20'>

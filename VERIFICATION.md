@@ -3,7 +3,9 @@
 > All evidence below is on-chain and independently checkable on the public
 > explorers. No number here is a local simulation — every hash, block, and
 > timestamp was read from Base Sepolia, Unichain Sepolia, or Lasna.
-> Verified 14–15 Nov 2026. Full working log: `deploy-log.md`.
+> Verified 14–15 Nov 2026; public v3 evidence added 15 Nov 2026.
+> Full working log for the v1 set: `deploy-log.md` (v1 only — the v2/v3
+> evidence below is the working record for those sets).
 
 ## Contracts (Sourcify `exact_match`, creation + runtime)
 
@@ -158,9 +160,13 @@ each sibling via its proxy).
   manual (unpause + emergencyPause ulang). Prosedur operator: jangan trip
   origin kedua sebelum incident pertama berstatus CONTAINED. Perbaikan
   sudah ada di kode repo (SiblingVault.pause() meng-emit ulang Paused) dan
-  live di instance publik baru. Catatan F6: registerSibling tidak memeriksa
+  live di instance publik v2 dan v3 — set publik saat ini (v3) tidak
+  rentan. Catatan F6: registerSibling tidak memeriksa
   code di chain tujuan (tidak mungkin dari Lasna) — verifikasi dilakukan
   off-chain (checklist app + cast code di chain tujuan sebelum register).
+- A trip while the watcher itself is paused is lost: there is no queue
+  or replay. After the watcher resumes, the origin must be tripped
+  again (a new incident) for the fan-out to run.
 
 ## Vaults v2 — ERC-20 shares (ETH + USDC), 15 Nov 2026
 
@@ -212,6 +218,19 @@ Deployer (testnet-only): `0x0FD65c51D9bD790Bf67FDA9BE45A7eB21ed3d99B`.
 Watcher v2 owner is the deployer. Implementation owners are `0x0`
 (renounced). The clones are canonical EIP-1167 minimal proxies of the
 verified implementations.
+
+> **Deploy-your-own uses the post-fix factories (N4, 15 Nov 2026).**
+> The factories in the table above still point at the pre-fix
+> implementations (`0xE732a6e1…`, `0x8809f72C…`, `0xB50ABF89…`,
+> `0xB394E38c…`) — vaults created from them inherit the two-origin
+> deadlock (see Known honest limitations). The Deploy page now points
+> at the factories deployed 15 Nov 2026 from the current repo source,
+> which contains the fix: ETH factory Unichain
+> `0xB13bd9d4649d947d599d5c8250eFe1CF67FaA6da`, Base
+> `0x9D9C5f379BC9E35593C49b2949db4dD2f83dC8fb`; ERC-20 factory
+> Unichain `0xD633d0da6D4c91637d0F3Ff9AD4D0F6378acEA70`, Base
+> `0x1Aa24e0F8d970C6c7b308724617E29b25FBB2Ac2` (all Sourcify
+> `exact_match`).
 
 ### Deploy transactions (USDC)
 
@@ -327,7 +346,7 @@ all `paused() = false`. Final state (Unichain block 67878015, Base
 unpaused, debt 0; both ETH v2 vaults `totalAssets` 0.003 ETH, unpaused,
 debt 0.
 
-## Public test deployment v2 + fresh-wallet E2E (15 Nov 2026)
+## Public test deployment v2 + fresh-wallet E2E (15 Nov 2026, historical — superseded by v3)
 
 ### Public v2 set (Sourcify `exact_match`)
 
@@ -350,7 +369,16 @@ README.md / Docs as recorded history.
 > **Address note.** The public v2 watcher (Lasna, 5318007) shares its
 > address `0x4b44497bAD6c270462D0529FCe4E41A7e092669b` with the retired v1
 > vault B on Base Sepolia (84532). Addresses are per-chain — no
-> collision — but the address must always be shown with its chain.
+> collision — but the address must always be shown with its chain. The
+> v3 set has five more such reuses (same deployer nonce sequence across
+> chains): the v3 watcher (Lasna) shares its address with the v2 ETH
+> factory on Base Sepolia; the v3 Base ETH implementation shares its
+> address with the v1 vault U1 on Unichain Sepolia; the v3 Base ETH
+> factory shares its address with the v1 vault U2 on Unichain Sepolia;
+> the N4 Base ERC-20 implementation shares its address with the v2
+> public ETH implementation on Unichain Sepolia; the N4 Base ERC-20
+> factory shares its address with the v2 public ETH factory on Unichain
+> Sepolia.
 
 ### E2E v2 publik — trip Uni #0 (PUB2-E2E1)
 
@@ -420,7 +448,9 @@ Sepolia. `predictVault(fresh, fresh, 1)` returned
 (Lasna 8406617) → containment
 `0x1ec9243d0dc00a16822d1adba4dd62e94ccddd869e3a332bf7bc482d9ecda7af`
 (Lasna 8406620); all five vaults paused, `incident(fresh).active =
-false`, loop cost 0.1526463 lREACT (watcher v2 2,0 → 1,8473537). All five
+false`, loop cost 0.1526463 lREACT (watcher v2 2,0 → 1,8473537). The
+watcher had been topped up to 2.0 lREACT before this run; the top-up tx
+hash is not recorded in any log. All five
 vaults were unpaused afterwards (fresh
 `0x87a85da2b0f0ec74d5a38bf96b63ec923727ed671555db2a5c023c7f271aced9`,
 Uni ETH main
@@ -436,6 +466,81 @@ The same wallet deposited 1 USDC into the public USDC vault (approve
 deposit
 `0x3c38e78c26327990451b1545e1b370a4c4bd56f1755ece9a921e21153b3c3cda`,
 block 67891700; totalAssets 20 → 21 USDC, shares 1e18).
+
+## Public test deployment v3 — current (15 Nov 2026)
+
+The current public set: three `PublicVaultV3` (ETH shares, CSV) + two
+`PublicVaultERC20V3` (USDC shares, CSUSDC, 20 USDC funded each) under
+watcher v3 on Lasna. Funds were migrated from the v2 set
+(`sweepExcess` + `redeem`, ~0.0059981676 ETH + 40 USDC), no faucet
+involved. After the migration the old v2 vaults hold only their 0.001
+ETH seeds (USDC Uni 1 USDC, USDC Base 0 USDC); the v2 watcher
+(`0x4b44497b…`, 1.7701604 lREACT) is untouched.
+
+| Contract | Chain | Address |
+|---|---|---|
+| `PublicVaultV3` Uni #0 (origin) | Unichain Sepolia (1301) | `0x9561235B28aA8609648299928Ce162632851dbeC` |
+| `PublicVaultV3` Uni #1 | Unichain Sepolia (1301) | `0x89b684B5cb0aCff7Ae33830c9b360ddCee3953E8` |
+| `PublicVaultV3` Base #0 | Base Sepolia (84532) | `0x0cf674eb58D3822075eE08A6De0568AF93Af450E` |
+| `PublicVaultERC20V3` USDC (20 USDC) | Unichain Sepolia (1301) | `0x4F10584326e9d96FBB3c65435667e9487C670d8b` |
+| `PublicVaultERC20V3` USDC (20 USDC) | Base Sepolia (84532) | `0xD536266c3595ba4dc9002771f44cDAe65776F9b3` |
+| `ContagionWatcher` v3 | Lasna (5318007) | `0xE7bd21cB41c0475650069A19b6207a48cAe0F9E6` |
+
+Implementations + factories (Sourcify `exact_match`): `PublicVaultV3`
+Uni `0xEe319AC96FAb0445ca48D1daa6af4FC312FD21Db`, factory Uni
+`0xD18B286C73285aef378B054D355dE43f63809111`; `PublicVaultV3` Base
+`0xE427B13172Dc65D9218C6067fC6fD89408B47A1a`, factory Base
+`0xCa5F695215DFE4aB6b96d6FbEAfbC79d57d3DCEe`; `PublicVaultERC20V3` Uni
+`0x366a79C1E37958F7239d57310dF2c5F94A113bb6`, factory ERC20 Uni
+`0xEcaF1E5Bbe943D0a5b58D9933ace161C5D2C3e09`; `PublicVaultERC20V3`
+Base `0xb2119fB0A06c8F032Afb1B71C8d270234b9b05B1`, factory ERC20 Base
+`0xC083d0CafbC93aE662BBe0Ac3442Ba61155d21B0`.
+
+### E2E v3 — full loop (15 Nov 2026)
+
+Trip Uni #0 (reason `V3-E2E-1`)
+`0xac350def7550963a6992627a3ded74cf5d99f37f72ab9b5dd514d35df02d8a30`
+→ react
+`0x82feb96d2ae197565ccafbf5beacd5da05e06f6473001259a7b44af4ebf021a8`
+(Lasna block 8419547) → all five vaults paused, incident `active =
+false` (CONTAINED). Loop cost 0.1514159 lREACT (watcher 1.0 →
+0.8485841); this trip counted as incident #1 in the cap window
+(`capWindowCount = 1`). The watcher holds 0.8485841 lREACT at handover
+(15 Nov 2026 23:37 WIB), about 5 loops at ~0.15 lREACT/loop; the cap
+bounds worst-case spend to ~0.75 lREACT/hour.
+
+**Aggregate cap (N1).** The watcher caps NEW incidents at 5 per
+rolling 1-hour window (`MAX_NEW_INCIDENTS_PER_WINDOW = 5`,
+`CAP_WINDOW = 1 hours`, `ContagionWatcherV3.sol:140,142`). A capped
+trip emits `IncidentCapHit` and requests no callbacks; retries of an
+active incident are never capped. The 60-second per-vault trip
+cooldown only slows aggregate drain — it does not prevent it; the cap
+is the technical bound.
+
+**Owner-only reopen (N2).** `reopen()` is `onlyOwner` on this set
+(`PublicVaultV3.sol:89`). A reopen simulated from any other wallet
+(`0x1111…1111`) reverts `OwnableUnauthorizedAccount` (verified live,
+15 Nov 2026). All five vaults were reopened by the deployer
+afterwards: Uni #0
+`0x426254bd1449f03f0fecde05bed701dac15fd77ac113da573ce4355162b05dc6`,
+Uni #1
+`0x4aa271ebcd895e2c9e8f3bf8eaca0c1f6b83dbf7bac76dd582df7c8315adc12b`,
+Base #0
+`0xcd85f206b8ba17b952a8d41d460c12f4510870b95c278a4af2ee79a82772843b`,
+USDC Uni
+`0x5d01058379a80f366b2660d2df8ad7210e13704cd985f577d5d974f4e2281890`,
+USDC Base
+`0x49e9a4b9301286bebcd4ac72757ccbc0864ce5677ec4f4462f02c5c3160ebc0b`
+— all `paused() = false` afterwards.
+
+**Loop cost per set (N3, measured 15 Nov 2026).** v1 3-vault set
+~0.08–0.11 lREACT; v2 4-vault set ~0.10–0.13 lREACT; v3 5-vault set
+~0.15 lREACT (0.1514159).
+
+**Trip lost while the watcher is paused (N5).** There is no queue or
+replay: a trip that arrives while the watcher itself is paused is
+lost. After the watcher resumes, the origin must be tripped again (a
+new incident) for the fan-out to run.
 
 ## AI assistance disclosure
 
